@@ -1,5 +1,7 @@
 # Fable (Learn with Story)
 
+[Open Fable](https://fable-learn-with-story.ulysse-ha-19.workers.dev)
+
 A cinematic, illustrated storybook for learning complex ideas through fables. Includes sample stories, English/Chinese/Danish/French content, light and dark themes, and a scrolling reader.
 
 ## Current release
