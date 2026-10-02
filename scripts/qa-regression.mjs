@@ -1,7 +1,5 @@
-// Regression: ISSUE-001 through ISSUE-004, preference loss, tour dead end, keyboard interception, unnamed controls.
-// Found by /qa on 2026-10-02.
-// Report: .gstack/qa-reports/qa-report-fable-2026-10-02.md
-import { chromium } from '@playwright/test';
+// Local and hosted regression checks for the sample-first Fable reader.
+import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 
@@ -10,71 +8,135 @@ const evidence = process.env.FABLE_QA_EVIDENCE;
 if (evidence) await mkdir(evidence, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const errors = [];
+const shot = async (page, name) => {
+  if (!evidence) return;
+  await page.waitForTimeout(1600);
+  await page.screenshot({ path: `${evidence}/${name}.png` });
+};
+const settle = async page => {
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(1800);
+};
+const openExplanation = async page => {
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.locator('.toc-sub').click();
+  await settle(page);
+  await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
+};
 try {
-  for (const width of [390, 1280]) {
-    const page = await browser.newPage({ viewport: { width, height: 900 } });
+  for (const width of [390, 1440]) {
+    const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 1000 } });
     page.setDefaultTimeout(15000);
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto(base, { waitUntil: 'domcontentloaded' });
-    await page.locator('textarea').waitFor();
-    // Dismiss the first-visit tour before independently exercising the form.
-    await page.waitForTimeout(1100);
-    const closeGuide = page.getByRole('button', { name: 'Close guide', exact: true });
-    if (await closeGuide.count()) await closeGuide.click();
-    assert.equal(await page.getByRole('textbox', { name: 'What should we explain?' }).count(), 1);
+    await page.goto(base, { waitUntil: 'networkidle' });
+    await expect(page.locator('.cine-create')).toBeVisible();
+    await settle(page);
+    assert.equal(await page.getByRole('dialog').count(), 0, 'Guide must be optional');
+    await expect(page.getByRole('button', { name: 'Read the sample', exact: true })).toBeEnabled();
+    assert.ok(await page.locator('.cine-nowshowing').evaluate(el => el.getBoundingClientRect().height >= 44));
+    await page.getByRole('button', { name: 'Guide me', exact: true }).click();
+    await expect(page.getByRole('dialog')).toContainText('Start with the sample');
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
+    await page.locator('summary').click();
+    await expect(page.getByRole('textbox')).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Weave the fable' })).toBeDisabled();
+    await page.locator('summary').click();
+    await shot(page, `home-dark-${width}`);
     for (const lang of ['fr', 'da', 'zh', 'en']) {
-      await page.getByRole('combobox', { name: 'Language' }).selectOption(lang);
-      await page.getByRole('button', { name: 'Switch to light', exact: true }).click();
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.locator('textarea').waitFor();
+      await page.getByRole('combobox').selectOption(lang);
+      await page.locator('.cine-bar .iconbtn').click();
+      await page.reload({ waitUntil: 'networkidle' });
       assert.equal(await page.getByRole('combobox').inputValue(), lang);
-      assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
-      await page.getByRole('button', { name: 'Switch to dark', exact: true }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+      await expect(page.locator('.cine-compose')).toHaveCSS('background-color', 'rgb(241, 233, 214)');
+      if (lang === 'en') await shot(page, `home-light-${width}`);
+      await page.locator('.ob-guide').click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      if (lang !== 'en') assert.doesNotMatch(await page.getByRole('dialog').innerText(), /Start with the sample|Finish|Skip/);
+      await page.keyboard.press('Escape');
+      await page.locator('.cine-nowshowing').click();
+      await settle(page);
+      const labels = await page.evaluate(() => window.FABLE.ui[document.documentElement.lang.split('-')[0]]);
+      await page.getByRole('button', { name: labels.contents, exact: true }).click();
+      const contents = page.getByRole('dialog');
+      await expect(contents.locator('.toc-row').last()).toContainText(labels.endLabel);
+      assert.doesNotMatch(await contents.innerText(), /XIII/);
+      await contents.locator('.toc-sub').click();
+      await settle(page);
+      await expect(page.locator('.cine-figure img')).toBeVisible();
+      assert.ok((await page.locator('.cine-figure img').getAttribute('alt')).length > 30);
+      assert.equal(await page.locator('.cine-decode .cine-prose h3').count(), 0);
+      await page.locator('.cine-bar [data-ob=shelf]').click();
+      await expect(page.locator('.cine-create')).toBeVisible();
+      await page.locator('.cine-bar .iconbtn').click();
     }
-    await page.getByRole('button', { name: 'Guide me', exact: true }).click();
-    const guide = page.getByRole('dialog');
-    await guide.getByRole('button', { name: 'Next', exact: true }).click();
-    await guide.getByRole('button', { name: 'Next', exact: true }).click();
-    assert.match(await guide.innerText(), /Explore the sample book/);
-    if (evidence) await page.screenshot({ path: `${evidence}/tour-after-${width}.png` });
-    await guide.getByRole('button', { name: 'Finish', exact: true }).click();
-    assert.equal(await page.getByRole('dialog').count(), 0);
-    await page.getByRole('button', { name: 'Guide me', exact: true }).click();
-    await page.keyboard.press('Escape');
-    assert.equal(await page.getByRole('dialog').count(), 0);
     await page.locator('.cine-nowshowing').click();
-    const language = page.getByRole('combobox', { name: 'Language' });
+    await settle(page);
+    await page.getByRole('button', { name: 'Begin reading', exact: true }).click();
+    await settle(page);
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'chapter');
+    await page.getByRole('button', { name: 'Scroll to continue', exact: true }).click();
+    await settle(page);
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', /1\/10/);
+    assert.equal(await page.locator('.cine-scene').first().locator('blockquote').count(), 0);
+    await shot(page, `story-dark-${width}`);
+    await page.getByRole('button', { name: 'Switch to light', exact: true }).click();
+    await expect(page.locator('.cine-panel').first()).toHaveCSS('background-color', 'rgb(241, 233, 214)');
+    await shot(page, `story-light-${width}`);
+    await page.getByRole('button', { name: 'Switch to dark', exact: true }).click();
+    await openExplanation(page);
+    await shot(page, `explanation-${width}`);
+    // Critical regression: with noninteractive focus, Space scrolls inside a long explanation.
+    await page.locator('.cine-decode h3.dt').click();
+    const before = await page.locator('.cine').evaluate(el => el.scrollTop);
+    await page.keyboard.press('Space');
+    await settle(page);
+    const after = await page.locator('.cine').evaluate(el => el.scrollTop);
+    assert.ok(after > before + 100, 'Space advances inside explanation');
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
+    await page.reload({ waitUntil: 'networkidle' });
+    await settle(page);
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
+    const restored = await page.locator('.cine').evaluate(el => el.scrollTop);
+    assert.ok(Math.abs(after - restored) < 5, `Reload keeps offset: ${after} -> ${restored}`);
+    await page.locator('.cine-bar [data-ob=shelf]').click();
+    await page.getByRole('button', { name: 'Continue reading', exact: true }).click();
+    await settle(page);
+    assert.ok(Math.abs(after - await page.locator('.cine').evaluate(el => el.scrollTop)) < 5);
+    await page.locator('.cine-bar [data-ob=shelf]').click();
+    await page.goBack();
+    await settle(page);
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
+    await page.goForward();
+    await expect(page.locator('.cine-create')).toBeVisible();
+    await page.getByRole('button', { name: 'Continue reading', exact: true }).click();
+    await settle(page);
+    const language = page.getByRole('combobox');
     await language.focus();
-    await page.evaluate(() => {
-      window.__qaKeys = [];
-      window.addEventListener('keydown', event => window.__qaKeys.push({ key: event.key, prevented: event.defaultPrevented }));
-    });
+    await page.evaluate(() => { window.__qaKeys = []; window.addEventListener('keydown', event => window.__qaKeys.push({ key: event.key, prevented: event.defaultPrevented })); });
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Escape');
-    assert.equal(await page.evaluate(() => window.__qaKeys.some(event => event.key === 'ArrowDown' && !event.prevented)), true);
-    await language.selectOption('fr');
-    assert.equal(await language.inputValue(), 'fr');
-    assert.equal(await page.locator('.cine').evaluate(el => el.scrollTop), 0);
-    await language.selectOption('en');
-    if (width >= 768) {
-      const rail = page.getByRole('navigation', { name: 'Contents' });
-      await rail.getByRole('button', { name: 'Title page' }).waitFor();
-      assert.equal(await rail.getByRole('button', { name: 'The Hall of Affairs' }).count(), 1);
-    } else {
-      assert.equal(await page.locator('.cine-rail').isVisible(), false);
-    }
+    assert.equal(await page.evaluate(() => window.__qaKeys.some(e => e.key === 'ArrowDown' && !e.prevented)), true);
     await page.getByRole('button', { name: 'Contents', exact: true }).click();
-    const contents = page.getByRole('dialog', { name: 'Contents', exact: true });
-    assert.equal(await contents.getByRole('button', { name: 'Close', exact: true }).evaluate(el => el === document.activeElement), true);
+    const contents = page.getByRole('dialog');
+    await expect(contents.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
     await page.keyboard.press('Shift+Tab');
-    assert.equal(await contents.locator('button').last().evaluate(el => el === document.activeElement), true);
+    await expect(contents.locator('button').last()).toBeFocused();
     await page.keyboard.press('Tab');
-    assert.equal(await contents.getByRole('button', { name: 'Close', exact: true }).evaluate(el => el === document.activeElement), true);
-    if (evidence) await page.screenshot({ path: `${evidence}/contents-after-${width}.png` });
-    await page.keyboard.press('Escape');
-    assert.equal(await contents.count(), 0);
-    assert.equal(await page.getByRole('button', { name: 'Contents', exact: true }).evaluate(el => el === document.activeElement), true);
-    console.log(`PASS ${width}px: saved preferences, tour completion/Escape, unintercepted keyboard selection, modal focus, accessible names.`);
+    await expect(contents.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+    await contents.locator('.toc-row').last().click();
+    await settle(page);
+    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'end');
+    await shot(page, `ending-${width}`);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    assert.equal(await page.locator('.cine-bg-layer img').first().evaluate(el => getComputedStyle(el).animationName), 'none');
+    await page.getByRole('button', { name: 'Contents', exact: true }).click();
+    await page.getByRole('dialog').locator('.toc-row').first().click();
+    await expect(page.locator('.cine')).toHaveJSProperty('scrollTop', 0);
+    assert.ok(await page.locator('.cine-create, .cine').evaluate(el => el.scrollWidth <= el.clientWidth));
+    assert.equal((await page.request.get(`${base}/api/generate`)).status(), 503);
+    console.log(`PASS ${width}px: four locales, sample/guide, both themes, chapter cue, explanation figure/keyboard, resume/reload/history, focus, reduced motion, disabled API.`);
     await page.close();
   }
   assert.deepEqual(errors, []);

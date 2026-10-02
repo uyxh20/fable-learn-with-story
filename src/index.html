@@ -652,6 +652,41 @@ button { font-family: inherit; cursor: pointer; }
   .cine-sec { padding-left: 18px; padding-right: 18px; }
 }
 
+/* Preview and reader usability: keep the cinematic artwork, give text solid surfaces. */
+.cine-compose, .cine-panel { background: var(--bg-2); }
+.cine-compose > .kicker { color: var(--ink-2); }
+.cine-ta, .cine-input, .cine-chip { background: var(--bg-3); }
+[data-identity="cinema"][data-theme="light"] { --ink-3: #685638; }
+.cine-bar, .cine-create .cine-bar { background: #110d08; color-scheme: dark;
+  --bg: #110d08; --bg-2: #110d08; --ink: #f1e8d6; --ink-2: #d0c1a6; --ink-3: #c2b297;
+  --line: rgba(241,232,214,.2); --line-2: rgba(241,232,214,.35); }
+.cine-bar .iconbtn, .cine-bar .langtoggle select, .cine-bar .btn { min-height: 44px; }
+.cine-bar .iconbtn { min-width: 44px; }
+.cine-nowshowing { min-height: 48px; font-size: 13px; padding: 12px 20px;
+  background: var(--accent); color: #1a1208; letter-spacing: .04em; text-transform: none; }
+.cine-nowshowing:hover { color: #1a1208; }
+.sample-title { font-family: var(--font-display),var(--font-cjk); font-size: clamp(27px,3vw,38px); margin: 0; line-height: 1.12; }
+.preview-note { color: var(--ink-2); margin: 0; line-height: 1.6; }
+.future-compose { border-top: 1px solid var(--line-2); padding-top: 10px; }
+.future-compose summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; color: var(--ink-2); }
+.future-fields { display: grid; gap: 14px; margin-top: 12px; }
+.future-fields :disabled { opacity: 1; cursor: not-allowed; }
+.cine-scrim[data-mode="end"] { background: rgba(7,5,3,.65); }
+.cine-cue { min-height: 44px; }
+.cue-down { display: inline-flex; transform: rotate(90deg); }
+.cine-rail-dot { width: 24px; height: 24px; border: 7px solid transparent; background-clip: padding-box; }
+.cine-rail-dot.is-active, .cine-rail-dot.is-done { border-color: transparent; background-clip: padding-box; }
+.cine-rail-dot.is-active { transform: translate(-50%,-50%); }
+.cine-mobile-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 7; background: #332a1b; }
+.cine-mobile-progress span { display: block; height: 100%; background: var(--accent); }
+.cine-figure { margin: 24px 0; }
+.cine-figure img { display: block; width: 100%; height: auto; border-radius: 3px; }
+.cine-figure figcaption { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin-top: 12px; }
+@media (max-width: 400px) { .cine-bar { padding-left: 12px; padding-right: 12px; gap: 8px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
 </style>
   <script>document.documentElement.setAttribute('data-identity','cinema');document.documentElement.setAttribute('data-theme','dark');</script>
 </head>
@@ -945,11 +980,11 @@ By the door stood a man laying out the desk. At the bell's ring he had gone to t
 
 The master tilted his bound face and listened. Then he spoke — not an answer, but an instruction: "In the eastern archive there is a tax register. Fetch it. Lay it down." And he fell still, as if asleep.
 
-The layer-of-the-desk passed the words to the runners at the gate. They went out — through alleys, over walls — and returned with the register, and a message: "A page is missing." He set the register and the message back on the desk, and with them the guest's request and the master's own instruction. Because the master had already forgotten.
+The desk-setter passed the words to the runners at the gate. They went out — through alleys, over walls — and returned with the register, and a message: "A page is missing." He set the register and the message back on the desk, and with them the guest's request and the master's own instruction. Because the master had already forgotten.
 
 The young man understood with a chill: each time the master woke, he forgot everything before. Whatever lay on the desk was all he saw; clear the desk, and his mind went blank — the cleverest man under heaven, living inside a span of time that erased itself. But the house did not forget. In the back hall, every affair, every word, was kept. The master forgets; the house remembers for him.
 
-Above the desk sat a steward. It heard the bell, opened the guest's meaning, and decided the whole affair step by step: what to lay before the master, which question to ask, which runner to send, when it was done. The master only thinks; the runners only act; the back hall only remembers; the layer only lays out. From first to last, the one who held what the affair was meant to become was the steward alone.
+Overseeing the desk-setter was a steward. It heard the bell, opened the guest's meaning, and decided the whole affair step by step: what to lay before the master, which question to ask, which runner to send, when it was done. The master only thinks; the runners only act; the back hall only remembers; the layer only lays out. From first to last, the one who held what the affair was meant to become was the steward alone.
 
 Then a watch-drum sounded, and he saw the house itself. High walls. Every runner searched at the gate, lest he carry something foul inside. Each affair lit by a single candle; if it burned out unfinished, the affair stopped. A runner long gone, and another was sent. And a sleepless night-watchman wrote every step into a great ledger, so that if an affair went wrong, you could open it and find which step had failed.
 
@@ -961,7 +996,7 @@ lesson: `### After the story — what it really says
 This fable is the layered architecture of an agentic AI system. What people call "the AI" is several layers working together; the model is the most central — and most helpless — of them.
 
 - **The blind, bound, forgetful master = the Model (the LLM).** A pure reasoning-and-generation engine with three fatal traits: it is *stateless* (each call is the first; nothing carries between calls); it sees only what is placed before it — the *context window*; and it cannot act or remember on its own. It only produces the best next words for the desk in front of it. Necessary, never sufficient.
-- **The layer-of-the-desk = the Context layer.** Prompt assembly, RAG retrieval, context engineering. How well the desk is laid decides how well the master answers.
+- **The desk-setter = the Context layer.** Prompt assembly, RAG retrieval, context engineering. How well the desk is laid decides how well the master answers.
 - **The runners = the Tools layer** (function calling). The model proposes an action; the tools execute it and bring back the result. The model speaks; the tools act.
 - **The back hall = the Memory layer.** Short-term state ("where is this affair?") and long-term memory (vector stores, knowledge bases). The model forgets; this layer remembers.
 - **The steward = the Orchestration layer** — the agent loop. Across the model's amnesiac calls, it alone holds the unchanging goal and the whole state. Planning, task decomposition, sub-agent routing, stopping conditions live here.
@@ -1244,12 +1279,12 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
         image: story.image, prompt: story.prompt,
         pan: m>1 ? Math.round((k/(m-1))*100) : 50,
         nav:`${mainTitle} · ${k+1}/${m}`,
-        raw: (k===0 && epigraph) ? `${epigraph}\n\n${sc}` : sc,
+        raw: sc,
       });
     });
     pages.push({ kind:"Lesson", nav: lang === "da" ? `${c.da} — Fortolket` : (lang === "fr" ? `${c.fr} — Interprétée` : `${c.en} — Decoded`), chapterIndex:i, sceneIndex:0, sceneCount:1,
       title: mainTitle, titleEn: lang === "da" ? `${c.da} · fortolket` : (lang === "fr" ? `${c.fr} · interprétée` : `${c.en} · decoded`), pan:50,
-      deck: lang === "zh" ? "故事之后。" : (lang === "da" ? "Efter historien." : (lang === "fr" ? "Après l'histoire." : "After the story.")), raw: lessonRaw, ...visuals[i*2+2] });
+      deck: lang === "zh" ? "故事之后。" : (lang === "da" ? "Efter historien." : (lang === "fr" ? "Après l'histoire." : "After the story.")), raw: `${epigraph}\n\n${lessonRaw.replace(/^#{1,3}[^\n]*\n+/, "")}`.trim(), ...visuals[i*2+2] });
   }
 
   function buildPages(md, lang){
@@ -1552,6 +1587,7 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
 
 </script>
   <script src="live-fable.js?v=20260612-poll-retry"></script>
+  <script src="ux-copy.js"></script>
   <script type="text/babel">
 /* FABLE — shared components, icons, helpers (exported to window) */
 const { useState, useEffect, useRef, useCallback } = React;
@@ -1585,7 +1621,7 @@ function MoonGateMark({ size = 28, animated = true }) {
   const [replay, setReplay] = useState(0);
   const sweep = useRef(null);
   useEffect(() => {
-    if (!animated || !sweep.current) return;
+    if (!animated || !sweep.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = requestAnimationFrame(() => {
       try { sweep.current.beginElement(); } catch (e) {}
     });
@@ -1663,11 +1699,12 @@ function Seg({ options, value, onChange, name }) {
 }
 
 /* ---------------- theme toggle ---------------- */
-function ThemeToggle({ theme, setTheme }) {
+function ThemeToggle({ theme, setTheme, lang = "en" }) {
+  const T = window.FABLE.ui[lang];
   const dark = theme === "dark";
   return (
     <button className="iconbtn" onClick={() => setTheme(dark ? "light" : "dark")}
-      aria-label={dark ? "Switch to light" : "Switch to dark"} title={dark ? "Light · 日间" : "Dark · 夜间"}>
+      aria-label={dark ? T.lightLabel : T.darkLabel} title={dark ? T.lightLabel : T.darkLabel}>
       <Icon name={dark ? "sun" : "moon"} />
     </button>
   );
@@ -1677,10 +1714,10 @@ function ThemeToggle({ theme, setTheme }) {
 function LangToggle({ lang, setLang }) {
   return (
     <div className="langtoggle">
-      <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Language">
+      <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label={window.FABLE.ui[lang].languageLabel}>
         <option value="en">EN</option>
         <option value="fr">FR</option>
-        <option value="da">DK</option>
+        <option value="da">DA</option>
         <option value="zh">中文</option>
       </select>
     </div>
@@ -1742,22 +1779,22 @@ function htmlLang(lang) {
   return "en";
 }
 
+function readSavedPlace() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("fable-reading-place"));
+    return saved && /^#read\/(cover|end|chapter\/\d+|scene\/\d+\/\d+|explanation\/\d+)$/.test(saved.route)
+      && Number.isFinite(saved.offset) && saved.offset >= 0 ? saved : null;
+  } catch { return null; }
+}
+
 function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }) {
   const FB = window.FABLE;
   const meta = FB.metaFor(lang);
   const cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
-  const [concept, setConcept] = useStateCC("");
-  const [setting, setSetting] = useStateCC(FB.settings[lang][0]);
   const [inView, setInView] = useStateCC(false);
-  useEffectCC(() => {setSetting(FB.settings[lang][0]);}, [lang]);
   useEffectCC(() => {setInView(true);}, []);
   const canWeave = false;
-  const previewNote = {
-    en: "New stories are coming soon. Explore the sample book below.",
-    zh: "新故事即将开放。请先阅读下方的示例故事。",
-    da: "Nye historier kommer snart. Udforsk eksempelbogen nedenfor.",
-    fr: "De nouvelles histoires arrivent bientôt. Découvrez le livre d’exemple ci-dessous."
-  }[lang];
+  const savedPlace = readSavedPlace();
 
   return (
     <div className="cine-create grain" lang={htmlLang(lang)} {...inView ? { "data-in": "" } : {}}>
@@ -1775,44 +1812,41 @@ function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }
         <Logo lang={lang} />
         <div className="cine-bar-right">
           <LangToggle lang={lang} setLang={setLang} />
-          <ThemeToggle theme={theme} setTheme={setTheme} />
+          <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
 
       <main className="cine-create-main">
         <div className="cine-create-inner">
-          <p className="kicker reveal-on" style={{ color: "rgba(246,237,219,.7)" }}>{T.heroKicker}</p>
+          <p className="kicker reveal-on" style={{ color: "rgba(246,237,219,.7)" }}>{T.previewLabel}</p>
           <h1 className="cine-create-title reveal-on"
           style={{ fontFamily: lang === "zh" ? "var(--font-cjk)" : "var(--font-display)", letterSpacing: lang === "zh" ? "0.02em" : undefined }}>
-            {T.heroPre}<br />{T.heroPost}{lang === "zh" ? "" : " "}
-            <span className="serif-italic" style={{ color: "var(--accent)" }}>{T.heroAccent}</span>{lang === "zh" ? "。" : "."}
+            {T.previewTitle}
           </h1>
-          <p className="cine-create-sub reveal-on">{T.heroSub}</p>
+          <p className="cine-create-sub reveal-on">{T.previewSub}</p>
 
-          <div className="cine-compose reveal-on" data-comment-anchor="36586ca834-div-45-11">
-            <label className="kicker" htmlFor="fable-concept">{T.conceptLabel}</label>
-            <textarea id="fable-concept" className="cine-ta" value={concept} spellCheck={false} data-ob="concept"
-            onChange={(e) => setConcept(e.target.value)} placeholder={T.conceptPh} />
-            <div style={{ display: "grid", gap: 9 }} data-ob="setting">
-              <span className="kicker" style={{ color: "rgba(246,237,219,.55)" }}>{T.settingLabel}</span>
-              <div className="cine-settings">
-                {FB.settings[lang].map((o) =>
-                <button key={o} type="button" className={"cine-chip" + (o === setting ? " is-on" : "")}
-                onClick={() => setSetting(o)} aria-pressed={o === setting}
-                style={{ fontFamily: cjk(o) ? "var(--font-cjk)" : undefined }}>{o}</button>
-                )}
-              </div>
-            </div>
-
-            <p role="status" style={{ color: "var(--ink-2)", margin: 0 }}>{previewNote}</p>
+          <div className="cine-compose reveal-on">
+            <p className="kicker">{T.sampleMeta}</p>
+            <h2 className="sample-title">{meta.title}</h2>
+            <p className="preview-note">{T.previewNote}</p>
             <div className="cine-compose-foot">
-              <button className="cine-nowshowing" data-ob="sample" onClick={onOpenBook}>
-                <Icon name="right" size={14} /> {T.open} · {meta.title}
+              <button className="btn btn--primary cine-nowshowing" data-ob="sample" onClick={() => onOpenBook(false)}>
+                <Icon name="book" /> {T.readSample}
               </button>
-              <button className="btn btn--primary" data-ob="weave" disabled={!canWeave} onClick={() => onWeave({ concept, setting })}>
-                <Icon name="feather" size={16} /> {T.weave}
-              </button>
+              {savedPlace && <button className="btn btn--quiet" onClick={() => onOpenBook(true)}>{T.resume}</button>}
             </div>
+            <details className="future-compose">
+              <summary>{T.comingSoon}</summary>
+              <div className="future-fields">
+                <label className="kicker" htmlFor="fable-concept">{T.conceptLabel}</label>
+                <textarea id="fable-concept" className="cine-ta" value="" disabled placeholder={T.conceptPh} />
+                <span className="kicker">{T.settingLabel}</span>
+                <div className="cine-settings">
+                  {FB.settings[lang].map((o) => <button key={o} type="button" disabled className="cine-chip" style={{ fontFamily: cjk(o) ? "var(--font-cjk)" : undefined }}>{o}</button>)}
+                </div>
+                <button className="btn btn--quiet" disabled={!canWeave}>{T.weave}</button>
+              </div>
+            </details>
           </div>
         </div>
       </main>
@@ -1985,7 +2019,7 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
         <Logo lang={lang} />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LangToggle lang={lang} setLang={setLang} />
-          <ThemeToggle theme={theme} setTheme={setTheme} />
+          <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
 
@@ -2102,6 +2136,12 @@ const { useState: useStateCR, useEffect: useEffectCR, useRef: useRefCR, useMemo:
 
 const _cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
 
+function sectionRoute(s) {
+  if (["cover", "end"].includes(s.type)) return `#read/${s.type}`;
+  const chapter = s.page.chapterIndex + 1;
+  return s.type === "scene" ? `#read/scene/${chapter}/${s.page.sceneIndex + 1}` : `#read/${s.type === "decode" ? "explanation" : "chapter"}/${chapter}`;
+}
+
 function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = {} }) {
   const FB = window.FABLE;
   const meta = (pages[0] && pages[0].meta) || FB.metaFor(lang);
@@ -2109,6 +2149,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
   const nodeRefs = useRefCR([]);
   const [active, setActive] = useStateCR(0);
   const [toc, setToc] = useStateCR(false);
+  const restored = useRefCR(false);
 
   // flatten pages → cinematic sections (cover · chapter card · scenes · decode · end)
   const sections = useMemoCR(() => {
@@ -2127,9 +2168,27 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
 
   const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image))], [sections]);
   const stops = useMemoCR(
-    () => sections.map((s, i) => ({ i, s })).filter((x) => x.s.type === "cover" || x.s.type === "chapter"),
+    () => sections.map((s, i) => ({ i, s })).filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type)),
     [sections]
   );
+
+  useEffectCR(() => {
+    let cancelled = false;
+    const restore = () => {
+      const i = Math.max(0, sections.findIndex((s) => sectionRoute(s) === location.hash));
+      const saved = readSavedPlace();
+      const node = nodeRefs.current[i];
+      if (!node || !scroller.current) return;
+      const offset = saved?.route === location.hash ? Math.min(saved.offset, Math.max(0, node.offsetHeight - 100)) : 0;
+      scroller.current.scrollTo({ top: node.offsetTop + offset, behavior: "instant" });
+      setActive(i);
+      restored.current = true;
+    };
+    restored.current = false;
+    document.fonts.ready.then(() => { if (!cancelled) restore(); });
+    window.addEventListener("hashchange", restore);
+    return () => { cancelled = true; window.removeEventListener("hashchange", restore); };
+  }, [sections]);
 
   // active section = the one whose body holds the viewport "read line"
   useEffectCR(() => {
@@ -2139,6 +2198,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
+        if (!restored.current) return;
         const line = el.scrollTop + el.clientHeight * 0.42;
         let best = 0, bestD = Infinity;
         nodeRefs.current.forEach((n, i) => {
@@ -2148,6 +2208,10 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
           else if (bestD !== -1) { const d = Math.abs(mid - line); if (d < bestD) { bestD = d; best = i; } }
         });
         setActive((a) => (a === best ? a : best));
+        const route = sectionRoute(sections[best]);
+        const offset = Math.max(0, el.scrollTop - nodeRefs.current[best].offsetTop);
+        history.replaceState(null, "", route);
+        try { sessionStorage.setItem("fable-reading-place", JSON.stringify({ route, offset })); } catch {}
       });
     };
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -2158,16 +2222,30 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
   const scrollToIndex = (i) => {
     const n = nodeRefs.current[i], el = scroller.current;
     if (!n || !el) return;
-    el.scrollTo({ top: n.offsetTop, behavior: "smooth" });
+    el.scrollTo({ top: n.offsetTop, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
 
   useEffectCR(() => {
     const h = (e) => {
       if (e.key === "Escape") { setToc(false); return; }
       if (toc || e.defaultPrevented || e.target.closest("input, textarea, select, button, [contenteditable], [role='dialog']")) return;
-      if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); scrollToIndex(Math.min(active + 1, sections.length - 1)); }
-      else if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); scrollToIndex(Math.max(active - 1, 0)); }
-      else if (e.key === "Escape") setToc(false);
+      const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key);
+      const backward = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
+      if (!forward && !backward) return;
+      e.preventDefault();
+      const el = scroller.current;
+      // Long sections must be read within the viewport before changing sections.
+      const i = sections.findIndex((_, j) => {
+        const n = nodeRefs.current[j];
+        return n && el.scrollTop + 100 >= n.offsetTop && el.scrollTop + 100 < n.offsetTop + n.offsetHeight;
+      });
+      const n = nodeRefs.current[Math.max(0, i)];
+      const bottom = n.offsetTop + n.offsetHeight;
+      const within = forward ? el.scrollTop + el.clientHeight < bottom - 24 : el.scrollTop > n.offsetTop + 24;
+      if (within) {
+        el.scrollBy({ top: (forward ? 1 : -1) * el.clientHeight * .75,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+      } else scrollToIndex(Math.max(0, Math.min(i + (forward ? 1 : -1), sections.length - 1)));
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
@@ -2183,7 +2261,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
   return (
     <div className="cine grain" ref={scroller} lang={htmlLang(lang)}>
       {/* fixed cinematic backdrop */}
-      <div className="cine-bg">
+      <div className="cine-bg" aria-hidden="true">
         {uniqueImages.map((src) => (
           <div key={src} className="cine-bg-layer" style={{ opacity: src === activeImage ? 1 : 0 }}>
             <img src={src} alt="" style={{ objectPosition: `${pan}% 50%` }} />
@@ -2205,17 +2283,19 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
           </p>
         </div>
         <div className="cine-bar-right">
-          <button className="iconbtn" data-ob="contents" onClick={() => setToc((t) => !t)} aria-label="Contents" title={T.contents}><Icon name="contents" /></button>
+          <button className="iconbtn" data-ob="contents" onClick={() => setToc((t) => !t)} aria-label={T.contents} title={T.contents}><Icon name="contents" /></button>
           <LangToggle lang={lang} setLang={setLang} />
-          <ThemeToggle theme={theme} setTheme={setTheme} />
+          <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
+
+      <div className="cine-mobile-progress" role="progressbar" aria-label={T.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}><span style={{ width: `${progress * 100}%` }} /></div>
 
       {/* progress rail */}
       <nav className="cine-rail" aria-label={T.contents}>
         <div className="cine-rail-track"><span className="cine-rail-fill" style={{ height: `${progress * 100}%` }} /></div>
         {stops.map(({ i, s }) => (
-          <button key={i} aria-label={s.type === "cover" ? T.titlePage : s.page.title} aria-current={activeStop === i ? "step" : undefined}
+          <button key={i} aria-label={s.type === "cover" ? T.titlePage : s.type === "decode" ? T.decodedWord : s.type === "end" ? T.endLabel : s.page.title} aria-current={activeStop === i ? "step" : undefined}
             className={"cine-rail-dot" + (active >= i ? " is-done" : "") + (activeStop === i ? " is-active" : "")}
             style={{ top: `${(i / (sections.length - 1)) * 100}%` }}
             onClick={() => scrollToIndex(i)} />
@@ -2223,16 +2303,16 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
       </nav>
 
       {/* the flow */}
-      <div className="cine-flow">
+      <main className="cine-flow">
         {sections.map((s, i) => (
           <section key={i} ref={(n) => (nodeRefs.current[i] = n)}
             className={`cine-sec cine-${s.type}`}
             data-screen-label={s.type === "scene" ? `${s.page.nav}` : s.type}
             {...(active === i ? { "data-active": "" } : {})}>
-            <Section s={s} T={T} meta={meta} lang={lang} onBegin={() => scrollToIndex(1)} onExit={onExit} />
+            <Section s={s} T={T} meta={meta} lang={lang} onBegin={() => scrollToIndex(i + 1)} onExit={onExit} />
           </section>
         ))}
-      </div>
+      </main>
 
       {toc && <CineContents sections={sections} active={active} T={T} onPick={(i) => { scrollToIndex(i); setToc(false); }} onClose={() => setToc(false)} />}
     </div>
@@ -2256,9 +2336,9 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
       <div className="inner">
         <p className="kicker reveal" style={{ color: "rgba(246,237,219,.7)" }}>{meta.trilogy}</p>
         <h1 className="reveal" style={{ fontFamily: dispFont(meta.title), letterSpacing: _cjk(meta.title) ? "0.03em" : undefined }}>{meta.title}</h1>
-        <p className="sub reveal">{meta.subtitle}.</p>
+        <p className="sub reveal">{meta.subtitle}</p>
         <button className="cine-cue reveal" onClick={onBegin} style={{ background: "none", border: 0, cursor: "pointer" }}>
-          {T.begin} <Icon name="right" size={16} style={{ transform: "rotate(90deg)" }} />
+          {T.begin} <span className="cue-down"><Icon name="right" size={16} /></span>
         </button>
       </div>
     );
@@ -2270,6 +2350,7 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
         <p className="num reveal">{T.ch} {roman(p.chapterIndex + 1)}</p>
         <h2 className="reveal" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h2>
         <p className="deck reveal">{p.deck}</p>
+        <button className="cine-cue reveal" onClick={onBegin} style={{ background: "none", border: 0, cursor: "pointer" }}>{T.scrollCue} <span className="cue-down"><Icon name="right" /></span></button>
       </div>
     );
   }
@@ -2278,7 +2359,7 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
     return (
       <div className="cine-panel reveal">
         <div className="cine-scene-meta">
-          <span className="kicker" style={{ color: "var(--accent)" }}>{T.theFable}</span>
+          <span className="kicker" style={{ color: "var(--ink-2)" }}>{T.theFable}</span>
           <span className="kicker" style={{ textTransform: "none" }}>{T.ch} {roman(p.chapterIndex + 1)} · {p.sceneIndex + 1}/{p.sceneCount}</span>
         </div>
         <Prose raw={p.raw} drop={p.sceneIndex === 0} />
@@ -2294,7 +2375,7 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
           <span className="ln" />
         </div>
         <h3 className="dt" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h3>
-        <div style={{ height: 18 }} />
+        <figure className="cine-figure"><img src={p.image} width="1672" height="941" alt={T.figureAlt} /><figcaption>{T.figureCaption}</figcaption></figure>
         <Prose raw={p.raw} drop={false} />
       </div>
     );
@@ -2306,7 +2387,7 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
     <div className="cine-end inner">
       <p className="kicker reveal" style={{ color: "rgba(246,237,219,.7)", marginBottom: 18 }}>{meta.trilogy}</p>
       <h2 className="reveal">{endTitle}</h2>
-      <p className="reveal">{meta.subtitle}.</p>
+      <p className="reveal">{meta.subtitle}</p>
       <button className="btn btn--ghost reveal" data-ob="shelf" onClick={onExit} style={{ borderColor: "rgba(246,237,219,.4)", color: "#f6eddb" }}>
         <Icon name="left" size={15} /> {T.shelf}
       </button>
@@ -2356,7 +2437,7 @@ function CineContents({ sections, active, T, onPick, onClose }) {
       <div className="overlay-card grain fade-up" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contents-title" onKeyDown={trapFocus} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <h3 id="contents-title" className="display" style={{ fontSize: 26 }}>{T.contents}</h3>
-          <button className="iconbtn" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
+          <button className="iconbtn" onClick={onClose} aria-label={T.closeLabel}><Icon name="x" /></button>
         </div>
         <div style={{ display: "grid", gap: 8 }}>
           {rows.map(({ s, i }) => {
@@ -2364,27 +2445,28 @@ function CineContents({ sections, active, T, onPick, onClose }) {
             const isChap = s.type === "chapter";
             const isDecode = s.type === "decode";
             const label = s.type === "cover" ? T.titlePage
-              : s.type === "end" ? (T.contents && "—")
+              : s.type === "end" ? T.endLabel
               : isDecode ? `${T.ch} ${roman(p.chapterIndex + 1)} · ${T.decodedWord}`
               : `${T.ch} ${roman(p.chapterIndex + 1)} · ${p.sceneCount} ${T.scenesWord}`;
             const title = s.type === "cover" ? sections[0].page.title
-              : s.type === "end" ? (T.contents ? "Fin" : "Fin")
+              : s.type === "end" ? T.endLabel
               : p.title;
             return (
               <button key={i}
                 className={(isDecode ? "toc-sub" : "toc-row") + (active === i ? " is-active" : "")}
-                style={isDecode ? {} : { gridTemplateColumns: "64px 1fr auto" }}
+                style={isDecode ? {} : { gridTemplateColumns: "64px 1fr" }}
                 onClick={() => onPick(i)}>
                 {!isDecode && <img src={s.image} alt="" />}
                 <span style={{ display: "grid", gap: 2, minWidth: 0, textAlign: "left" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.13em", textTransform: "uppercase", color: isDecode ? "var(--bordeaux)" : "var(--ink-3)" }}>{label}</span>
                   {!isDecode && <span style={{ fontFamily: _cjk(title) ? "var(--font-cjk)" : "var(--font-display)", fontSize: 16, color: "var(--ink)", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>}
                 </span>
-                {isDecode ? <Icon name="arrowR" size={14} /> : <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)" }}>{roman(i)}</span>}
+                {isDecode && <Icon name="right" size={14} />}
               </button>
             );
           })}
         </div>
+        <button className="btn btn--quiet" style={{ marginTop: 18 }} onClick={() => { onClose(); window.dispatchEvent(new Event("fable:guide")); }}>{T.guideLabel}</button>
       </div>
     </div>
   );
@@ -2966,7 +3048,12 @@ function App() {
       return ["en", "fr", "da", "zh"].includes(saved) ? saved : "en";
     } catch { return "en"; }
   });
-  const [screen, setScreen] = useStateA("create"); // create | generate | reader
+  const [screen, setScreen] = useStateA(() => location.hash.startsWith("#read/") ? "reader" : "create"); // create | generate | reader
+  useEffectA(() => {
+    const syncRoute = () => setScreen(location.hash.startsWith("#read/") ? "reader" : "create");
+    window.addEventListener("hashchange", syncRoute);
+    return () => window.removeEventListener("hashchange", syncRoute);
+  }, []);
   const [request, setRequest] = useStateA(null);
   const [generated, setGenerated] = useStateA(null);
 
@@ -2986,6 +3073,7 @@ function App() {
   useEffectA(() => {
     try { localStorage.setItem("fable-lang", lang); } catch {}
     document.documentElement.setAttribute("lang", htmlLang(lang));
+    window.dispatchEvent(new CustomEvent("fable:language", { detail: lang }));
   }, [lang]);
   useEffectA(() => {
     window.__fableScreen = screen;
@@ -3003,7 +3091,7 @@ function App() {
       {screen === "create" && (
         <CinemaCreate {...shared}
           onWeave={(req) => { setGenerated(null); setRequest(req); setScreen("generate"); window.scrollTo(0, 0); }}
-          onOpenBook={() => { setGenerated(null); setScreen("reader"); window.scrollTo(0, 0); }} />
+          onOpenBook={(resume) => { setGenerated(null); if (!resume) { try { sessionStorage.removeItem("fable-reading-place"); } catch {} } location.hash = resume ? (readSavedPlace()?.route || "#read/cover") : "#read/cover"; }} />
       )}
       {screen === "generate" && (
         <GenerateScreen {...shared} request={request}
@@ -3011,7 +3099,7 @@ function App() {
       )}
       {screen === "reader" && (
         <CinemaReader {...shared} pages={pages}
-          onExit={() => { setScreen("create"); window.scrollTo(0, 0); }} />
+          onExit={() => { location.hash = ""; }} />
       )}
 
       <TweaksPanel title="Tweaks">

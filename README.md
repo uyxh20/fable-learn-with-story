@@ -6,7 +6,7 @@ A cinematic, illustrated storybook for learning complex ideas through fables. In
 
 ## Current release
 
-Cloudflare Workers hosts the existing Fable Cinema interface and sample artwork. **New story and image generation are disabled**, both in the UI and at every API route. No AI provider requests can be made by this Worker. API URLs, API keys, and model names are intentionally empty.
+Cloudflare Workers hosts a sample-first Fable interface and the original artwork. The reader includes a visible explanatory illustration, localized controls and an optional guide, light and dark reading surfaces, reduced-motion support, and section links. Reading position is retained in session storage for the current browser tab; Home offers Continue reading. **New story and image generation are disabled**, both in the UI and at every API route. No AI provider requests can be made by this Worker. API URLs, API keys, and model names are intentionally empty.
 
 This is an isolated public export of the app. The original Google Cloud backend, private project history, operational notes, account identifiers, logs, and credentials are excluded. That backend has not been ported to Workers. Adding keys alone will not enable generation: the provider integration and its public-use controls are a follow-up once the providers are selected.
 
@@ -20,6 +20,8 @@ npm run dev
 ```
 
 Open the local URL printed by Wrangler. `npm run check` runs API tests, builds the frontend, and validates the Worker bundle. Frontend JSX is compiled during the build, and React is bundled locally; no runtime Babel or third-party script CDN is used.
+
+Run `node scripts/qa-regression.mjs` against the local server for browser regression checks (requires Chrome). Set `FABLE_TEST_URL` to run the same checks on a deployment.
 
 ## Deploy
 
@@ -40,6 +42,6 @@ Before enabling generation, implement the selected providers on the server, inpu
 
 ## Privacy and security
 
-The preview makes no AI calls and has no analytics. UI preferences use browser local storage. Fonts are loaded from Google Fonts. Security headers restrict scripts and connections to this site's origin. Only the app sources and curated sample illustrations are tracked; local secrets and generated build output are ignored.
+The preview makes no AI calls and has no analytics. UI preferences use browser local storage; reading position uses session storage. Fonts are loaded from Google Fonts. Security headers restrict scripts and connections to this site's origin. Only the app sources and curated sample illustrations are tracked; local secrets and generated build output are ignored.
 
 Public visibility does not grant an open-source license. No license has been selected for the original application or artwork. React's license notice is retained in the built bundle.

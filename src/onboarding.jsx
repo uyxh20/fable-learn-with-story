@@ -6,38 +6,22 @@
 (function () {
   const { useState, useEffect, useRef } = React;
 
-  // ---- tour content (English; tone: minimal + practical) ----------------
-  const SEGMENTS = {
-    create: [
-      { key: "concept", target: "concept", title: "Start with a concept",
-        body: ["Type the idea you want turned into a fable — a question, a system, or a concept you’re trying to understand."] },
-      { key: "setting", target: "setting", title: "Choose a setting",
-        body: ["Pick the world the fable is told in — classical, myth, fairy tale, or present-day. It shapes both the voice and the artwork."] },
-      { key: "sample", target: "sample", finish: true, title: "Explore the sample book",
-        body: ["New story and image generation are not available yet. Use the sample-book link to read the illustrated stories."] },
-    ],
-    generate: [
-      { key: "open", target: "open", action: "Press “Open the book” to start reading.", title: "Open the book",
-        body: ["This button appears the moment your fable is ready."] },
-    ],
-    reader: [
-      { key: "read", target: null, title: "Read by scrolling",
-        body: ["Scroll down to move through the story. Each scene rises over its own cinematic backdrop."] },
-      { key: "nav", target: "contents", title: "Find your place",
-        body: ["The rail on the right tracks your progress — tap a dot to jump. Contents lists every chapter."] },
-      { key: "decode", target: "contents", title: "After the story",
-        body: ["Past the final scene comes the decode — a plain-language explanation of what the fable was really teaching."] },
-      { key: "shelf", target: "shelf", finish: true, title: "Back to the shelf",
-        body: ["Use the shelf button to return to the home screen.",
-               "You can replay this guide anytime from “Guide me”."] },
-    ],
-  };
+  function segments(T) {
+    return {
+      create: [{ key: "sample", target: "sample", finish: true, title: T.guideSampleTitle, body: [T.guideSampleBody] }],
+      reader: [
+        { key: "read", target: null, title: T.guideReadTitle, body: [T.guideReadBody] },
+        { key: "decode", target: "contents", title: T.guideContentsTitle, body: [T.guideContentsBody] },
+        { key: "home", target: "shelf", finish: true, title: T.guideHomeTitle, body: [T.guideHomeBody] },
+      ],
+    };
+  }
   const ORDER = ["create", "generate", "reader"];
   const DONE_KEY = "fable-tour-v1-done";
 
   const findEl = (key) => (key ? document.querySelector('[data-ob="' + key + '"]') : null);
-  const visibleSteps = (seg) =>
-    (SEGMENTS[seg] || []).filter((s) => !s.optional || findEl(s.target));
+  const visibleSteps = (seg, T) =>
+    (segments(T)[seg] || []).filter((s) => !s.optional || findEl(s.target));
 
   // Bring a target comfortably into view by scrolling its scrollable ancestor
   // directly (not scrollIntoView, which can disrupt the app's own scrollers).
@@ -100,7 +84,8 @@
     .ob-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--accent);
       box-shadow:0 0 8px var(--glow);animation:obPulse 1.5s var(--ease) infinite;}
     @keyframes obPulse{0%,100%{opacity:.45;transform:scale(.8);}50%{opacity:1;transform:scale(1.12);}}
-    .ob-guide{position:fixed;left:16px;bottom:16px;z-index:8500;display:inline-flex;align-items:center;
+    .ob-guide[hidden]{display:none;}
+    .ob-guide{min-height:44px;min-width:44px;position:fixed;left:16px;bottom:16px;z-index:8500;display:inline-flex;align-items:center;
       gap:9px;padding:9px 15px 9px 12px;border-radius:999px;border:1px solid var(--line-2);
       background:color-mix(in srgb,var(--bg-2) 84%,transparent);
       -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);color:var(--ink-2);cursor:pointer;
@@ -122,7 +107,7 @@
       React.createElement("circle", { cx: 12, cy: 12, r: 9 }),
       React.createElement("path", { d: "M15.5 8.5l-2 5-5 2 2-5z" })));
 
-  function Coach({ step, idx, len, onNext, onBack, onEnd }) {
+  function Coach({ step, idx, len, onNext, onBack, onEnd, T }) {
     const [, setTick] = useState(0);
     const lastRef = useRef(null);
 
@@ -211,7 +196,7 @@
     return React.createElement("div", { className: "ob-veil" },
       rect ? spot : React.createElement("div", { className: "ob-dim" }),
       React.createElement("div", { className: "ob-card", style: cardStyle, ref: cardRef, role: "dialog", "aria-labelledby": "guide-title", tabIndex: -1 },
-        React.createElement("button", { className: "ob-x", "aria-label": "Close guide", onClick: onEnd },
+        React.createElement("button", { className: "ob-x", "aria-label": T.guideClose, onClick: onEnd },
           React.createElement(CloseIcon)),
         React.createElement("h3", { className: "ob-title", id: "guide-title" }, step.title),
         step.bullets
@@ -224,16 +209,16 @@
               step.body.map((p, k) => React.createElement("p", { key: k }, p))),
         React.createElement("div", { className: "ob-foot" },
           React.createElement("span", { className: "ob-count" }, (idx + 1) + " / " + len),
-          React.createElement("button", { className: "ob-skip", onClick: onEnd }, "Skip"),
+          React.createElement("button", { className: "ob-skip", onClick: onEnd }, T.guideSkip),
           React.createElement("div", { className: "ob-foot-r" },
             isAction
               ? React.createElement("span", { className: "ob-action" },
                   React.createElement("i", { className: "ob-dot" }), step.action)
               : [
-                  idx > 0 && React.createElement("button", { key: "b", className: "ob-b ghost", onClick: onBack }, "Back"),
+                  idx > 0 && React.createElement("button", { key: "b", className: "ob-b ghost", onClick: onBack }, T.guideBack),
                   isFinish
-                    ? React.createElement("button", { key: "f", className: "ob-b next", onClick: onEnd }, "Finish")
-                    : React.createElement("button", { key: "n", className: "ob-b next", onClick: onNext }, "Next"),
+                    ? React.createElement("button", { key: "f", className: "ob-b next", onClick: onEnd }, T.guideFinish)
+                    : React.createElement("button", { key: "n", className: "ob-b next", onClick: onNext }, T.guideNext),
                 ]
           )
         )
@@ -242,6 +227,13 @@
   }
 
   function Onboarding() {
+    const [lang, setLang] = useState(() => document.documentElement.lang.split("-")[0] || "en");
+    const T = window.FABLE.ui[lang] || window.FABLE.ui.en;
+    useEffect(() => {
+      const update = (event) => setLang(event.detail);
+      window.addEventListener("fable:language", update);
+      return () => window.removeEventListener("fable:language", update);
+    }, []);
     const [active, setActive] = useState(false);
     const [seg, setSeg] = useState("create");
     const [i, setI] = useState(0);
@@ -261,15 +253,13 @@
     };
     const startAt = (s) => { completed.current = {}; setSeg(s); setI(0); setActive(true); };
 
-    // auto-start once, on first visit
     useEffect(() => {
-      let done = false;
-      try { done = localStorage.getItem(DONE_KEY) === "1"; } catch (e) {}
-      if (done) return;
-      try { localStorage.setItem(DONE_KEY, "1"); } catch (e) {}
-      const t = setTimeout(() => startAt(window.__fableScreen || "create"), 850);
-      return () => clearTimeout(t);
-    }, []);
+      const open = () => startAt(screen);
+      window.addEventListener("fable:guide", open);
+      return () => window.removeEventListener("fable:guide", open);
+    }, [screen]);
+
+    // The guide is optional; the sample and preview notice explain the first visit.
 
     // when the app changes screen mid-tour, advance to that screen's segment
     useEffect(() => {
@@ -279,7 +269,7 @@
       else if (ORDER.every((s) => completed.current[s])) end();
     }, [screen, active, seg]);
 
-    const steps = visibleSteps(seg);
+    const steps = visibleSteps(seg, T);
     const idx = Math.max(0, Math.min(i, steps.length - 1));
     const showStep = active && seg === screen && steps.length > 0 ? steps[idx] : null;
 
@@ -288,12 +278,12 @@
 
     return React.createElement(React.Fragment, null,
       React.createElement("style", null, STYLE),
-      React.createElement("button", { className: "ob-guide", "aria-label": "Guide me", onClick: () => startAt(screen),
-        title: "Replay the guided tour" },
+      React.createElement("button", { className: "ob-guide", hidden: screen === "reader" && !active, "aria-label": T.guideLabel, onClick: () => startAt(screen),
+        title: T.guideLabel },
         React.createElement(CompassIcon),
-        React.createElement("span", null, "Guide me")),
+        React.createElement("span", null, T.guideLabel)),
       showStep && React.createElement(Coach, {
-        step: showStep, idx, len: steps.length,
+        step: showStep, idx, len: steps.length, T,
         onNext: next, onBack: back, onEnd: end,
       })
     );
