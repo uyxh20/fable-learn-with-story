@@ -15,3 +15,4 @@ test-results/
 
 *.cpuprofile
 worker-configuration.d.ts
+.gstack/
