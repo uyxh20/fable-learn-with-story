@@ -2940,8 +2940,17 @@ function App() {
   const FB = window.FABLE;
   const md = document.getElementById("source-md").textContent.trim();
 
-  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-  const [lang, setLangState] = useStateA("en");
+  const [savedTheme] = useStateA(() => {
+    try { return localStorage.getItem("fable-theme") === "light" ? "light" : "dark"; }
+    catch { return "dark"; }
+  });
+  const [t, setTweak] = useTweaks({ ...TWEAK_DEFAULTS, theme: savedTheme });
+  const [lang, setLangState] = useStateA(() => {
+    try {
+      const saved = localStorage.getItem("fable-lang");
+      return ["en", "fr", "da", "zh"].includes(saved) ? saved : "en";
+    } catch { return "en"; }
+  });
   const [screen, setScreen] = useStateA("create"); // create | generate | reader
   const [request, setRequest] = useStateA(null);
   const [generated, setGenerated] = useStateA(null);
@@ -2951,13 +2960,16 @@ function App() {
   ), [generated, lang]);
   const T = FB.ui[lang];
 
-  useEffectA(() => { document.documentElement.setAttribute("data-theme", t.theme); }, [t.theme]);
+  useEffectA(() => {
+    document.documentElement.setAttribute("data-theme", t.theme);
+    try { localStorage.setItem("fable-theme", t.theme); } catch {}
+  }, [t.theme]);
   useEffectA(() => {
     document.documentElement.style.setProperty("--accent", t.accent);
     document.documentElement.style.setProperty("--grain", String(t.grain));
   }, [t.accent, t.grain]);
   useEffectA(() => {
-    localStorage.setItem("fable-lang", lang);
+    try { localStorage.setItem("fable-lang", lang); } catch {}
     document.documentElement.setAttribute("lang", htmlLang(lang));
   }, [lang]);
   useEffectA(() => {
