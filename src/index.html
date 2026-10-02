@@ -1790,8 +1790,8 @@ function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }
           <p className="cine-create-sub reveal-on">{T.heroSub}</p>
 
           <div className="cine-compose reveal-on" data-comment-anchor="36586ca834-div-45-11">
-            <span className="kicker">{T.conceptLabel}</span>
-            <textarea className="cine-ta" value={concept} spellCheck={false} data-ob="concept"
+            <label className="kicker" htmlFor="fable-concept">{T.conceptLabel}</label>
+            <textarea id="fable-concept" className="cine-ta" value={concept} spellCheck={false} data-ob="concept"
             onChange={(e) => setConcept(e.target.value)} placeholder={T.conceptPh} />
             <div style={{ display: "grid", gap: 9 }} data-ob="setting">
               <span className="kicker" style={{ color: "rgba(246,237,219,.55)" }}>{T.settingLabel}</span>
@@ -2212,15 +2212,15 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
       </header>
 
       {/* progress rail */}
-      <div className="cine-rail" aria-hidden="true">
+      <nav className="cine-rail" aria-label={T.contents}>
         <div className="cine-rail-track"><span className="cine-rail-fill" style={{ height: `${progress * 100}%` }} /></div>
-        {stops.map(({ i }) => (
-          <button key={i}
+        {stops.map(({ i, s }) => (
+          <button key={i} aria-label={s.type === "cover" ? T.titlePage : s.page.title} aria-current={activeStop === i ? "step" : undefined}
             className={"cine-rail-dot" + (active >= i ? " is-done" : "") + (activeStop === i ? " is-active" : "")}
             style={{ top: `${(i / (sections.length - 1)) * 100}%` }}
             onClick={() => scrollToIndex(i)} />
         ))}
-      </div>
+      </nav>
 
       {/* the flow */}
       <div className="cine-flow">

@@ -288,7 +288,7 @@
 
     return React.createElement(React.Fragment, null,
       React.createElement("style", null, STYLE),
-      React.createElement("button", { className: "ob-guide", onClick: () => startAt(screen),
+      React.createElement("button", { className: "ob-guide", "aria-label": "Guide me", onClick: () => startAt(screen),
         title: "Replay the guided tour" },
         React.createElement(CompassIcon),
         React.createElement("span", null, "Guide me")),
