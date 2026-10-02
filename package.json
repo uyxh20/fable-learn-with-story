@@ -1,0 +1,26 @@
+{
+  "name": "fable-learn-with-story",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fable (Learn with Story) — illustrated stories for learning",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "test": "node --test",
+    "check": "npm test && npm run build && wrangler deploy --dry-run",
+    "deploy": "npm run check && wrangler deploy"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "esbuild": "0.28.2",
+    "wrangler": "4.147.0"
+  }
+}

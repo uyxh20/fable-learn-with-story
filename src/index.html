@@ -1,0 +1,3020 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fable (Learn with Story)</title>
+  <meta name="description" content="Learn through illustrated fables. Explore stories that make complex ideas memorable.">
+  <style>
+/* ============================================================
+   FABLE — design system
+   A candlelit, literary storybook brand built from the art:
+   warm ink + cream + brass-gold, classical serif + technical mono.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body: 'EB Garamond', Georgia, serif;
+  --font-cjk: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --read: var(--font-body), var(--font-cjk);
+
+  /* accent (tweakable) */
+  --gold: #c89a4a;
+  --gold-soft: #e3c184;
+  --bordeaux: #9a4148;
+  --jade: #5c8a73;
+  --accent: var(--gold);
+
+  --maxw: 1280px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --grain: 0.5; /* paper-grain strength multiplier */
+}
+
+/* ---------- DARK (default — candlelit night) ---------- */
+:root, [data-theme="dark"] {
+  --bg: #14100b;
+  --bg-2: #1b1610;
+  --bg-3: #241d15;
+  --paper: #1a1510;
+  --ink: #ede3d0;
+  --ink-2: #bcae96;
+  --ink-3: #88795f;
+  --line: rgba(237, 227, 208, 0.12);
+  --line-2: rgba(237, 227, 208, 0.20);
+  --glow: rgba(227, 193, 132, 0.16);
+  --shadow: 0 24px 60px rgba(0,0,0,0.55);
+  --shadow-soft: 0 8px 30px rgba(0,0,0,0.4);
+  --vignette: radial-gradient(120% 90% at 50% 8%, transparent 40%, rgba(0,0,0,0.45) 100%);
+  color-scheme: dark;
+}
+
+/* ---------- LIGHT (paper) ---------- */
+[data-theme="light"] {
+  --bg: #ece2cd;
+  --bg-2: #f3ecdb;
+  --bg-3: #f9f3e6;
+  --paper: #f7f1e3;
+  --ink: #251d12;
+  --ink-2: #5d5240;
+  --ink-3: #8b7d64;
+  --line: rgba(37, 29, 18, 0.14);
+  --line-2: rgba(37, 29, 18, 0.24);
+  --glow: rgba(168, 122, 46, 0.14);
+  --shadow: 0 24px 60px rgba(58,42,20,0.18);
+  --shadow-soft: 0 8px 26px rgba(58,42,20,0.12);
+  --vignette: radial-gradient(120% 90% at 50% 8%, transparent 55%, rgba(58,42,20,0.10) 100%);
+  --gold: #a9762e;
+  --gold-soft: #b98a3e;
+  --bordeaux: #863439;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--read);
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 400;
+  overflow-x: hidden;
+}
+
+/* paper grain — applied to .grain surfaces */
+.grain { position: relative; }
+.grain::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: calc(0.5 * var(--grain));
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+/* ---------- type helpers ---------- */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.serif-italic { font-style: italic; }
+
+/* ---------- buttons ---------- */
+button { font-family: inherit; cursor: pointer; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.55em;
+  font-family: var(--font-mono);
+  font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 500;
+  padding: 0.92em 1.5em;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  background: transparent; color: var(--ink);
+  transition: all 0.22s var(--ease);
+  white-space: nowrap;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn--primary {
+  background: var(--accent);
+  color: #1a1208;
+  box-shadow: 0 0 0 0 var(--glow);
+}
+.btn--primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 32px -4px var(--glow);
+}
+.btn--primary:active { filter: brightness(0.96); }
+.btn--ghost { border-color: var(--line-2); color: var(--ink-2); }
+.btn--ghost:hover { color: var(--ink); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.btn--quiet { color: var(--ink-2); padding: 0.6em 0.7em; }
+.btn--quiet:hover { color: var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none !important; box-shadow: none; }
+
+/* icon button */
+.iconbtn {
+  display: inline-grid; place-items: center;
+  width: 38px; height: 38px;
+  border-radius: 2px; border: 1px solid transparent;
+  background: transparent; color: var(--ink-2);
+  transition: all 0.2s var(--ease);
+}
+.iconbtn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.iconbtn svg { width: 18px; height: 18px; }
+
+/* ---------- segmented control ---------- */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font-family: var(--font-mono);
+  font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.62em 0.95em;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent; color: var(--ink-3);
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.seg button:hover { color: var(--ink-2); border-color: var(--line-2); }
+.seg button[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ---------- hairline / rule ---------- */
+.rule { height: 1px; background: var(--line); border: 0; }
+
+/* language toggle */
+.langtoggle {
+  position: relative; display: inline-flex; align-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line-2));
+  border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22), inset 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.langtoggle select {
+  appearance: none; border: 0; background: transparent; color: var(--ink);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  line-height: 1; padding: 9px 34px 9px 14px; min-width: 82px; cursor: pointer;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.45);
+}
+.langtoggle select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.langtoggle option {
+  color: var(--ink);
+  background: var(--bg-2);
+}
+.langtoggle::after {
+  content: ""; position: absolute; right: 14px; top: 50%; width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent); transform: translateY(-35%); pointer-events: none;
+  filter: drop-shadow(0 0 6px var(--glow));
+}
+
+/* scrollbars */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 99px; border: 3px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* fade utility */
+@keyframes fadeUp { from { transform: translateY(16px); } to { transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes inkBloom { from { filter: blur(13px); transform: scale(1.035); } to { filter: blur(0); transform: none; } }
+.fade-up { animation: fadeUp 0.7s var(--ease) forwards; }
+.fade-in { animation: fadeIn 0.8s var(--ease) forwards; }
+
+/* MoonGate ii brand mark: gate draws, moon rises, shadow crosses, light orbits. */
+.mg-mark { overflow: visible; display: block; flex: none; }
+.mg-ring { stroke-dasharray: 276.5; stroke-dashoffset: 0; }
+.mg-mark.is-animated .mg-ring { animation: mgRingDraw 1.15s var(--ease) 0.1s both; }
+.mg-disc { opacity: 1; }
+.mg-mark.is-animated .mg-disc { animation: mgDiscIn 0.55s var(--ease) 0.75s both; }
+.mg-glow { transform-origin: 60px 60px; transform-box: view-box; animation: mgGlowBreath 6.5s ease-in-out infinite; }
+.mg-orbit { transform-box: view-box; transform-origin: 60px 60px; animation: mgOrbitSpin 9s linear 2.3s infinite; }
+.mg-dot { filter: drop-shadow(0 0 5px var(--gold-soft)); }
+.mg-tail { filter: drop-shadow(0 0 4px var(--gold-soft)); }
+@keyframes mgRingDraw { from { stroke-dashoffset: 276.5; } to { stroke-dashoffset: 0; } }
+@keyframes mgDiscIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mgGlowBreath { 0%,100% { opacity: 0.76; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes mgOrbitSpin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .mg-orbit { animation: none !important; }
+  .mg-disc { opacity: 1 !important; }
+}
+
+/* ============================================================
+   PLATE FRAME — museum-style keyline around an illustration
+   ============================================================ */
+.plate-frame {
+  position: relative;
+  border: 1px solid var(--line-2);
+  border-radius: 2px;
+  background: var(--bg-3);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ============================================================
+   READER — the open book
+   ============================================================ */
+.book {
+  position: relative;
+  width: min(1180px, 95vw);
+  height: min(76vh, 768px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.page { position: relative; overflow: hidden; }
+.page--verso { background: var(--paper); box-shadow: inset -22px 0 34px -28px rgba(0,0,0,0.7); }
+.page--recto { background: var(--paper); box-shadow: inset 22px 0 34px -28px rgba(0,0,0,0.7); }
+.spine {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-1px);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ink) 24%, transparent), transparent);
+  z-index: 4; pointer-events: none;
+}
+.folio {
+  position: absolute; bottom: 18px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
+  color: var(--ink-3); z-index: 3;
+}
+.folio--l { left: 28px; }
+.folio--r { right: 28px; }
+
+/* navigation arrows outside the book */
+.navarrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 52px; height: 52px; display: grid; place-items: center; z-index: 5;
+  border-radius: 50%; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--ink-2);
+  transition: all .22s var(--ease); box-shadow: var(--shadow-soft);
+}
+.navarrow:hover { color: var(--ink); border-color: var(--accent); transform: translateY(-50%) scale(1.05); }
+.navarrow:disabled { opacity: 0.28; pointer-events: none; }
+.navarrow--l { left: clamp(6px, 2vw, 30px); }
+.navarrow--r { right: clamp(6px, 2vw, 30px); }
+
+/* page turn animations (transform only — never hide content) */
+@keyframes turnNext { from { transform: translateX(28px); } to { transform: none; } }
+@keyframes turnPrev { from { transform: translateX(-28px); } to { transform: none; } }
+
+/* ---------- story body (the read) ---------- */
+.story-body {
+  position: relative; flex: 1; min-height: 0; overflow: auto;
+  padding: 8px clamp(22px, 3.2vw, 46px) 36px;
+  font-family: var(--font-body), var(--font-cjk);
+  color: var(--ink); line-height: 1.85;
+  scroll-behavior: smooth;
+}
+.story-body p { margin: 0 0 1.05em; text-wrap: pretty; }
+.story-body .dropcap {
+  font-family: var(--font-cjk); font-weight: 600; font-size: 3.05em; line-height: 0.7;
+  float: left; margin: 7px 0.14em 0 0; color: var(--accent);
+}
+.story-body h2 {
+  font-family: var(--font-cjk); font-weight: 600; font-size: 1.18em; letter-spacing: 0.04em;
+  color: var(--ink-2); margin: 1.4em 0 0.7em;
+}
+.story-body h3 {
+  font-family: var(--font-cjk); font-weight: 600; font-size: 1.12em; letter-spacing: 0.03em;
+  color: var(--ink); margin: 1.5em 0 0.7em;
+}
+.story-body.is-lesson h3:first-child { margin-top: 0; }
+.story-body.is-lesson h3 {
+  color: var(--bordeaux); font-family: var(--font-mono); font-size: 0.78em; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: none;
+  padding-bottom: 0.5em; border-bottom: 1px solid var(--line); margin-bottom: 1em;
+}
+.story-body blockquote {
+  margin: 0 0 1.4em; padding: 0.2em 0 0.2em 1.1em; border-left: 2px solid var(--accent);
+  color: var(--ink-2); font-style: italic;
+}
+.story-body blockquote p { margin-bottom: 0.6em; font-size: 0.94em; line-height: 1.7; }
+.story-body blockquote p:last-child { margin-bottom: 0; }
+.story-body ul { margin: 0 0 1.4em; padding-left: 1.2em; }
+.story-body li { margin: 0 0 0.7em; line-height: 1.72; }
+.story-body li::marker { color: var(--accent); }
+.story-body strong { font-weight: 600; color: var(--ink); }
+.story-body em { color: var(--ink-2); }
+.story-body code {
+  font-family: var(--font-mono); font-size: 0.84em; background: var(--bg-3);
+  border: 1px solid var(--line); border-radius: 2px; padding: 0.05em 0.4em;
+}
+.story-body hr { border: 0; border-top: 1px solid var(--line); margin: 1.8em 0; }
+.page-fade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 44px; pointer-events: none; z-index: 2;
+  background: linear-gradient(transparent, var(--paper));
+}
+
+/* progress ticks */
+.track { display: flex; gap: 6px; align-items: center; }
+.tick { flex: 1; height: 3px; border: 0; padding: 0; background: var(--line-2); border-radius: 99px; transition: all .25s var(--ease); cursor: pointer; }
+.tick:hover { background: var(--ink-3); }
+.tick.is-done { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.tick.is-active { background: var(--accent); box-shadow: 0 0 8px var(--glow); }
+
+/* contents overlay */
+.overlay { position: fixed; inset: 0; z-index: 60; background: color-mix(in srgb, var(--bg) 70%, rgba(0,0,0,.6)); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 24px; }
+.overlay-card { width: min(560px, 94vw); max-height: 84vh; overflow: auto; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 4px; padding: clamp(22px,3vw,34px); box-shadow: var(--shadow); }
+.toc-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; width: 100%; text-align: left; padding: 8px; border: 1px solid transparent; border-radius: 3px; background: transparent; transition: all .18s var(--ease); }
+.toc-row:hover { background: var(--bg-3); border-color: var(--line); }
+.toc-row.is-active { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.toc-row img { width: 64px; height: 40px; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); }
+.toc-sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 7px 12px 7px 78px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--ink-3); transition: all .18s var(--ease); }
+.toc-sub:hover { background: var(--bg-3); border-color: var(--line); }
+.toc-sub.is-active { background: color-mix(in srgb, var(--bordeaux) 12%, transparent); border-color: color-mix(in srgb, var(--bordeaux) 40%, transparent); }
+.toc-sub svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+/* settings popover */
+.pop { position: absolute; top: 60px; z-index: 40; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 18px; box-shadow: var(--shadow); min-width: 220px; }
+
+/* mobile nav buttons (hidden on desktop) */
+.navmobile { display: none; }
+
+/* ---------- responsive: stack the book ---------- */
+@media (max-width: 900px) {
+  .book { grid-template-columns: 1fr; height: auto; width: min(580px, 96vw); }
+  .spine { display: none; }
+  .navarrow { display: none; }
+  .page { overflow: visible; }
+  .page--verso { aspect-ratio: 16/11; box-shadow: none; border-bottom: 1px solid var(--line); }
+  .page--recto { box-shadow: none; }
+  .page--recto > div { position: static !important; }
+  .story-body { overflow: visible; max-height: none; }
+  .page-fade { display: none; }
+  .navmobile { display: inline-grid; }
+}
+
+</style>
+  <style>
+/* ============================================================
+   IDENTITY · CINEMA  ·  "The Reel"
+   A fundamentally different reading metaphor: no book, no pages.
+   You fall through the story — a fixed cinematic backdrop swaps per
+   chapter while prose rises over a filmic scrim, and the "decode"
+   becomes a flat field-notes interlude. Filmic, warm, letterboxed.
+   ============================================================ */
+
+/* ---- tokens: deepen toward true black, keep the brass-gold ---- */
+[data-identity="cinema"][data-theme="dark"] {
+  --bg: #0a0805; --bg-2: #110d08; --bg-3: #181209; --paper: #0d0a06;
+  --ink: #f1e8d6; --ink-2: #bdae93; --ink-3: #8a7c62;
+  --line: rgba(241,232,214,.13); --line-2: rgba(241,232,214,.22);
+  --gold: #cf9f4c; --gold-soft: #e7c587; --bordeaux: #c66a64; --jade: #6f9c84;
+  --glow: rgba(207,159,76,.22);
+  --shadow: 0 40px 90px rgba(0,0,0,.7); --shadow-soft: 0 14px 40px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+[data-identity="cinema"][data-theme="light"] {
+  --bg: #e9e0cc; --bg-2: #f1e9d6; --bg-3: #f7f0e0; --paper: #f3ebd8;
+  --ink: #241c10; --ink-2: #58492f; --ink-3: #897453;
+  --line: rgba(36,28,16,.16); --line-2: rgba(36,28,16,.26);
+  --gold: #a9762e; --gold-soft: #c2913f; --bordeaux: #8c3439; --jade: #4d6f5b;
+  --glow: rgba(169,118,46,.18);
+  --shadow: 0 30px 70px rgba(46,34,14,.24); --shadow-soft: 0 12px 32px rgba(46,34,14,.16);
+  color-scheme: light;
+}
+
+[data-identity="cinema"] .display { letter-spacing: -.02em; }
+
+/* ============================================================
+   THE SCROLLER
+   ============================================================ */
+.cine { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto;
+  background: #000; color: var(--ink); -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth; }
+.cine::-webkit-scrollbar { width: 0; height: 0; }      /* hide — the rail is the scrollbar */
+.cine { scrollbar-width: none; }
+
+/* ---- fixed cinematic backdrop ---- */
+.cine-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.cine-bg-layer { position: absolute; inset: 0; transition: opacity 1.1s var(--ease); }
+.cine-bg-layer img { width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.08); transform-origin: 50% 42%;
+  animation: cineDrift 26s ease-in-out infinite alternate; }
+@keyframes cineDrift { from { transform: scale(1.08) translate3d(0,0,0); } to { transform: scale(1.14) translate3d(0,-1.4%,0); } }
+
+.cine-scrim { position: absolute; inset: 0; transition: background .9s var(--ease); }
+.cine-scrim[data-mode="cover"]   { background: linear-gradient(180deg, rgba(7,5,3,.55) 0%, rgba(7,5,3,.30) 38%, rgba(7,5,3,.80) 100%); }
+.cine-scrim[data-mode="chapter"] { background: linear-gradient(180deg, rgba(7,5,3,.42) 0%, rgba(7,5,3,.55) 55%, rgba(7,5,3,.85) 100%); }
+.cine-scrim[data-mode="scene"]   { background: linear-gradient(180deg, rgba(7,5,3,.34) 0%, rgba(7,5,3,.52) 42%, rgba(7,5,3,.88) 100%); }
+.cine-scrim[data-mode="decode"]  { background: rgba(7,5,3,.93); }
+
+/* letterbox bars + vignette */
+.cine-bars { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(130% 100% at 50% 46%, transparent 56%, rgba(0,0,0,.55) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.6), transparent 11%),
+    linear-gradient(0deg, rgba(0,0,0,.55), transparent 11%); }
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+.cine-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px clamp(16px,3vw,40px);
+  background: linear-gradient(180deg, rgba(7,5,3,.66), transparent); }
+.cine-bar-mid { text-align: center; min-width: 0; }
+.cine-bar-mid .kicker { color: var(--ink-3); }
+.cine-bar-title { margin: 3px 0 0; font-size: 14px; color: var(--ink-2);
+  letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cine-bar-right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.cine-bar .btn--quiet, .cine-bar .iconbtn { color: var(--ink-2); }
+
+/* ============================================================
+   PROGRESS RAIL (right edge)
+   ============================================================ */
+.cine-rail { position: fixed; right: clamp(12px,2.2vw,30px); top: 50%; transform: translateY(-50%);
+  z-index: 6; height: min(48vh,440px); width: 16px; display: grid; place-items: center; }
+.cine-rail-track { position: relative; width: 2px; height: 100%; background: var(--line-2); border-radius: 2px; }
+.cine-rail-fill { position: absolute; left: 0; top: 0; width: 100%; background: var(--accent);
+  border-radius: 2px; box-shadow: 0 0 8px var(--glow); transition: height .35s var(--ease); }
+.cine-rail-dot { position: absolute; left: 50%; width: 9px; height: 9px; border-radius: 50%;
+  transform: translate(-50%,-50%); background: var(--bg); border: 1px solid var(--line-2);
+  padding: 0; cursor: pointer; transition: all .22s var(--ease); }
+.cine-rail-dot:hover { border-color: var(--accent); }
+.cine-rail-dot.is-done { border-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+.cine-rail-dot.is-active { background: var(--accent); border-color: var(--accent);
+  box-shadow: 0 0 12px var(--glow); transform: translate(-50%,-50%) scale(1.3); }
+
+/* ============================================================
+   FLOW + SECTIONS
+   ============================================================ */
+.cine-flow { position: relative; z-index: 2; }
+.cine-sec { position: relative; min-height: 100vh; display: flex;
+  padding: clamp(96px,13vh,150px) clamp(20px,6vw,90px) clamp(80px,11vh,130px);
+  box-sizing: border-box; }
+.cine-cover, .cine-chapter { align-items: flex-end; }
+.cine-scene  { align-items: center; }
+.cine-decode { align-items: center; min-height: auto;
+  padding-top: clamp(96px,14vh,170px); padding-bottom: clamp(96px,14vh,170px); }
+
+/* reveal-on-enter (the visible end-state is the base; we animate FROM hidden) */
+@media (prefers-reduced-motion: no-preference) {
+  .cine-sec .reveal { opacity: 0; transform: translateY(30px);
+    transition: opacity 1s var(--ease), transform 1s var(--ease); }
+  .cine-sec[data-active] .reveal { opacity: 1; transform: none; }
+  .cine-sec[data-active] .reveal:nth-child(2) { transition-delay: .08s; }
+  .cine-sec[data-active] .reveal:nth-child(3) { transition-delay: .16s; }
+  .cine-sec[data-active] .reveal:nth-child(4) { transition-delay: .24s; }
+}
+
+/* ---- COVER ---- */
+.cine-cover .inner { max-width: 980px; }
+.cine-cover h1 { font-family: var(--font-display); font-weight: 600; margin: 14px 0 0;
+  font-size: clamp(48px,9vw,128px); line-height: .96; letter-spacing: -.02em;
+  color: #f6eddb; text-shadow: 0 4px 40px rgba(0,0,0,.5); }
+.cine-cover .sub { color: rgba(246,237,219,.82); font-size: clamp(17px,2vw,23px);
+  line-height: 1.5; margin: 20px 0 0; max-width: 620px; font-style: italic;
+  font-family: var(--font-body), var(--font-cjk); }
+.cine-cue { display: inline-flex; align-items: center; gap: 9px; margin-top: 38px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(246,237,219,.7); }
+.cine-cue svg { width: 17px; height: 17px; animation: cineBob 1.9s var(--ease) infinite; }
+@keyframes cineBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+/* ---- CHAPTER TITLE CARD ---- */
+.cine-chapter .inner { max-width: 920px; }
+.cine-chapter .num { font-family: var(--font-mono); color: var(--accent);
+  font-size: 13px; letter-spacing: .3em; text-transform: none; }
+.cine-chapter h2 { font-family: var(--font-display); font-weight: 600; margin: 16px 0 0;
+  font-size: clamp(40px,7vw,104px); line-height: .98; letter-spacing: -.015em;
+  color: #f6eddb; text-shadow: 0 4px 40px rgba(0,0,0,.5); }
+.cine-chapter .deck { color: rgba(246,237,219,.84); font-style: italic;
+  font-family: var(--font-body), var(--font-cjk); font-size: clamp(16px,1.9vw,21px);
+  line-height: 1.55; margin: 18px 0 0; max-width: 540px; }
+
+/* ---- SCENE PANEL (prose over film) ---- */
+.cine-panel { max-width: 660px; margin: 0 auto;
+  background: color-mix(in srgb, var(--bg) 56%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05); backdrop-filter: blur(10px) saturate(1.05);
+  border: 1px solid var(--line); border-radius: 4px;
+  padding: clamp(26px,3.4vw,48px); box-shadow: var(--shadow); }
+.cine-scene-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+
+/* ---- DECODE INTERLUDE (flat field-notes) ---- */
+.cine-decode-card { max-width: 780px; margin: 0 auto; background: var(--bg-2);
+  border: 1px solid var(--line-2); border-radius: 4px;
+  padding: clamp(28px,3.8vw,56px); box-shadow: var(--shadow); }
+.cine-decode-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.cine-decode-head .tag { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--bordeaux); }
+.cine-decode-head .ln { flex: 1; height: 1px; background: var(--line); }
+.cine-decode-card h3.dt { font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(26px,3.2vw,38px); letter-spacing: -.01em; color: var(--ink); margin: 6px 0 0; }
+
+/* ---- prose (shared by scene + decode) ---- */
+.cine-prose { font-family: var(--font-body), var(--font-cjk); color: var(--ink);
+  font-size: clamp(17px,1.45vw,19.5px); line-height: 1.86; }
+.cine-prose p { margin: 0 0 1.05em; text-wrap: pretty; }
+.cine-prose p:last-child { margin-bottom: 0; }
+.cine-prose strong { font-weight: 600; color: var(--ink); }
+.cine-prose em { color: var(--ink-2); }
+.cine-prose blockquote { margin: 0 0 1.3em; padding: .15em 0 .15em 1.1em;
+  border-left: 2px solid var(--accent); color: var(--ink-2); font-style: italic; font-size: .96em; }
+.cine-prose blockquote p { margin-bottom: .5em; }
+.cine-prose ul { margin: .2em 0 1.3em; padding-left: 1.15em; }
+.cine-prose li { margin: 0 0 .8em; line-height: 1.7; }
+.cine-prose li::marker { color: var(--accent); }
+.cine-prose code { font-family: var(--font-mono); font-size: .82em; background: var(--bg-3);
+  border: 1px solid var(--line); border-radius: 2px; padding: .04em .4em; }
+.cine-prose h2, .cine-prose h3 { font-family: var(--font-cjk); font-weight: 600;
+  font-size: 1.06em; letter-spacing: .03em; color: var(--ink-2); margin: 1.5em 0 .6em; }
+.cine-prose hr { border: 0; border-top: 1px solid var(--line); margin: 1.7em 0; }
+.cine-prose .dropcap { font-family: var(--font-display); font-weight: 600; font-size: 3em;
+  line-height: .72; float: left; margin: 8px .12em 0 0; color: var(--accent); }
+[lang="zh"] .cine-prose .dropcap, .cine-prose .dropcap.cjk { font-family: var(--font-cjk); }
+
+/* ---- end colophon ---- */
+.cine-end { text-align: center; }
+.cine-end .inner { max-width: 620px; margin: 0 auto; }
+.cine-end h2 { font-family: var(--font-display); font-size: clamp(34px,5vw,60px); font-weight: 600;
+  color: #f6eddb; margin: 0; letter-spacing: -.01em; }
+.cine-end p { color: rgba(246,237,219,.78); margin: 16px 0 28px; font-style: italic;
+  font-family: var(--font-body), var(--font-cjk); }
+
+/* ============================================================
+   CINEMATIC ENTRY (the on-ramp for The Reel)
+   ============================================================ */
+.cine-create { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto;
+  background: #000; color: var(--ink); -webkit-overflow-scrolling: touch; }
+.cine-create::-webkit-scrollbar { width: 0; height: 0; }
+.cine-create { scrollbar-width: none; }
+.cine-create .cine-bar { background: linear-gradient(180deg, rgba(7,5,3,.66), transparent); }
+
+.cine-create-main { position: relative; z-index: 2; min-height: 100vh; display: flex;
+  align-items: center; padding: clamp(92px,13vh,150px) clamp(20px,6vw,90px) clamp(56px,8vh,96px); box-sizing: border-box; }
+.cine-create-inner { max-width: 760px; width: 100%; }
+
+.cine-create-title { font-family: var(--font-display); font-weight: 600; margin: 14px 0 0;
+  font-size: clamp(44px,7.4vw,104px); line-height: .96; letter-spacing: -.02em;
+  color: #f6eddb; text-shadow: 0 4px 40px rgba(0,0,0,.5); }
+.cine-create-sub { color: rgba(246,237,219,.84); font-size: clamp(16px,1.9vw,21px);
+  line-height: 1.5; margin: 20px 0 0; max-width: 560px; font-family: var(--font-body), var(--font-cjk); }
+
+/* composer over the film */
+.cine-compose { margin-top: clamp(26px,4vh,40px); max-width: 620px;
+  background: color-mix(in srgb, var(--bg) 58%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.05); backdrop-filter: blur(12px) saturate(1.05);
+  border: 1px solid var(--line-2); border-radius: 5px; padding: clamp(20px,2.6vw,30px);
+  box-shadow: var(--shadow); display: grid; gap: 16px; }
+.cine-compose > .kicker { color: rgba(246,237,219,.66); }
+.cine-ta { width: 100%; min-height: 74px; resize: vertical; background: rgba(7,5,3,.4);
+  color: var(--ink); border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px;
+  font-family: var(--font-body), var(--font-cjk); font-size: 17.5px; line-height: 1.5; outline: none; }
+.cine-ta:focus { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.cine-ta::placeholder { color: var(--ink-3); }
+.cine-input { width: 100%; background: rgba(7,5,3,.4); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 3px; padding: 13px 16px;
+  font-family: var(--font-body), var(--font-cjk); font-size: 16px; line-height: 1.3; outline: none; }
+.cine-input:focus { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.cine-input::placeholder { color: var(--ink-3); }
+
+.cine-settings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.cine-chip { display: flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 46px; line-height: 1.25;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .04em;
+  padding: .4em .6em; border: 1px solid var(--line-2); border-radius: 16px; background: rgba(7,5,3,.35);
+  color: var(--ink-2); transition: all .2s var(--ease); }
+@media (max-width: 520px) { .cine-settings { grid-template-columns: repeat(2, 1fr); } }
+.cine-chip:hover { color: var(--ink); border-color: var(--ink-3); }
+.cine-chip.is-on { color: #1a1208; background: var(--accent); border-color: var(--accent);
+  box-shadow: 0 0 22px -6px var(--glow); }
+
+.cine-compose-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+
+.cine-nowshowing { display: inline-flex; align-items: center; gap: 7px; background: none; border: 0;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); padding: 4px 0; transition: color .2s var(--ease); }
+.cine-nowshowing:hover { color: var(--ink); }
+.cine-nowshowing svg { width: 14px; height: 14px; }
+
+/* entrance — mount-triggered transition (resting state is VISIBLE; we only
+   hide while motion is allowed AND before the JS flag lands, so content can
+   never get stuck invisible the way an animation can). */
+@media (prefers-reduced-motion: no-preference) {
+  .cine-create .reveal-on { opacity: 0; transform: translateY(26px);
+    transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .cine-create[data-in] .reveal-on { opacity: 1; transform: none; }
+  .cine-create[data-in] .reveal-on:nth-child(2) { transition-delay: .07s; }
+  .cine-create[data-in] .reveal-on:nth-child(3) { transition-delay: .14s; }
+  .cine-create[data-in] .reveal-on:nth-child(4) { transition-delay: .22s; }
+}
+
+/* ---- responsive ---- */
+@media (max-width: 720px) {
+  .cine-rail { display: none; }
+  .cine-bar-mid { display: none; }
+  .cine-sec { padding-left: 18px; padding-right: 18px; }
+}
+
+</style>
+  <script>document.documentElement.setAttribute('data-identity','cinema');document.documentElement.setAttribute('data-theme','dark');</script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- baked source: the agentic-AI fable trilogy -->
+  <script type="text/plain" id="source-md">
+# 智能体架构寓言三部曲（Agentic AI Fables）
+
+> **一组一脉相承的寓言三部曲。** 从《用寓言讲 AI 概念》系列里抽出三则专讲「智能体（agent）架构」的寓言，单独汇成一卷。三则连成一条线：《应事斋》讲**一个** agent 内部如何分层协作；《空宅》讲把这样的 agent 搬上云端、放进后台、成百上千地无人值守放养时，那个「脑身分离」的架构抉择；《机栝》再回头点破——这套系统里除模型之外那一圈「编排、运行时、沙箱、触发」，其实几乎全是确定性的代码与基础设施，而非更多的「脑子」。
+>
+> **读法：** 三则按 in-the-box → out-of-the-box → 确定性骨架层层递进，建议顺读。
+>
+> **日期：** 2026-06-02
+
+---
+
+## 一、Agent 分层架构 —— 《应事斋》
+
+> 概念：一个 agentic AI（智能体）系统的分层架构——模型、上下文、工具、记忆、编排、运行时如何各司其职；以及那个最反直觉的真相：模型再聪明，也只是其中一层，真正把「智能」变成「办成事」的，是围在它外面的那整座宅子。
+
+### 《应事斋》
+
+城南有一座宅子，门匾上写着「应事斋」三个字。城里人都说，天底下没有应事斋办不成的事——替你翻出一桩二十年前的旧案，替你算清一笔缠了三家的烂账，替你写一封能叫仇人回心转意的信。你只要肯上门去摇那只铜铃，把要办的事说清楚，过些时候，事就办成了。
+
+没有外人见过斋里到底是什么光景。只晓得最里头那间屋，住着一位先生。求过事的人都传：那位先生，是天下第一聪明的人。
+
+有个年轻人不信，更想学到那份本事。他在斋里做了几年杂役，专等有朝一日能进最里头那间屋，亲眼见一见先生。
+
+进去那天，他愣住了。
+
+先生很老了，独自坐在一张空桌前。他眼睛蒙着——看不见。两只手平搁在膝上，自始至终没抬起来过——后来年轻人才晓得，先生的手做不得事，提不动笔，连碗也端不起。屋里没有一本书、没有一张纸，四壁空空。
+
+年轻人忍不住问：「先生，您……是怎么办成那些事的？」
+
+先生没有应他这句，只淡淡道：「桌上，这会儿摆着点什么？念来听听。」
+
+年轻人这才回头，看见门边站着一个铺案的人。方才铜铃一响，这铺案人就忙起来了：他先去后院翻账，把这位客人从前来过几回、办过什么事、上回话说到哪儿，连同今日这桩新事，一并按着次序，一样一样摆到先生桌上——该摆的摆齐，不相干的，一样也不摆。
+
+先生侧着那张蒙眼的脸，「听」着满桌的东西。片刻，他开口了。可他说出的并不是答案，而是一句吩咐：
+
+「东头官库里，存着一册税单。取来，摆上。」
+
+话音才落，先生就像睡着了一般，再不言语。年轻人慌忙去看，那铺案人却镇定得很，转身把先生这句话吩咐给门外候着的几个跑腿的。跑腿的应一声，出门去了——穿巷翻墙，到官库取了那册税单回来。
+
+回来的不止税单。跑腿的还捎回一句话：「官库的人说，这册子，缺了一页。」
+
+铺案人便把税单、连同「缺了一页」这句话，重新摆回先生桌上。这一回，他还顺手把这位客人原本要办的事、先生方才那句吩咐，也一并摆了回去——因为先生，早忘了。
+
+年轻人这才骇然：先生每「睡」一次再醒，就把方才的一切忘得干干净净。他根本不记得自己问过什么、吩咐过什么、眼下这是在替谁办事。桌上摆着什么，他眼前就只有什么；桌子一空，他心里就一片空白。一个天下第一聪明的人，却活在一段眨眼就抹掉的工夫里。
+
+可斋子不忘。后院的账房里，从开斋头一天起，每一桩事、每一个人、每一句话，都记着。先生忘，宅子替他记。铺案人每回往桌上摆的那些「旧事」，正是从这账房里翻出来的。
+
+年轻人原以为，真正办事的那个人，是先生。这会儿他改了主意：莫非是这铺案人？……可也不全是。
+
+铺案人之上，还坐着一位大管家。是大管家最先听见铜铃、拆开客人的来意，定下整桩事该怎么一步一步地办：先该让铺案人给先生摆些什么、问先生哪一句；听了先生的吩咐，该差哪个跑腿的出门；跑腿的带回了东西，又该怎么摆回先生桌上、再问一句；如此问到第几个来回，事算办妥了，可以把回信送出门去。
+
+先生，只管在那一桌东西上，想出最聪明的一句话。
+跑腿的，只管出门，把那一句话，变成真做出来的一件事。
+账房，只管记。
+铺案人，只管摆。
+而从头到尾，心里惦着「这桩事究竟要办成什么样」的，自始至终只有大管家一个——因为先生每一回都忘，唯有大管家一直记着这桩事的来龙去脉，一遍遍把先生唤醒、把跑腿的差出去、在人世与先生之间来回搬运，直到事成。
+
+年轻人还想再问，忽然一阵更鼓敲过。
+
+他抬起头，这才第一次，看见自己身在其中、却从没留意过的——这座宅子本身。
+
+院墙极高。跑腿的每回出门回来，都要在门房搜身——怕他们在外头惹了祸、把不干净的东西夹带进斋。每办一桩事，都点起一支蜡；蜡烧尽了事还没成，这桩事就得停下，不许没完没了地缠下去。跑腿的出门久久不归，门房便另差一个顶上——一桩事，不能因为一个人误了。最要紧的是，墙角有个彻夜不眠的更夫，把这一夜斋里发生的每一件事——谁摇了铃、先生说了什么、哪个跑腿的去了何处、几时回的、办成没办成——一笔一笔记进一本大账。日后哪桩事若办砸了，翻开这本账，就知道是哪一层、哪一步出的错。
+
+先生的聪明，是这座宅子的心；可若没有这院墙、这蜡、这门房、这更夫的大账，先生那点聪明，转眼就会把整个斋子拖进一团没头没尾、无法收拾的乱麻里。是这座宅子，把那点眨眼即逝的聪明，稳稳地接住、围起来，逼着它一步一步、有始有终地落成一件件实事。
+
+年轻人在斋里又待了许多年。临走那日，有个新来的杂役拦住他，问了一句和他当年一模一样的话：
+
+「听说……最里头那间屋，住着天下第一聪明的人？」
+
+他笑了笑，说：
+
+「住着一位很聪明的先生。可他眼看不见、手做不得、一转头就忘。你把他一个人关进一间空屋子，他连一桩最小的事也办不成——他会想出一句绝顶聪明的话，然后忘掉，再没有下文。」
+
+「真正把事办成的，从来不是他一个人。是把他围在正中的——这一整座宅子。」
+
+### 故事之后：它讲的到底是什么
+
+这则寓言讲的是一个 agentic AI（智能体）系统的分层架构：当下大家口中的「AI」，其实是好几层东西叠在一起协同的结果，模型只是最中心、却也最「无能为力」的那一层。逐一对应：
+
+- **那位眼盲、手缚、一转头就忘的先生 = 模型层（the Model / LLM）。** 纯粹的「推理与生成」引擎。它有三个要命的天性：（1）无状态——每次被唤起都像头一回，两次调用之间什么都不记得；（2）只看得见当下摆在它面前的东西，也就是上下文窗口（context window），桌子之外的世界一概不知；（3）自己不能动手、也不能记事。它唯一会做的，是就着眼前这一桌信息，吐出最高明的「下一句」——仅此而已。必要，却远远不够。
+- **铺案的人（决定往桌上摆什么）= 上下文层（Context）。** 模型答得好不好，全看你在它面前摆了什么。这一层把「客人的来意 + 从账房翻出的相关旧事 + 恰当的措辞」拼成那一桌信息。所谓 prompt 拼装、RAG 检索、上下文工程，都是这个铺案人在干的活。
+- **跑腿的（出门把话变成事）= 工具层（Tools / function calling）。** 先生只会用嘴说出一个动作（「去取那册税单」），却不能亲手去做。真正出门、调 API、查数据库、执行代码、把结果带回来的，是这些跑腿的。模型动口，工具动手。
+- **后院的账房（先生忘、宅子替他记）= 记忆层（Memory）。** 跨越单次对话、乃至跨越多次来访的状态留存：既有「这桩事办到哪了」的短期记忆，也有「这位客人历来办过什么」的长期记忆（向量库 / 知识库）。模型本身会忘，是这一层替它记住。
+- **大管家（拆来意、定步骤、一遍遍唤醒先生、差遣跑腿、直到事成）= 编排层（Orchestration）。** 整个系统的控制流，也就是所谓 agent loop：读懂目标 → 决定问模型什么 → 执行模型要的工具 → 把结果喂回去 → 再问 → 判断办没办妥、该不该收工。最关键的一点：模型每次调用都「失忆」，是编排层在这一连串失忆的调用之间，始终攥着那个不变的总目标和全过程的状态。
+- **宅子本身：高墙、蜡、补差的跑腿、门房搜身、更夫的大账 = 运行时层（Runtime）。** 让这一切真正可靠、可控、可追溯地跑起来的执行环境：蜡烧尽即停＝超时（timeout）；跑腿不归就另差一个＝重试（retry）；进门必搜身＝沙箱隔离（sandboxing）；更夫把每一步记进大账＝可观测性 / 链路追踪（observability / tracing）。
+- **门前那只铜铃（有人来摇，或到点自鸣）= 接口与触发层（Interface / Triggers）。** 一桩事如何进入这个系统：用户上门来摇（一次请求 / 一段对话），或铃到点自鸣（定时任务 / 事件 / webhook）。
+
+而这则寓言真正的题眼，是结尾那句话：**智能 ≠ 行动力。** 模型（先生）是必要的，却远谈不上充分。把「智能」真正变成「能办成事的智能体」的，是它外面那几层：上下文喂给它该看的、工具替它伸出手、记忆替它记住、编排替它攥住目标与全程、运行时替它把这一切兜成可靠有序的实事。
+
+**一句话：** 一个 agentic AI 系统是分层叠起来的——模型是那位绝顶聪明、却眼盲、手缚、一转头就忘的先生；上下文替他铺案，工具替他跑腿，记忆替他记账，编排（大管家）在他一次次失忆之间始终攥着总目标，运行时（这座宅子的墙、蜡、门房、大账）替这一切立下超时、重试、隔离与追溯的规矩。智能只是最中心的一层；把智能变成「办成事」的行动力，是它外面那整座宅子给的。
+
+---
+
+## 二、背景智能体与「脑身分离」 —— 《空宅》
+
+> 概念：当人们想让 agent 不再需要有人守在一旁，而是成百上千地在云端「后台」自行办事时，最要紧的一个架构抉择——把那颗会思考的「脑子」（harness）放进干活的「身子」（sandbox）里，还是留在外头（in the box / out of the box）。
+
+### 《空宅》
+
+〔承《应事斋》。多年以后。〕
+
+那位当年的年轻人，如今也老了。他早离了应事斋，可城里的光景，这些年变得他几乎认不得。
+
+从前，求事的人得亲自上门，立在斋中，看着先生一桩一桩办；一回只办一桩，人不走，事不停。如今城里人嫌慢。他们要的是：夜里把一摞事往门房一搁，自去睡觉；天亮回来，桩桩都办妥了。他们要的不是一座应事斋，是一整条街、半座城的应事斋，同一夜里，各办各的，谁也不等谁。
+
+他寻到城东一座最有名的新宅，夜里摇了铃，报上一桩事，便候着。不多时，墙内果然忙起来：铺案的、记账的、出门跑腿的，和当年应事斋一模一样。他熟门熟路，径直往最里头那间屋走去——他要见一见，这宅子里坐着的，是哪一位先生。
+
+推开门，他第二回愣住了。
+
+屋里没有先生。
+
+只有一个……他一时不知该叫它什么。像个役，像个替身，端坐在那张空桌前。那替身不言不动，只偶尔抬手，照着什么去取一册、去翻一页、去把跑腿的差出门——做的，正是当年先生做的事。可它自己显然什么也不「想」。它每要紧一步，都先停下，朝着屋后那堵墙——怔怔地「等」。
+
+老人绕到屋后，才看见那堵墙根上，有一线极细的话路，顺着墙缝出去，穿巷过桥，一直牵向城西——牵向那座他再熟悉不过的、当年的应事斋。
+
+他这才懂了。先生，还是那一个先生，仍坐在城西应事斋最里头那间屋里，从未挪窝。变的是：每要办一桩事，城里便就地草草起一座空宅——四壁、一桌、几个跑腿的、一个不会想的替身——再由那条细细的话路，把城西先生的每一句吩咐，传进这空宅里，叫替身照着做。**先生在城西想，空宅在城东做。** 想的那颗脑子，和做事的这副身子，隔着半座城。
+
+老人想起一桩旧事。那时也有人图省事，索性把先生请进外头的宅子里坐镇——脑子和身子，搁在同一座墙内。可那年出过一回大祸：有伙歹人夜里翻进一座这样的宅子，把宅子一占——**连带着，把当场坐镇的先生、先生身边那串能进官库、动银钱的钥匙，一锅端了去。**
+
+自那以后，应事斋立了条铁规矩：**先生这颗脑子，连同那串最要命的钥匙，永远只留在城西内宅，再不踏进外头任何一座宅子半步。** 外头的空宅里，只摆一个照令行事的替身，只放一两把最不打紧的小钥匙。如此，外头的宅子哪怕整座被人占了、烧了，歹人得着的，也不过是一座空壳、一两把无关痛痒的小钥匙——城西那颗脑子和那串真钥匙，毫发无伤。
+
+这般分着摆，自然比从前麻烦。脑子在城西、身子在城东，那条话路便不能断；这桩事办到哪一步了、先生方才那句吩咐是对着哪座空宅说的，都得有人在两头细细记着、对着。可应事斋认了这份麻烦。图的，正是那条铁规矩换来的安稳：把会想的，和会被人夺的，彻底分开。
+
+临走，门房里一个新来的小役拦住他，问了一句——又是当年那句，几乎一字不差：「听说……这屋里头，坐着天下第一聪明的先生？」
+
+老人笑了，指了指屋后那条细得几乎看不见的话路，又往城西的夜色里一引：
+
+「这屋里，一个聪明人也没有。聪明的先生在那头，半座城以外，从不到这边来。这边只有一具照他的话办事的身子——空宅一座，今夜起、明早拆，拆了明夜还能再起。真正了不起的，是没有谁坐在这屋里、事也照样办成；而那颗真正会想的脑子，自始至终，安安稳稳，不在场。」
+
+### 故事之后：它讲的到底是什么
+
+《应事斋》讲的是「一座宅子」内部的分层；这一则《空宅》讲的是把这样的宅子**搬到云端、放进「后台」、成百上千地自行运转**之后，多出来的那一层架构抉择与代价。逐一对应：
+
+- **城里人「夜里搁下、天亮取走」、半座城的宅子同夜各办各的** = **背景／云端智能体（background / cloud agents）。** Agent 不再需要你守在 IDE 旁一步步盯着，而是被丢到云端、在后台自行从「一句需求」跑到「一份办妥的结果」，且许多个同时并行、各占各的箱子、互不打扰。
+- **「脑子在城西想、身子在城东做，隔着半座城」** = 整则寓言的题眼：**把 harness（那颗会思考、做决策的「脑」）放在沙箱「外」（out of the box）。** 真正推理、决策、攥着目标的「脑」跑在一个受保护的控制面里；那个干活的沙箱，只是它伸出去的一双「手」。
+- **「把先生请进外头宅子坐镇」、结果宅子一被占，先生和要命的钥匙一锅端** = 另一种选择：**把 harness 放进沙箱「里」（in the box）。** 省了来回传话，但代价是安全：你的密钥、凭据全得塞进那个箱子里，一旦箱子被攻破，secrets 就泄了。
+- **铁规矩：脑子和真钥匙永留内宅，外头空宅只放「当场够用的小钥匙」** = out-of-box 的核心好处——**权限与密钥隔离。** 机器被攻破，损失也被框死在那一点点权限里。
+- **「凭空草起一百座一模一样的空宅、事毕抹平、片刻又能立起」** = **沙箱的极速起停（snapshot / 快照）。** 只保存「这一次改动过」的那一点点增量，于是起一个新沙箱的代价，只正比于它和模板的差异。
+- **「空宅虽空，摆设家什却得和真地方一般无二」** = **环境搭建（repo setup）。** 沙箱必须忠实镜像真正的开发／运行环境，否则 agent 在沙箱里「做成」的事，搬到真实环境却跑不起来。
+
+**一句话：** 当你要把 agent 搬上云端、在后台成百上千地自行办事，最要紧的一念是「脑身分离」——让会思考、攥着密钥的「脑」（harness）留在受保护的控制面、待在沙箱外（out of the box），只把一具照令行事、随起随拆的「身子」（sandbox）放到危险的现场去。真正的护城河，不是那颗脑子有多聪明，而是你能不能把这套地基盖得足够结实。
+
+---
+
+## 三、确定性骨架与「唯一的活脑」 —— 《机栝》
+
+> 概念：一个 agent 系统里，**编排、运行时、沙箱、触发**这四层，几乎全是写死的、确定性的「机括」（code / scripts / infra），并不是更多的「脑子」。真正会思考、却也慢、贵、每次答得都不一样的，只有模型那一层。
+
+### 《机栝》
+
+〔承《应事斋》《空宅》。〕
+
+斋里有个做了几年的伙计，渐渐与那位大管家熟了。那夜事少，他想讨教讨教，便凑上去问：「依您看，今晚这桩事，办得值不值？这位客人，是个讲理的么？」
+
+大管家没有应他。它只照着手里那桩事，往下走它的章程：唤铺案的摆桌、听先生一句、差跑腿的出门——一步不错，一句不多。
+
+伙计当它没听见，换了个法子又问。大管家还是不睬，只在走到一处它章程里没写的岔口时，停了。它既不猜，也不蒙，转身走到先生门前，叩了三下门，把那岔口照实禀了，听先生说了一句，记下，回身——接着走它的章程去了。
+
+伙计看呆了。他忽然明白：这位大管家，**从不曾「想」过一件事**。它手里攥着一块牌，牌上一条一条，写死了「铃响先做什么、再做什么、遇上什么样的回话往哪条道走」。凡牌上有的，它照办，又快又准，通宵不倦；凡牌上没有的，它一步也不敢自专——只会走到先生门前，叩门，去借那一句。它要么照牌，要么叩门。除此之外，它什么都不会。
+
+他这才头一回，看清了大管家的脸——那是一张**木人**的脸。机关木人。
+
+他骇然回头，把这满宅的「人」重新看了一遍。门口搜身的门子，原也是个木人：它并不「判断」什么算夹带，只照着一张写死的单子。墙角记大账的更夫，是个木人。连那只门钟，也不是「有人懂事来摇」：它一头接着个滴水的漏壶，时辰一到，水满自落，铃便自鸣；另一头还牵着根长绳，绳子一直引到城门口的火鼓上。点事的那支蜡，更是块死蜡，只管烧，烧尽了便逼着这桩事停手。
+
+满宅奔忙，竟没有一个是在「想」的。
+
+一位老伙计见他发怔，便点他：「你当这一屋子都是聪明人？错了。这宅子里，真正会想的活脑，自始至终，只坐在最里那一间——就先生一个。旁的，全是机括木人。」
+
+「为什么不多养几个像先生那样会想的？」
+
+老伙计笑了：「养不起，也使不动。先生那样的活脑，金贵：你问他一句，他想得慢，要得贵，更要命的是——同一句话问他两遍，他兴许答得两样。这样的脑子，办大事时少他不得，可你要拿他去看门、去记账、去掐时辰？那既慢又贵，还靠不住。机括木人反过来：又快又省，问它一百遍是一样的答，半夜里也不打盹。」
+
+「所以这宅子的真本事，不在多请几位先生，而在——**凡是写得成死规矩的，一概交给木人；非得活脑临场拿主意不可的那几处，才去叩先生的门**。叩在哪里、叩几下，才是这一宅子盖得好不好的真讲究。」
+
+许多年后，又有个新来的伙计，指着这满宅奔忙的身影，问他那句几乎人人都要问一遍的话：「这一屋子，想必个个都是顶聪明的吧？」
+
+他摇头：「一屋子的快手，没一个在想。真会想的，只有最里头那一两位先生。慢，贵，还时常答得前后两样。这宅子最了不起的地方，恰恰不是养了多少会想的脑子——而是它能把绝大多数的活儿，都交给那些不会想、却分文不差的机括；只把那一两颗金贵的活脑，省着用。**聪明是省着用的，机括是管够的。**」
+
+### 故事之后：它讲的到底是什么
+
+你的三个问题——**是 code/脚本吗？还有更多 LLM 吗？具体长什么样**——这则寓言逐一作答：
+
+- **满宅奔忙的「机关木人」（大管家、门子、更夫、自鸣的门钟、死蜡）= 确定性的代码／脚本／基础设施（deterministic code / scripts / infra），不是更多的「脑子」。** 它们照着一块写死的「牌」（规则、配置、控制流）运转，又快、又省、又可重复（问一百遍答一样），完全不「思考」。
+- **大管家（照牌走章程，遇到牌上没有的岔口才去叩先生的门）= 编排层（Orchestration / the agent loop）。** 它本身是一段确定性的循环代码。**「还有更多 LLM 吗」的答案，全在这里：** 木人那几次「叩门」，就是编排层额外发起的模型调用——任务规划、子任务路由、判断「办没办成」、失败后反思、上下文压缩。具体长相：一个 `while` 循环、LangGraph 的一张节点图、Temporal 工作流。
+- **门钟：漏壶满则自鸣／长绳牵到城门火鼓 = 触发层（Triggers）。** 纯粹是机括接线，零 LLM：定时自鸣＝cron；牵到火鼓被扯响＝webhook；有人来摇＝用户的一次请求。
+- **门子照死单子搜身 + 院墙 = 沙箱（Sandbox）。** 由操作系统／虚拟化提供的**隔离边界**，零 LLM。具体长相：Firecracker microVM / Docker / gVisor / E2B / Modal。
+- **死蜡（烧尽即停）、补差的、更夫的大账、那道院墙 = 运行时（Runtime）。** 全是确定性的基础设施，零 LLM：蜡＝超时（timeout）；补差＝重试（retry）；大账＝可观测性 / 链路追踪（observability / tracing）。
+- **最里那一两位先生（慢、贵、同问两遍答两样）= 模型层（the Model / LLM）。** 整座宅子里唯一真正「会想」、也唯一非确定性的东西。
+
+**一句话：** 编排、运行时、沙箱、触发这四层几乎全是写死的确定性代码与基础设施（照「牌」行事的机关木人——又快、又省、又可重复），并不是更多的 LLM；真正会思考却又慢、又贵、又每次不一样的，只有模型那一层。所以「还有更多 LLM 吗」的答案是：**只在编排层、只在规矩用尽的那几个岔口**才去「叩门」多调一次模型——而把聪明省着用、把机括管够用，正是把「一句吩咐」稳稳变成「一桩办成的事」的全部真功夫。
+
+---
+
+*三部曲完。*
+  </script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script>
+/* FABLE — bilingual content model + markdown rendering (plain JS, runs before Babel) */
+(function () {
+  const ART = "art";
+
+  // ---- per-page illustrations + the image prompts used to make them ----
+  const visuals = [
+    { image: `${ART}/cover.png`, prompt:
+`Cover illustration for a fable storybook about agentic AI architecture. A moonlit walled courtyard compound from a slightly elevated angle: an inner room with an old blind scholar at an empty desk, several temporary empty houses connected by a fine luminous line, clockwork wooden attendants moving through gates with ledgers and candles. Refined Chinese ink-and-watercolor with subtle cybernetic detail. Clean negative space upper-left for the title. No text.` },
+    { image: `${ART}/01_yingshizhai_story.png`, prompt:
+`The Hall of Affairs: inside a high-walled archive courtyard, an old blind scholar sits at an empty desk; a clerk lays scrolls before him, a steward watches, runners wait at the gate, a ledger room glows behind. Refined ink-and-watercolor with fine cybernetic linework. No text.` },
+    { image: `${ART}/02_yingshizhai_explain.png`, prompt:
+`Conceptual cutaway of one courtyard house as a layered agent system: center room with the blind scholar, surrounding rooms with a context table, a memory archive, tool-runners, a steward, runtime safeguards. Architectural allegory. Refined ink-and-watercolor, thin luminous circuitry. No text.` },
+    { image: `${ART}/03_kongzhai_story.png`, prompt:
+`The Empty House: a protected manor in the far west sends thin luminous command lines to many temporary empty houses in the east; in one, a silent puppet-like attendant directs workers while the scholar is absent. Refined ink-and-watercolor, soft moonlight. No text.` },
+    { image: `${ART}/04_kongzhai_explain.png`, prompt:
+`The Empty House decoded: a secure inner control manor protects a glowing brain-lantern and a ring of keys; outside, disposable sandbox houses are built, burned, and rebuilt; a fine command thread links control to them. Refined ink-and-watercolor. No text.` },
+    { image: `${ART}/05_jigua_story.png`, prompt:
+`The Mechanism: inside the agentic courtyard, the steward, guards, watchman, bell, candle and runners are revealed as wooden clockwork automata; only one living scholar sits in the innermost room. Refined ink-and-watercolor, brass gears, subtle circuitry. No text.` },
+    { image: `${ART}/06_jigua_explain.png`, prompt:
+`The Mechanism decoded: an allegorical cutaway of an agent system as deterministic machinery — brass-and-wood clockwork operating triggers, sandbox walls, runtime candles, ledgers, orchestration paths around one small living mind. Refined ink-and-watercolor. No text.` },
+  ];
+
+  // chapter titles + ideas, in both languages (single source of truth)
+  const chapters = [
+    { zh: "应事斋", en: "The Hall of Affairs",
+      ideaZh: "一个 agent 如何分层协作——模型只是宅子正中那个人。",
+      ideaEn: "How a single agent is layered — the model is only the figure at the center of the house.",
+      da: "Salen for Anliggender",
+      ideaDa: "Hvordan en enkelt agent er lagdelt — modellen er kun skikkelsen i husets midte.",
+      fr: "La salle des affaires",
+      ideaFr: "Comment un agent est organisé en couches — le modèle n'est que la figure au centre de la maison." },
+    { zh: "空宅", en: "The Empty House",
+      ideaZh: "把 agent 搬上云端，最要紧的抉择是「脑身分离」。",
+      ideaEn: "Sending agents to the cloud, and the choice that matters most: separating the mind from the body.",
+      da: "Det Tomme Hus",
+      ideaDa: "At sende agenter i skyen, og det vigtigste valg: at skille sindet fra kroppen.",
+      fr: "La maison vide",
+      ideaFr: "Envoyer des agents dans le cloud, et le choix essentiel : séparer l'esprit du corps." },
+    { zh: "机栝", en: "The Mechanism",
+      ideaZh: "编排、运行时、沙箱、触发大多是确定性机括，不是更多活脑。",
+      ideaEn: "Orchestration, runtime, sandbox and triggers are mostly deterministic machinery — not more minds.",
+      da: "Mekanismen",
+      ideaDa: "Orkestrering, runtime, sandkasse og triggere er mest deterministisk maskineri — ikke flere sind.",
+      fr: "Le mécanisme",
+      ideaFr: "Orchestration, runtime, sandbox et triggers sont surtout une mécanique déterministe — pas davantage d'esprits." },
+  ];
+
+  const meta = {
+    zh: { title: "智能体架构寓言", alt: "The Agentic Architecture",
+      subtitle: "一则讲清 AI 智能体真实构造的寓言",
+      concept: "一个 agentic AI 系统是如何分层的——模型、上下文、工具、记忆、编排、运行时——以及那个最反直觉的真相：模型再聪明，也只是这座大宅正中的那个人。",
+      trilogy: "寓言" },
+    en: { title: "The Agentic Architecture", alt: "智能体架构寓言",
+      subtitle: "A fable on how AI agents are really built",
+      concept: "How an agentic AI system is layered — model, context, tools, memory, orchestration, runtime — and the counterintuitive truth that the model, however clever, is only the figure at the center of a much larger house.",
+      trilogy: "A fable" },
+    da: { title: "Den Agentiske Arkitektur", alt: "The Agentic Architecture",
+      subtitle: "En fabel om, hvordan AI-agenter egentlig bygges",
+      concept: "Hvordan et agentisk AI-system er lagdelt — model, kontekst, værktøjer, hukommelse, orkestrering og runtime — og den modintuitive sandhed, at modellen, uanset hvor klog den er, kun er skikkelsen i midten af et langt større hus.",
+      trilogy: "En fabel" },
+    fr: { title: "L'architecture agentique", alt: "The Agentic Architecture",
+      subtitle: "Une fable sur la façon dont les agents IA sont vraiment construits",
+      concept: "Comment un système d'IA agentique est organisé en couches — modèle, contexte, outils, mémoire, orchestration et runtime — et la vérité contre-intuitive selon laquelle le modèle, aussi intelligent soit-il, n'est qu'une figure au centre d'une maison bien plus vaste.",
+      trilogy: "Une fable" },
+  };
+
+  // ============================================================
+  //  ENGLISH CONTENT (the Chinese content is parsed from #source-md)
+  // ============================================================
+  const enContent = [
+    { // I — The Hall of Affairs
+story: `> Concept: the layered architecture of an agentic AI system — model, context, tools, memory, orchestration, runtime. However clever, the model is only one layer; what turns intelligence into getting-things-done is the whole house built around it.
+
+In the south of the city stood a house. Above its gate, three words: the Hall of Affairs. People said there was nothing it could not settle — a lawsuit twenty years cold, a debt that bound three families, a letter to soften an enemy's heart. You had only to ring the bronze bell and state your business; in time, the thing was done.
+
+No outsider had seen inside. They knew only that in the innermost room sat a master — the cleverest man, they said, under heaven. A young man did not believe it, and served years as an errand-hand, waiting to enter that room and see for himself.
+
+The day he did, he froze. The master was very old, and sat alone at an empty desk. His eyes were bound — he could not see. His hands rested on his knees and never rose; they could not lift a brush, could not hold a bowl. No book, no paper; the four walls bare.
+
+"Master," the young man asked, "how do you settle all those affairs?" The master did not answer. "What lies on the desk just now?" he said. "Read it to me."
+
+By the door stood a man laying out the desk. At the bell's ring he had gone to the back hall, dug through the ledgers, and set before the master — in order — how often this guest had come, what was done, where the last words stopped, and today's new affair. What belonged, he laid out; what did not, he left off.
+
+The master tilted his bound face and listened. Then he spoke — not an answer, but an instruction: "In the eastern archive there is a tax register. Fetch it. Lay it down." And he fell still, as if asleep.
+
+The layer-of-the-desk passed the words to the runners at the gate. They went out — through alleys, over walls — and returned with the register, and a message: "A page is missing." He set the register and the message back on the desk, and with them the guest's request and the master's own instruction. Because the master had already forgotten.
+
+The young man understood with a chill: each time the master woke, he forgot everything before. Whatever lay on the desk was all he saw; clear the desk, and his mind went blank — the cleverest man under heaven, living inside a span of time that erased itself. But the house did not forget. In the back hall, every affair, every word, was kept. The master forgets; the house remembers for him.
+
+Above the desk sat a steward. It heard the bell, opened the guest's meaning, and decided the whole affair step by step: what to lay before the master, which question to ask, which runner to send, when it was done. The master only thinks; the runners only act; the back hall only remembers; the layer only lays out. From first to last, the one who held what the affair was meant to become was the steward alone.
+
+Then a watch-drum sounded, and he saw the house itself. High walls. Every runner searched at the gate, lest he carry something foul inside. Each affair lit by a single candle; if it burned out unfinished, the affair stopped. A runner long gone, and another was sent. And a sleepless night-watchman wrote every step into a great ledger, so that if an affair went wrong, you could open it and find which step had failed.
+
+The master's cleverness was the heart of the house. But without the walls, the candle, the search, the ledger, that cleverness would drag the Hall into a tangle with no end. It was the house that caught the blink-quick cleverness and forced it, step by step, into done things.
+
+Years later, leaving, a new hand asked him the old question: "They say the cleverest man under heaven lives in the innermost room?" He smiled. "A clever master lives there. But he cannot see, cannot act, and forgets the moment he turns his head. Shut him alone in an empty room and he settles nothing — one brilliant thought, then gone. The one who truly settles affairs was never him alone. It is the whole house, built around him."`,
+lesson: `### After the story — what it really says
+
+This fable is the layered architecture of an agentic AI system. What people call "the AI" is several layers working together; the model is the most central — and most helpless — of them.
+
+- **The blind, bound, forgetful master = the Model (the LLM).** A pure reasoning-and-generation engine with three fatal traits: it is *stateless* (each call is the first; nothing carries between calls); it sees only what is placed before it — the *context window*; and it cannot act or remember on its own. It only produces the best next words for the desk in front of it. Necessary, never sufficient.
+- **The layer-of-the-desk = the Context layer.** Prompt assembly, RAG retrieval, context engineering. How well the desk is laid decides how well the master answers.
+- **The runners = the Tools layer** (function calling). The model proposes an action; the tools execute it and bring back the result. The model speaks; the tools act.
+- **The back hall = the Memory layer.** Short-term state ("where is this affair?") and long-term memory (vector stores, knowledge bases). The model forgets; this layer remembers.
+- **The steward = the Orchestration layer** — the agent loop. Across the model's amnesiac calls, it alone holds the unchanging goal and the whole state. Planning, task decomposition, sub-agent routing, stopping conditions live here.
+- **The house — walls, candle, replacement runners, gate-search, the watchman's ledger = the Runtime layer.** Candle out = timeout; send another = retry; search at the gate = sandboxing; the ledger = observability / tracing.
+- **The bronze bell = the Interface / Triggers layer.** A user request, or a scheduled job / event / webhook.
+
+**The point:** intelligence ≠ agency. A brilliant mind that is blind, handless, and forgetful settles nothing alone. What turns intelligence into an agent that gets things done is everything around it — and that house is where the real engineering lives.` },
+
+    { // II — The Empty House
+story: `> Concept: when agents run unattended in the cloud — hundreds at once, in the background — the choice that matters most is where the thinking "mind" (the harness) lives: inside the working sandbox, or safely outside it.
+
+Years later, the young man was old, and the city had changed past knowing. Once, you came in person and watched the master settle your affair, one at a time, no one leaving until it was done. Now the city found that slow. People left a stack of affairs at the gatehouse at night and went to sleep; by morning each was settled. They wanted not one Hall but a whole street of them, each working the same night, none waiting on another.
+
+He sought out a famous new house in the east, rang the bell at night, and walked to the innermost room to see which master sat there. He froze a second time. There was no master — only a kind of stand-in at the empty desk, moving sometimes to fetch a scroll or send a runner, yet plainly thinking nothing. Before each important step it stopped and waited, facing the back wall.
+
+Behind that wall ran a thread, thin as spider-silk, out through the bricks and across the city — west, to the old Hall he knew so well. He understood. The master still sat in the west, blind and forgetful, and never left. But he no longer entered these outer houses himself. For each affair the city threw up an empty house — four walls, a desk, some runners, a stand-in that could not think — and the thread carried the master's every instruction in, and carried back what the house saw. The mind thinks in the west; the body works in the east, half a city apart.
+
+He remembered an old disaster. Once, to spare that thread, people had seated the master inside the working house — mind and body behind one wall. It was quick, until thieves broke in one night and took the house, and with it the master and the ring of keys at his side that opened the archives and the treasury. The mind was in the body; the body broke; the mind and all its keys were gone.
+
+After that the Hall made an iron rule: the master and the most dangerous keys stay forever in the inner manor, and never set foot in any outer house. The empty house holds only a stand-in and one or two small keys, good for the moment. So if the outer house is taken or burned, the thieves get a shell, a puppet, a trinket — the mind and the true keys, untouched. Burned? He raises another empty house and goes on.
+
+It cost more this way. With mind and body apart, the thread could not break; someone had to track, on both ends, exactly where each affair stood and which house each instruction meant. But the Hall paid that cost gladly for what the rule bought: the thinking thing and the stealable thing, kept apart.
+
+And the true marvel, he saw at last, was the power to raise a hundred identical empty houses anywhere in a night, wipe them clean when done, and raise them again in a breath. Raise one fast: don't rebuild from nothing — keep only the little that changed and lay it over a ready frame. Make it faithful: the empty house must mirror the real place exactly, or what works in the copy fails in the world. And when it is done, the stand-in replays the whole doing, step by step, so you can see it was truly done.
+
+"They say the cleverest master sits in this room?" a new servant asked at the gate. He pointed at the thread, and west into the dark. "No clever man sits here. The master is half a city away and never comes. Here is only a body that does as he says — an empty house, raised tonight, struck tomorrow, raised again the next. The marvel is that no one sits here and the work is still done; and the mind that truly thinks is never, ever, on the scene."`,
+lesson: `### After the story — what it really says
+
+Where the first fable was the layers *inside* one house, this one is what changes when you move that house **to the cloud, into the background, and run it unattended by the hundred**.
+
+- **"Leave a stack at night, collected by morning," a whole street working at once = background / cloud agents.** The agent no longer needs you watching beside it; it runs in the background from a single request to a finished result, many in parallel, each in its own box.
+- **"The mind thinks in the west, the body works in the east" = keeping the harness *outside* the sandbox** (out of the box). The reasoning, deciding mind runs in a protected control plane; the sandbox is just a pair of hands it reaches into with tool calls.
+- **Seating the master inside the working house, then losing him when it's robbed = the harness *inside* the sandbox** (in the box). Simpler — but your keys and credentials sit in a box the agent can be tricked into leaking.
+- **The iron rule: real keys stay in the inner manor; the outer house holds only small ones = permission & secret isolation.** Breach the machine and the loss is capped at that tiny scope; the real secrets never moved.
+- **Raising a hundred identical houses, wiping and re-raising them = fast sandbox snapshots.** Save only the changed delta over a template; a new sandbox costs only its difference, not a rebuild.
+- **The empty house must mirror the real place = environment / repo setup.** Faithfully mirror dependencies, services, data — or what passes in the copy breaks in production.
+- **The stand-in replays the whole doing = testing & recording.** The hard part isn't clicking a button; it's proving the thing was truly done.
+
+**The point:** the moat isn't how clever the mind is — it's whether you can raise a faithful, isolated, replayable house on demand and drive it safely from a mind that is never on the scene. You sell the agent *and* the agent infra.` },
+
+    { // III — The Mechanism
+story: `> Concept: in an agent system, orchestration, runtime, sandbox and triggers are almost all fixed, deterministic machinery — code and infrastructure, not more minds. The only thing that truly thinks, yet is also slow, costly, and never the same twice, is the model.
+
+A clerk who had served some years grew close to the steward, and admired it above all — it heard the bell and knew at once what to do, whom to send, what to ask. Surely, he thought, after the master this steward was the second cleverest in the house.
+
+One quiet night he asked its opinion of a guest. The steward did not answer. It only walked its routine — lay the desk, hear the master, send a runner — not a step wrong, not a word extra. He asked again. Still nothing. Only when it reached a fork its rules did not cover did it stop: it neither guessed nor bluffed, but went to the master's door, knocked three times, reported the fork plainly, heard one sentence, wrote it down, and returned to its routine.
+
+The clerk understood: the steward had never once thought. It held a tablet, and on it was written, line by line, what to do at the bell, what next, which way to turn on which reply. What the tablet covered, it did — fast, exact, tireless. What it did not, the steward dared not invent — it only went and knocked. It either followed the tablet or knocked at the door. Nothing else. For the first time he saw the steward's face: a wooden face. A clockwork automaton.
+
+He looked again at the busy house. The gate-searcher was a wooden man too, checking against a fixed list — passing what was on it, stopping what was not, without judgment. The ledger-keeper was wooden. Even the bell was no one's hand: a water-clock filled and tipped it on the hour, and a long cord ran to the fire-drum at the city gate, so an alarm would jerk it too. The candle that timed each affair was a dead candle, burning whether the work was done or not. The whole house bustled, and not one of them was thinking.
+
+An old hand saw him staring. "You think this house is full of clever men? Wrong. The only living mind sits in the innermost room — the master, alone. The rest are clockwork." — "Why not keep more minds like his?" — "Can't afford them, can't drive them. A living mind is precious: ask it once and it answers slowly, dearly; ask the same thing twice, it may answer two ways. You need it for the hard turns — but to keep the gate, the books, the hours? Slow, costly, unreliable. The clockwork is the opposite: fast, cheap, the same answer a hundred times, never asleep."
+
+"So the house's true skill is this: whatever can be written as a fixed rule, give to the clockwork; only at the few forks where a living mind must choose, knock at the master's door. Knock too often and it's slow and dear; too rarely and the work goes wrong. Where to knock, and how often — that is the whole craft of building the house well." He learned, too, that there was more than one master: in the inner room the dearest and slowest, kept for true difficulties; in a side court a quicker, cheaper one the clockwork could ask for small forks.
+
+Years later a new hand pointed at the bustle: "Surely every one of them is brilliant?" He shook his head. "A house of fast hands, and not one is thinking. The ones who truly think are the one or two masters within — slow, dear, and often of two minds. The marvel is not how many minds it keeps, but how much it hands to the tireless clockwork, and how sparingly it spends the living few. Cleverness is spent sparingly; mechanism is supplied without limit. Between the two, a single instruction becomes a thing well done."`,
+lesson: `### After the story — what it really says
+
+Your three questions — *is it code/scripts? are there more LLMs? what does it actually look like?* — answered in turn.
+
+- **The clockwork automata (steward, gate-searcher, watchman, self-ringing bell, dead candle) = deterministic code / scripts / infrastructure, not more minds.** They run off a fixed tablet (rules, config, control flow): fast, cheap, repeatable, not thinking. Orchestration, runtime, sandbox, triggers are mostly this.
+- **The steward, knocking only at forks its rules don't cover = the Orchestration layer** (the agent loop). It's deterministic loop code: bell → lay desk → call model → run tool → feed back → judge done. **"Are there more LLMs?" lives here:** each "knock" is an extra model call — planning, routing, judging done, reflecting, compressing, sub-agents. The craft is to knock as rarely and precisely as possible. It looks like a \`while\` loop, a LangGraph node graph, a Temporal workflow, a harness.
+- **The bell — water-clock on the hour, a cord to the fire-drum, or rung by hand = the Triggers layer.** Pure wiring, zero LLM: cron, webhook (a PR, an alert), a user request.
+- **The gate-searcher with a fixed list + the walls = the Sandbox.** An OS/virtualization isolation boundary, zero LLM — Firecracker, Docker, gVisor, E2B, Modal.
+- **The dead candle, replacement runner, the ledger, the walls = the Runtime.** Deterministic infra, zero LLM: timeout, retry, observability/tracing, isolation.
+- **The one or two masters within = the Model (the LLM).** The only thing that truly thinks, and the only non-deterministic thing — slow, costly, two answers to one question. Spend it sparingly.
+
+**The point:** don't be fooled by the bustle — most of it is tireless deterministic machinery, not more AI. The skill is to hand everything rule-bound to the clockwork and knock at the living mind only where the rules run out. Cleverness, spent sparingly; mechanism, supplied without limit.` },
+  ];
+
+  const daContent = [
+    {
+story: `> Koncept: den lagdelte arkitektur i et agentisk AI-system — model, kontekst, værktøjer, hukommelse, orkestrering og runtime. Modellen kan være klog, men den er kun et lag; det, der gør intelligens til udført arbejde, er hele huset omkring den.
+
+I den sydlige del af byen lå et hus. Over porten stod tre ord: Salen for Anliggender. Folk sagde, at der ikke fandtes noget, den ikke kunne ordne — en tyve år gammel retssag, en gæld der bandt tre familier, et brev der skulle blødgøre en fjendes hjerte. Man skulle blot ringe med bronzeklokken og fremlægge sin sag; med tiden blev den løst.
+
+Ingen udenforstående havde set indersiden. De vidste kun, at der i det inderste rum sad en mester — den klogeste mand under himlen, sagde man. En ung mand troede ikke på det og tjente i årevis som buddreng, mens han ventede på at komme ind og se selv.
+
+Da dagen kom, stivnede han. Mesteren var meget gammel og sad alene ved et tomt skrivebord. Hans øjne var bundet til; han kunne ikke se. Hans hænder lå på knæene og løftede sig aldrig; de kunne hverken holde en pensel eller en skål. Ingen bog, intet papir; fire bare vægge.
+
+"Mester," spurgte den unge mand, "hvordan afgør De alle de sager?" Mesteren svarede ikke. "Hvad ligger på bordet nu?" sagde han. "Læs det for mig."
+
+Ved døren stod en mand og lagde bordet til rette. Da klokken lød, var han gået til baghallen, havde gravet i protokollerne og lagt alt frem for mesteren i orden: hvor ofte gæsten var kommet, hvad der var gjort, hvor de sidste ord standsede, og dagens nye anliggende. Det, der hørte til, lagde han frem; det andet lod han ligge.
+
+Mesteren vendte sit bundne ansigt og lyttede. Så talte han — ikke et svar, men en instruktion: "I det østlige arkiv ligger et skatteregister. Hent det. Læg det her." Og han blev tavs, som om han sov.
+
+Bordlæggeren gav ordene videre til løberne ved porten. De gik ud gennem gyder og over mure og vendte tilbage med registeret og en besked: "En side mangler." Han lagde registeret, beskeden, gæstens ønske og mesterens egen instruktion tilbage på bordet. For mesteren havde allerede glemt.
+
+Den unge mand forstod med kulde i kroppen: hver gang mesteren vågnede, havde han glemt alt før. Det, der lå på bordet, var alt, han kunne se; ryddede man bordet, blev hans sind tomt — den klogeste mand under himlen, fanget i et tidsrum der slettede sig selv. Men huset glemte ikke. I baghallen blev hver sag og hvert ord bevaret. Mesteren glemmer; huset husker for ham.
+
+Over bordet sad en forvalter. Den hørte klokken, åbnede gæstens mening og besluttede hele sagen trin for trin: hvad der skulle lægges foran mesteren, hvilket spørgsmål der skulle stilles, hvilken løber der skulle sendes, hvornår sagen var færdig. Mesteren tænkte kun; løberne handlede kun; baghallen huskede kun; bordlæggeren lagde kun frem. Fra først til sidst var det alene forvalteren, der holdt fast i, hvad sagen skulle blive til.
+
+Så lød en vagtromme, og han så selve huset. Høje mure. Hver løber blev gennemsøgt ved porten, så intet urent kom ind. Hver sag blev oplyst af et enkelt lys; brændte det ned, standsede sagen. Blev en løber væk for længe, sendte man en ny. Og en søvnløs nattevagt skrev hvert skridt ind i en stor protokol, så man, hvis en sag gik galt, kunne åbne den og se, hvilket trin der svigtede.
+
+Mesterens klogskab var husets hjerte. Men uden murene, lyset, gennemsøgningen og protokollen ville den klogskab trække Salen ind i en knude uden ende. Det var huset, der greb den lynhurtige tanke og tvang den, trin for trin, til færdige gerninger.
+
+År senere, da han forlod stedet, spurgte en ny hånd ham det gamle spørgsmål: "Siger de ikke, at den klogeste mand under himlen bor i det inderste rum?" Han smilede. "En klog mester bor der. Men han kan ikke se, ikke handle og glemmer i det øjeblik, han vender hovedet. Luk ham alene inde i et tomt rum, og han afgør intet — én strålende tanke, og så væk. Den, der virkelig afgør sagerne, var aldrig ham alene. Det er hele huset, bygget omkring ham."`,
+lesson: `### Efter historien — hvad den egentlig siger
+
+Denne fabel handler om den lagdelte arkitektur i et agentisk AI-system. Det, folk kalder "AI'en", er flere lag, der arbejder sammen; modellen er det mest centrale — og mest hjælpeløse — af dem.
+
+- **Den blinde, bundne, glemsomme mester = modellen (LLM'en).** En ren motor for ræsonnement og generering med tre fatale træk: den er tilstandsløs, den ser kun det, der lægges foran den i kontekstvinduet, og den kan hverken handle eller huske alene.
+- **Bordlæggeren = kontekstlaget.** Prompt-samling, RAG, retrieval og kontekstdesign. Hvor godt bordet lægges, afgør hvor godt mesteren svarer.
+- **Løberne = værktøjslaget.** Modellen foreslår handlingen; værktøjerne udfører den og bringer resultatet tilbage.
+- **Baghallen = hukommelseslaget.** Kort tilstand og lang hukommelse. Modellen glemmer; dette lag husker.
+- **Forvalteren = orkestreringslaget.** Agentløkken, der holder målet fast på tværs af modellens glemsomme kald: planlægning, opdeling, routing og stopbetingelser.
+- **Huset — mure, lys, nye løbere, portkontrol og protokol = runtime-laget.** Timeout, retry, sandboxing, observability og tracing.
+- **Bronzeklokken = interface og triggers.** En brugerforespørgsel, et planlagt job, en webhook eller en hændelse.
+
+**Pointen:** intelligens er ikke det samme som handlekraft. Et strålende sind, der er blindt, håndløst og glemsomt, løser intet alene. Det, der gør intelligens til en agent, er alt omkring den — og det hus er dér, den virkelige ingeniørkunst bor.` },
+
+    {
+story: `> Koncept: når agenter kører uden opsyn i skyen — hundredvis ad gangen, i baggrunden — er det vigtigste valg, hvor det tænkende sind, harnesset, bor: inde i arbejdssandboxen eller sikkert udenfor.
+
+År senere var den unge mand blevet gammel, og byen havde forandret sig til ukendelighed. Før kom man personligt og så mesteren afgøre sin sag, én ad gangen, ingen gik før arbejdet var gjort. Nu fandt byen det for langsomt. Folk efterlod en stak sager ved porten om natten og gik i seng; om morgenen var hver sag løst. De ville ikke have én sal, men en hel gade af sale, alle arbejdende samme nat, ingen ventende på hinanden.
+
+Han opsøgte et berømt nyt hus i øst, ringede med klokken om natten og gik mod det inderste rum for at se, hvilken mester der sad der. Han stivnede for anden gang. Der var ingen mester — kun en slags stedfortræder ved det tomme bord, som indimellem hentede en rulle eller sendte en løber, men tydeligt ikke tænkte. Før hvert vigtigt skridt standsede den og ventede med ansigtet mod bagvæggen.
+
+Bag væggen løb en tråd, tynd som edderkoppesilke, ud gennem murstenene og tværs over byen — mod vest, til den gamle Sal han kendte så godt. Han forstod. Mesteren sad stadig i vest, blind og glemsom, og forlod aldrig stedet. Men han gik ikke længere ind i disse ydre huse selv. For hver sag rejste byen et tomt hus — fire vægge, et bord, nogle løbere, en stedfortræder uden tanke — og tråden bar mesterens instruktioner ind og bar tilbage, hvad huset så. Sindet tænker i vest; kroppen arbejder i øst, en halv by fra hinanden.
+
+Han huskede en gammel katastrofe. Engang, for at spare tråden, havde man sat mesteren inde i arbejdshuset — sind og krop bag samme mur. Det var hurtigt, indtil tyve en nat brød ind og tog huset, og med det mesteren og nøgleringen ved hans side, som åbnede arkiverne og skatkammeret. Sindet var i kroppen; kroppen blev brudt; sindet og alle dets nøgler var væk.
+
+Efter den nat indførte Salen en jernregel: mesteren og de farligste nøgler bliver altid i den indre gård og sætter aldrig fod i et ydre hus. Det tomme hus får kun en stedfortræder og en eller to små nøgler, gode for øjeblikket. Hvis det ydre hus bliver taget eller brændt, får tyvene en skal, en dukke, en småting — sindet og de virkelige nøgler forbliver urørte. Brænder huset? Man rejser et nyt og går videre.
+
+Det kostede mere på denne måde. Når sind og krop er adskilt, må tråden ikke knække; nogen må i begge ender holde nøjagtigt styr på, hvor hver sag står, og hvilket hus hver instruktion tilhører. Men Salen betalte gerne den pris for det, reglen købte: det tænkende og det stjælbare holdt adskilt.
+
+Og det sande mirakel så han til sidst: evnen til at rejse hundrede ens tomme huse hvor som helst på en nat, tørre dem rene når arbejdet er gjort og rejse dem igen i et åndedrag. Rejs et hurtigt: byg ikke fra nul; læg kun det lille, der ændrede sig, oven på en klar ramme. Gør det troværdigt: det tomme hus må spejle det virkelige sted nøjagtigt, ellers virker kopien, mens verden fejler. Og når arbejdet er gjort, afspiller stedfortræderen hele forløbet trin for trin, så man kan se, at det virkelig blev gjort.
+
+"Siger de, at den klogeste mester sidder i dette rum?" spurgte en ny tjener ved porten. Den gamle pegede på tråden og mod vest i mørket. "Ingen klog mand sidder her. Mesteren er en halv by væk og kommer aldrig. Her er kun en krop, der gør, hvad han siger — et tomt hus, rejst i aften, revet ned i morgen, rejst igen den næste. Miraklet er, at ingen sidder her, og arbejdet stadig bliver gjort; og sindet, der virkelig tænker, er aldrig, aldrig på stedet."`,
+lesson: `### Efter historien — hvad den egentlig siger
+
+Hvor den første fabel handlede om lagene inde i ét hus, handler denne om, hvad der ændrer sig, når huset flyttes til skyen, kører i baggrunden og arbejder uden opsyn i hundredvis.
+
+- **Stakken ved porten om natten og en hel gade, der arbejder samtidigt = cloud- og baggrundsagenter.** Agenten behøver ikke længere en bruger, der ser på; den kører fra én anmodning til et færdigt resultat, mange parallelt, hver i sin egen boks.
+- **"Sindet tænker i vest, kroppen arbejder i øst" = harnesset uden for sandboxen.** Beslutningslaget kører i et beskyttet kontrolplan; sandboxen er kun hænderne, der nås gennem værktøjskald.
+- **Mesteren inde i arbejdshuset og tabt ved indbrud = harnesset inde i sandboxen.** Enklere, men nøgler og credentials ligger i den boks, agenten kan narres til at lække.
+- **Jernreglen om små nøgler i det ydre hus = tilladelses- og hemmelighedsisolering.** Kompromitteres maskinen, er tabet begrænset; de virkelige hemmeligheder flyttede aldrig.
+- **Hundrede ens huse, slettet og rejst igen = hurtige sandbox-snapshots.** Gem kun ændringen over en skabelon; en ny sandbox koster forskellen, ikke en fuld genopbygning.
+- **Det tomme hus må spejle det virkelige sted = miljø- og repo-setup.** Dependencies, services og data skal ligne virkeligheden, ellers passer testen ikke på produktion.
+- **Stedfortræderen afspiller arbejdet = test og optagelse.** Det svære er ikke at klikke; det er at bevise, at arbejdet faktisk blev gjort.
+
+**Pointen:** forsvarsværket er ikke bare, hvor klogt sindet er. Det er, om man kan rejse et troværdigt, isoleret og genafspilleligt hus på kommando — og styre det sikkert fra et sind, der aldrig er på gerningsstedet.` },
+
+    {
+story: `> Koncept: i et agentsystem er orkestrering, runtime, sandbox og triggers næsten altid fast, deterministisk maskineri — kode og infrastruktur, ikke flere sind. Det eneste, der virkelig tænker, og samtidig er langsomt, dyrt og aldrig helt ens to gange, er modellen.
+
+En skriver, der havde tjent nogle år, kom tæt på forvalteren og beundrede den over alt andet. Den hørte klokken og vidste straks, hvad der skulle gøres, hvem der skulle sendes, hvad der skulle spørges om. Sikkert, tænkte han, var forvalteren efter mesteren den næstklogeste i huset.
+
+En stille nat spurgte han den om dens mening om en gæst. Forvalteren svarede ikke. Den gik blot sin rutine — lagde bordet, hørte mesteren, sendte en løber — ikke et skridt forkert, ikke et ord for meget. Han spurgte igen. Stadig intet. Kun da den nåede et skillepunkt, dens regler ikke dækkede, standsede den: den gættede ikke, bluffede ikke, men gik til mesterens dør, bankede tre gange, fremlagde skillepunktet nøgternt, hørte én sætning, skrev den ned og vendte tilbage til sin rutine.
+
+Skriveren forstod: forvalteren havde aldrig tænkt. Den bar en tavle, og på den stod linje for linje, hvad der skulle gøres ved klokken, hvad der kom derefter, hvilken vej man skulle dreje ved hvilket svar. Det tavlen dækkede, gjorde den — hurtigt, præcist, utrætteligt. Det tavlen ikke dækkede, turde den ikke opfinde; den gik blot hen og bankede. Enten fulgte den tavlen, eller også bankede den på døren. Intet andet. For første gang så han forvalterens ansigt: et træansigt. En urværksautomat.
+
+Han så igen på det travle hus. Portvagten var også af træ, tjekkede mod en fast liste — lod det kendte passere, standsede det ukendte, uden dom. Protokolføreren var af træ. Selv klokken blev ikke ringet af en hånd: et vandur fyldtes og tippede på timen, og en lang snor løb til brandtrommen ved byporten, så en alarm også kunne rykke i den. Lyset, der målte hver sag, var et dødt lys, der brændte uanset om arbejdet var gjort eller ej. Hele huset summede, og ikke én af dem tænkte.
+
+En gammel hånd så ham stirre. "Tror du, huset er fuldt af kloge mænd? Forkert. Det eneste levende sind sidder i det inderste rum — mesteren, alene. Resten er urværk." — "Hvorfor ikke beholde flere sind som hans?" — "Vi har ikke råd, og de kan ikke styres sådan. Et levende sind er kostbart: spørg det én gang, og det svarer langsomt og dyrt; spørg samme ting to gange, og det kan svare på to måder. Du behøver det ved de svære sving — men til at holde porten, bøgerne og tiden? Langsomt, dyrt, upålideligt. Urværket er det modsatte: hurtigt, billigt, samme svar hundrede gange, aldrig søvnigt."
+
+"Husets egentlige kunst er derfor denne: alt, hvad der kan skrives som en fast regel, gives til urværket; kun ved de få skillepunkter, hvor et levende sind må vælge, banker man på mesterens dør. Banker man for ofte, bliver det langsomt og dyrt; banker man for sjældent, går arbejdet galt. Hvor man banker, og hvor ofte — det er hele håndværket i at bygge huset godt." Han lærte også, at der fandtes mere end én mester: i det inderste rum den dyreste og langsomste til de virkelige vanskeligheder; i en sidegård en hurtigere og billigere, som urværket kunne spørge ved små skillepunkter.
+
+År senere pegede en ny hånd på travlheden: "De må da alle være geniale?" Han rystede på hovedet. "Et hus af hurtige hænder, og ikke én tænker. Dem, der virkelig tænker, er den ene eller de to mestre indenfor — langsomme, dyre og ofte af to sind. Miraklet er ikke, hvor mange sind huset holder, men hvor meget det overlader til det utrættelige urværk, og hvor sparsomt det bruger de levende få. Klogskab bruges sparsomt; mekanisme gives uden grænse. Mellem de to bliver én instruktion til en velgjort ting."`,
+lesson: `### Efter historien — hvad den egentlig siger
+
+De tre spørgsmål — er det kode og scripts, er der flere LLM'er, hvordan ser det egentlig ud — besvares sådan her.
+
+- **Urværksautomaterne = deterministisk kode, scripts og infrastruktur, ikke flere sind.** Forvalter, portvagt, protokolfører, selvklokke og lys kører på faste regler: hurtigt, billigt, gentageligt og uden tanke. Orkestrering, runtime, sandbox og triggers er mest dette.
+- **Forvalteren, der kun banker ved skillepunkter, reglerne ikke dækker = orkestreringslaget.** Agentløkken er typisk deterministisk: klokke, læg kontekst, kald model, kør værktøj, før resultat tilbage, vurder færdig. Hvert bank er et ekstra modelkald: planlægning, routing, bedømmelse, refleksion, komprimering eller subagent.
+- **Klokken — vandur, brandsnor eller håndringning = triggerlaget.** Cron, webhook, alert, PR eller brugerinput. Ren wiring, nul LLM.
+- **Portvagten med fast liste og murene = sandboxen.** En OS- eller virtualiseringsgrænse som Firecracker, Docker, gVisor, E2B eller Modal. Nul LLM.
+- **Lyset, ny løber, protokol og mure = runtime.** Timeout, retry, observability, tracing og isolation. Deterministisk infra.
+- **Den ene eller de to mestre = modellen.** Det eneste, der virkelig tænker, og det eneste ikke-deterministiske: langsomt, dyrt og med mulighed for to svar på samme spørgsmål.
+
+**Pointen:** lad dig ikke narre af travlheden — det meste er utrætteligt deterministisk maskineri, ikke mere AI. Håndværket er at give alt regelbundet til urværket og kun banke på det levende sind, hvor reglerne slipper op. Klogskab, brugt sparsomt; mekanisme, leveret uden grænse.` },
+  ];
+
+  const frContent = [
+    {
+story: `> Concept : l'architecture en couches d'un système d'IA agentique — modèle, contexte, outils, mémoire, orchestration et runtime. Le modèle peut être brillant, mais il n'est qu'une couche ; ce qui transforme l'intelligence en action accomplie, c'est toute la maison construite autour de lui.
+
+Au sud de la ville se dressait une maison. Au-dessus de sa porte, trois mots : la salle des affaires. On disait qu'aucune affaire ne lui résistait — un procès refroidi depuis vingt ans, une dette liant trois familles, une lettre destinée à adoucir le coeur d'un ennemi. Il suffisait de sonner la cloche de bronze et d'exposer son affaire ; avec le temps, la chose était faite.
+
+Nul étranger n'en avait vu l'intérieur. On savait seulement que, dans la pièce la plus profonde, siégeait un maître — l'homme le plus sage sous le ciel, disait-on. Un jeune homme n'y croyait pas et servit pendant des années comme coursier, attendant le jour où il entrerait dans cette pièce pour voir par lui-même.
+
+Quand ce jour arriva, il se figea. Le maître était très vieux et assis seul devant un bureau vide. Ses yeux étaient bandés ; il ne voyait pas. Ses mains reposaient sur ses genoux et ne se levaient jamais ; elles ne pouvaient tenir ni pinceau ni bol. Aucun livre, aucun papier ; quatre murs nus.
+
+"Maître", demanda le jeune homme, "comment réglez-vous toutes ces affaires ?" Le maître ne répondit pas. "Qu'y a-t-il sur le bureau à cet instant ?" dit-il. "Lis-le-moi."
+
+Près de la porte se tenait un homme chargé de préparer le bureau. À la cloche, il était allé dans la salle du fond, avait fouillé les registres et disposé devant le maître, dans l'ordre, les anciennes visites du demandeur, ce qui avait été fait, l'endroit où les derniers mots s'étaient arrêtés, et l'affaire du jour. Ce qui appartenait au dossier, il le posait ; le reste, il l'écartait.
+
+Le maître inclina son visage bandé et écouta. Puis il parla — non pas une réponse, mais une instruction : "Dans l'archive de l'est se trouve un registre d'impôt. Va le chercher. Pose-le ici." Puis il se tut, comme endormi.
+
+Le préparateur transmit les mots aux coureurs de la porte. Ils sortirent par les ruelles et les murs, puis revinrent avec le registre et un message : "Il manque une page." Il reposa le registre, le message, la demande du visiteur et l'instruction du maître sur le bureau. Car le maître avait déjà oublié.
+
+Le jeune homme comprit avec un frisson : chaque fois que le maître s'éveillait, il oubliait tout ce qui précédait. Ce qui était sur le bureau était tout son monde ; qu'on vide le bureau, et son esprit redevenait blanc — le plus sage des hommes, enfermé dans un instant qui s'effaçait lui-même. Mais la maison, elle, n'oubliait pas. Dans la salle du fond, chaque affaire et chaque mot étaient conservés. Le maître oublie ; la maison se souvient pour lui.
+
+Au-dessus du bureau veillait un intendant. Il entendait la cloche, déchiffrait le sens de la demande et décidait l'affaire étape par étape : quoi placer devant le maître, quelle question poser, quel coureur envoyer, quand s'arrêter. Le maître ne faisait que penser ; les coureurs ne faisaient qu'agir ; la salle du fond ne faisait que se souvenir ; le préparateur ne faisait que disposer. Du début à la fin, celui qui gardait en tête ce que l'affaire devait devenir était l'intendant.
+
+Alors un tambour de veille retentit, et le jeune homme vit la maison elle-même. De hauts murs. Chaque coureur fouillé à la porte, afin que rien de souillé n'entre. Chaque affaire éclairée par une seule chandelle ; si elle se consumait avant la fin, l'affaire s'arrêtait. Un coureur tardait trop, on en envoyait un autre. Et un veilleur sans sommeil notait chaque étape dans un grand registre, si bien que, si une affaire tournait mal, on pouvait l'ouvrir et trouver l'endroit exact de la faute.
+
+La sagesse du maître était le coeur de la maison. Mais sans les murs, la chandelle, la fouille et le registre, cette sagesse aurait entraîné la salle dans un enchevêtrement sans fin. C'était la maison qui capturait l'éclair de pensée et le forçait, pas à pas, à devenir une chose accomplie.
+
+Des années plus tard, alors qu'il partait, une nouvelle recrue lui posa l'ancienne question : "On dit que l'homme le plus sage sous le ciel vit dans la pièce intérieure ?" Il sourit. "Un maître sage y vit. Mais il ne peut voir, ne peut agir, et oublie dès qu'il tourne la tête. Enfermez-le seul dans une pièce vide, et il ne règle rien — une pensée brillante, puis plus rien. Celui qui règle vraiment les affaires n'a jamais été lui seul. C'est toute la maison, bâtie autour de lui."`,
+lesson: `### Après l'histoire — ce qu'elle dit vraiment
+
+Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce que l'on appelle "l'IA" est en réalité un ensemble de couches qui travaillent ensemble ; le modèle est la plus centrale — et la plus impuissante — d'entre elles.
+
+- **Le maître aveugle, lié et oublieux = le modèle (LLM).** Un moteur de raisonnement et de génération, sans état durable, limité à ce qu'on place dans sa fenêtre de contexte, incapable d'agir ou de se souvenir seul.
+- **Le préparateur du bureau = la couche de contexte.** Assemblage du prompt, retrieval, RAG et ingénierie du contexte. La qualité de ce qui est posé sur le bureau détermine la qualité de la réponse.
+- **Les coureurs = la couche d'outils.** Le modèle propose une action ; les outils l'exécutent et rapportent le résultat.
+- **La salle du fond = la mémoire.** État court terme et mémoire longue. Le modèle oublie ; cette couche garde trace.
+- **L'intendant = l'orchestration.** La boucle d'agent qui conserve le but et l'état à travers des appels de modèle amnésiques : planification, découpage, routage, conditions d'arrêt.
+- **La maison — murs, chandelle, nouveaux coureurs, fouille et registre = le runtime.** Timeout, retry, sandboxing, observability et tracing.
+- **La cloche de bronze = interface et déclencheurs.** Requête utilisateur, job planifié, webhook ou événement.
+
+**Le point :** intelligence n'est pas agency. Un esprit brillant, aveugle, sans mains et oublieux ne règle rien seul. Ce qui transforme l'intelligence en agent, c'est tout ce qui l'entoure — et cette maison est le vrai travail d'ingénierie.` },
+  ];
+
+  // ---- markdown → html ----
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function inline(s){
+    let h = esc(s);
+    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+    h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    return h;
+  }
+  function renderMarkdown(md){
+    const lines = md.split(/\r?\n/);
+    let html="", p=[], q=[], li=[];
+    const fp=()=>{ if(p.length){ html+=`<p>${p.map(inline).join("<br>")}</p>`; p=[]; } };
+    const fq=()=>{ if(q.length){ const b=q.join("\n").split(/\n\s*\n/).filter(Boolean); html+=`<blockquote>${b.map(x=>`<p>${inline(x.replace(/\n/g," "))}</p>`).join("")}</blockquote>`; q=[]; } };
+    const fl=()=>{ if(li.length){ html+=`<ul>${li.map(x=>`<li>${inline(x)}</li>`).join("")}</ul>`; li=[]; } };
+    lines.forEach(line=>{
+      const t=line.trim();
+      if(!t){ fp();fq();fl(); return; }
+      if(/^---+$/.test(t)){ fp();fq();fl(); html+='<hr>'; return; }
+      if(line.startsWith(">")){ fp();fl(); q.push(line.replace(/^>\s?/,"")); return; }
+      if(/^-\s+/.test(line)){ fp();fq(); li.push(line.replace(/^-\s+/,"")); return; }
+      const hm=line.match(/^(#{1,4})\s+(.+)$/);
+      if(hm){ fp();fq();fl(); const lv=hm[1].length; html+=`<h${lv}>${inline(hm[2])}</h${lv}>`; return; }
+      p.push(line);
+    });
+    fp();fq();fl();
+    return html;
+  }
+
+  // split a story into scenes: pull the concept epigraph, drop headings, chunk prose
+  function splitProse(storyRaw){
+    let lines = storyRaw.split(/\r?\n/);
+    let i=0;
+    while(i<lines.length && (/^##\s/.test(lines[i].trim()) || lines[i].trim()==="")) i++;
+    lines = lines.slice(i).filter(l => !/^###\s+《.*》\s*$/.test(l.trim()));
+    const blocks = lines.join("\n").trim().split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
+    let epigraph=""; const prose=[];
+    blocks.forEach(b => { if(b.startsWith(">")) epigraph = epigraph ? epigraph+"\n"+b : b; else prose.push(b); });
+    return { epigraph, prose };
+  }
+  function chunkScenes(prose, budget){
+    const scenes=[]; let cur="";
+    prose.forEach(b => {
+      if(cur && (cur.length + b.length) > budget){ scenes.push(cur); cur=b; }
+      else cur = cur ? cur+"\n\n"+b : b;
+    });
+    if(cur) scenes.push(cur);
+    return scenes;
+  }
+
+  function pushChapter(pages, i, lang, storyRaw, lessonRaw){
+    const c = chapters[i];
+    const mainTitle = lang === "en" ? c.en : (lang === "da" ? c.da : (lang === "fr" ? c.fr : `《${c.zh}》`));
+    const subTitle  = lang === "en" ? `《${c.zh}》` : c.en;
+    const idea = lang === "en" ? c.ideaEn : (lang === "da" ? c.ideaDa : (lang === "fr" ? c.ideaFr : c.ideaZh));
+    const budget = lang === "zh" ? 300 : 520;
+    const { epigraph, prose } = splitProse(storyRaw);
+    const scenes = chunkScenes(prose, budget);
+    const m = scenes.length;
+    const story = visuals[i*2+1];
+    scenes.forEach((sc,k)=>{
+      pages.push({
+        kind:"Story", chapterIndex:i, sceneIndex:k, sceneCount:m,
+        title: mainTitle, titleEn: subTitle, deck: idea,
+        image: story.image, prompt: story.prompt,
+        pan: m>1 ? Math.round((k/(m-1))*100) : 50,
+        nav:`${mainTitle} · ${k+1}/${m}`,
+        raw: (k===0 && epigraph) ? `${epigraph}\n\n${sc}` : sc,
+      });
+    });
+    pages.push({ kind:"Lesson", nav: lang === "da" ? `${c.da} — Fortolket` : (lang === "fr" ? `${c.fr} — Interprétée` : `${c.en} — Decoded`), chapterIndex:i, sceneIndex:0, sceneCount:1,
+      title: mainTitle, titleEn: lang === "da" ? `${c.da} · fortolket` : (lang === "fr" ? `${c.fr} · interprétée` : `${c.en} · decoded`), pan:50,
+      deck: lang === "zh" ? "故事之后。" : (lang === "da" ? "Efter historien." : (lang === "fr" ? "Après l'histoire." : "After the story.")), raw: lessonRaw, ...visuals[i*2+2] });
+  }
+
+  function buildPages(md, lang){
+    lang = ["zh", "da", "fr"].includes(lang) ? lang : "en";
+    const mt = meta[lang];
+    const pages=[{
+      kind:"Cover", nav:"Cover", chapterIndex:-1, sceneIndex:0, sceneCount:1,
+      title: mt.title, titleEn: mt.alt, subtitle: mt.subtitle, concept: mt.concept,
+      ...visuals[0]
+    }];
+
+    if (lang === "en" || lang === "da" || lang === "fr") {
+      const content = lang === "fr" ? frContent : (lang === "da" ? daContent : enContent);
+      content.slice(0, 1).forEach((ch,i)=> pushChapter(pages, i, lang, ch.story, ch.lesson));
+      return pages;
+    }
+
+    // zh: parse the embedded markdown
+    const heads=[...md.matchAll(/^## [一二三]、.*$/gm)].map(m=>m.index);
+    const closeIdx=md.lastIndexOf("\n---\n\n*三部曲完");
+    const closing=closeIdx>=0?md.slice(closeIdx).trim():"";
+    heads.slice(0, 1).forEach((start,i)=>{
+      const next=heads[i+1] ?? (closeIdx>=0?closeIdx:md.length);
+      const sec=md.slice(start,next).replace(/\n---\s*$/,"").trim();
+      const mk="### 故事之后：它讲的到底是什么";
+      const mi=sec.indexOf(mk);
+      const storyRaw=mi>=0?sec.slice(0,mi).trim():sec;
+      let explainRaw=mi>=0?sec.slice(mi).trim():"";
+      if(i===heads.length-1 && closing) explainRaw=`${explainRaw}\n\n${closing}`;
+      pushChapter(pages, i, "zh", storyRaw, explainRaw);
+    });
+    return pages;
+  }
+
+  // ---- featured book (shelf card) ----
+  const book = {
+    id: "agentic-architecture",
+    tags: ["Agentic AI", "Architecture", "LLM systems"],
+    cover: `${ART}/cover.png`,
+  };
+
+  const settings = {
+    en: ["Chinese classical", "Greek myth", "Fairy tale", "Contemporary"],
+    zh: ["中国古典", "希腊神话", "童话", "当代"],
+    da: ["Kinesisk klassisk", "Græsk myte", "Eventyr", "Samtid"],
+    fr: ["Chinois classique", "Mythe grec", "Conte de fées", "Contemporain"],
+  };
+
+  // ---- generation prompt (tuned per setting × language) ----
+  // The brief the storyteller is given. It keeps the original spine — pick a
+  // grad-level concept, tell it INDIRECTLY as a fable, let the reader only
+  // realize the concept near the end, then explain it — and swaps the fable's
+  // world + the illustration style per setting.
+  const promptBase = {
+    en: "Pick a concept at roughly graduate level. Convey it indirectly by writing a fable — only near the very end should the reader slowly realize what the concept truly is. Then, after the story, add a short explanation that states plainly the concept you were really teaching, and maps each character and object back to it.",
+    zh: "我希望你选一个大概研究生水平的概念。然后通过写一个寓言的方式，间接地把这个概念完整讲出来。最好一直到快结尾时，人才会慢慢意识到这个概念究竟是什么。然后在故事之后，再补一段解释，把你刚才真正要讲的概念说清楚，并把每个人物与器物一一对应回去。",
+    da: "Vælg et koncept på omtrent kandidatniveau. Formidl det indirekte ved at skrive en fabel — først tæt på slutningen skal læseren langsomt forstå, hvad konceptet egentlig er. Efter historien skal du tilføje en kort forklaring, der siger konceptet tydeligt og kortlægger hver figur og genstand tilbage til det.",
+    fr: "Choisissez un concept d'un niveau à peu près master. Faites-le comprendre indirectement en écrivant une fable — le lecteur ne doit réaliser que vers la fin ce que le concept est vraiment. Après l'histoire, ajoutez une courte explication qui nomme clairement le concept enseigné et relie chaque personnage et objet à celui-ci.",
+  };
+
+  // world (how to tell it), per setting
+  const styleNotes = {
+    en: {
+      "Chinese classical": { world: "Tell it as a classical Chinese tale: an old house, scholars and servants, lantern-light, a restrained literary voice.", art: "Ink-and-wash (水墨) — muted indigo, bone and soot, candlelit interiors, generous empty space." },
+      "Greek myth":        { world: "Tell it as a Greek myth: gods and an oracle, a mortal who oversteps, the grave cadence of Homer.", art: "Red-figure vase painting and weathered marble — ochre, terracotta and black, sun-bleached stone." },
+      "Fairy tale":        { world: "Tell it as a European fairy tale: 'once upon a time,' a dark wood, a bargain struck, a moral half-hidden.", art: "Golden-age storybook watercolour — warm, gently ornamented, soft gouache edges." },
+      "Contemporary":      { world: "Tell it as a present-day realist parable: an office, a city street, no magic — the strangeness is entirely ordinary.", art: "Muted editorial photography — natural window light, documentary restraint, shallow depth of field." },
+    },
+    zh: {
+      "中国古典": { world: "用中国古典笔记／寓言的笔法来讲：一座老宅、先生与杂役、烛火，文白相间、克制。", art: "水墨——靛蓝、骨白与烟灰，烛照的室内，大量留白。" },
+      "希腊神话": { world: "用希腊神话的方式来讲：诸神与神谕、一个僭越的凡人，荷马式的庄重语调。", art: "红绘陶瓶与风化大理石——赭石、陶土与黑，日晒的石头。" },
+      "童话":     { world: "用欧洲童话的方式来讲：「从前」、幽暗森林、一桩交易、一个半藏的寓意。", art: "黄金时代童话水彩——温暖、略带纹饰、柔和的水粉边缘。" },
+      "当代":     { world: "用当代写实寓言的方式来讲：办公室、城市街道，没有魔法——离奇之处恰恰极其日常。", art: "克制的编辑摄影——自然窗光、纪实感、浅景深。" },
+    },
+    da: {
+      "Kinesisk klassisk": { world: "Fortæl den som en klassisk kinesisk fortælling: et gammelt hus, lærde og tjenere, lanternelys, en behersket litterær stemme.", art: "Tusj og vask — dæmpet indigo, benhvid og sod, stearinbelyste rum, generøs tomhed." },
+      "Græsk myte":        { world: "Fortæl den som en græsk myte: guder og et orakel, et dødeligt menneske der går for langt, en alvorlig homerisk kadence.", art: "Rødfigursvaser og vejrbidt marmor — okker, terrakotta og sort, solbleget sten." },
+      "Eventyr":           { world: "Fortæl den som et europæisk eventyr: der var engang, en mørk skov, en handel der bliver indgået, en halvt skjult morale.", art: "Guldalderens eventyrakvarel — varm, let ornamenteret, bløde gouachekanter." },
+      "Samtid":            { world: "Fortæl den som en nutidig realistisk parabel: et kontor, en bygade, ingen magi — det mærkelige er helt almindeligt.", art: "Dæmpet redaktionel fotografi — naturligt vindueslys, dokumentarisk tilbageholdenhed, lav dybdeskarphed." },
+    },
+    fr: {
+      "Chinois classique": { world: "Racontez-la comme un récit chinois classique : une vieille maison, des lettrés et des serviteurs, la lumière des lanternes, une voix littéraire retenue.", art: "Encre et lavis — indigo sourd, ivoire et suie, intérieurs éclairés à la bougie, grands espaces vides." },
+      "Mythe grec":        { world: "Racontez-la comme un mythe grec : des dieux et un oracle, un mortel qui va trop loin, une cadence grave et homérique.", art: "Vase à figures rouges et marbre patiné — ocre, terre cuite et noir, pierre blanchie par le soleil." },
+      "Conte de fées":     { world: "Racontez-la comme un conte européen : il était une fois, une forêt sombre, un pacte conclu, une morale à demi cachée.", art: "Aquarelle de livre de contes d'âge d'or — chaude, légèrement ornementée, bords doux de gouache." },
+      "Contemporain":      { world: "Racontez-la comme une parabole réaliste contemporaine : un bureau, une rue de ville, aucune magie — l'étrangeté est entièrement ordinaire.", art: "Photographie éditoriale feutrée — lumière naturelle de fenêtre, retenue documentaire, faible profondeur de champ." },
+    },
+  };
+
+  function promptFor(lang, setting) {
+    lang = ["zh", "da", "fr"].includes(lang) ? lang : "en";
+    const base = promptBase[lang];
+    const s = (styleNotes[lang] && styleNotes[lang][setting]) || styleNotes[lang][settings[lang][0]];
+    if (lang === "en") {
+      return `${base} ${s.world} The app will generate exactly one cover image separately in a fixed cinematic ink-and-watercolor house style, so do not write image prompts or plate counts.`;
+    }
+    if (lang === "da") {
+      return `${base} ${s.world} Appen genererer præcis ét separat omslagsbillede i den faste filmiske tusj-og-akvarel-husstil, så skriv ikke billedprompter eller billedantal.`;
+    }
+    if (lang === "fr") {
+      return `${base} ${s.world} L'application générera séparément une seule image de couverture dans le style fixe maison, cinématographique, encre et aquarelle ; n'écrivez donc pas de prompts d'image ni de nombre d'images.`;
+    }
+    return `${base}${s.world}应用会另外生成一张固定水墨电影感风格的封面图；不要写配图提示词，也不要写图片数量。`;
+  }
+
+  // precomputed map for reference / display: prompts[lang][setting]
+  const prompts = { en: {}, zh: {}, da: {}, fr: {} };
+  ["en", "zh", "da", "fr"].forEach((l) => settings[l].forEach((st) => { prompts[l][st] = promptFor(l, st); }));
+
+  // ---- UI strings ----
+  const ui = {
+    en: {
+      shelf: "Shelf",
+      heroKicker: "Graduate-level ideas, told as illustrated fables",
+      heroPre: "Turn any idea", heroAccent: "fable", heroPost: "into a",
+      heroSub: "Tell us what you want explained — we bind it into a little illustrated book.",
+      conceptLabel: "What should we explain?",
+      conceptPh: "e.g. How does an agentic AI system actually work under the hood?",
+      settingLabel: "Setting",
+      weave: "Weave the fable",
+      demoNote: "This demo opens one agentic-architecture fable.",
+      onShelf: "On the shelf", open: "Open",
+      tags: ["Agentic AI", "Architecture", "LLM systems"],
+      // generate
+      stages: [
+        { label:"Reading your idea", note:"Listening for the shape of the concept beneath the words." },
+        { label:"Weaving the fable", note:"Casting the idea as characters, a world, and a turn." },
+        { label:"Preparing the reader", note:"The story text is set first, before the cover arrives." },
+        { label:"Painting the cover", note:"One image for the whole fable, ink blooming into form." },
+        { label:"Binding the book", note:"Setting the type, deckling the edges." },
+      ],
+      loadingLines: [
+        "First the fable is written. Then the cover is painted.",
+        "The story can be read before the image is finished.",
+        "The cover takes longer because it is generated as a full illustration.",
+        "If the text is ready, you can skip image generation and start reading.",
+        "A single cover is being made for the whole fable.",
+      ],
+      weaveLines: [
+        "In the south of the city stood a house. Above its gate, three words…",
+        "In the innermost room sat a master — the cleverest under heaven.",
+        "His eyes were bound. His hands could not lift a brush.",
+        "The one who truly settles affairs was never him alone — it is the whole house.",
+      ],
+      bound: "The book is bound", ready: "Your fable is ready", readySub: "Turn the page.",
+      openBook: "Open the book", skipImage: "Skip image generation", skipImageHint: "Usually takes 1-3 minutes. Available once the story text is ready.",
+      skipQueued: "Opening as soon as the story text is ready.",
+      progressLabel: "Progress",
+      // reader
+      theFable: "The fable", afterStory: "After the story",
+      plate: "Plate", sceneWord: "Scene", decodedWord: "Decoded",
+      ch: "ch", concept: "Concept", contents: "Contents", titlePage: "Title page",
+      scenesWord: "scenes", decodedRow: "After the story — decoded",
+      begin: "Begin reading", textSize: "Text size", prev: "Prev", next: "Next",
+    },
+    zh: {
+      shelf: "书架",
+      heroKicker: "把高深的概念，讲成一则插画寓言",
+      heroPre: "把任何概念，", heroAccent: "寓言", heroPost: "讲成一则",
+      heroSub: "告诉我们你想弄懂什么——我们把它装订成一本插画小书。",
+      conceptLabel: "你想弄懂什么？",
+      conceptPh: "例如：一个 agentic AI 系统在底层到底是怎么运作的？",
+      settingLabel: "背景",
+      weave: "编织寓言",
+      demoNote: "本演示会翻开一则「智能体架构」寓言。",
+      onShelf: "书架上", open: "翻开",
+      tags: ["智能体", "系统架构", "大模型"],
+      stages: [
+        { label:"读你的念头", note:"在字句之下，听出概念真正的形状。" },
+        { label:"编织寓言", note:"把概念化成人物、世界与一处转折。" },
+        { label:"准备阅读", note:"文字先成篇，再等待封面落定。" },
+        { label:"绘制封面", note:"一则寓言只生成一张图，墨色晕染成形。" },
+        { label:"装订成册", note:"排版落定，裁出毛边。" },
+      ],
+      loadingLines: [
+        "先写出寓言，再绘制封面。",
+        "文字准备好后，你可以先开始阅读。",
+        "封面是一张完整插画，所以会比文字更慢。",
+        "如果文字已经好了，可以跳过图片生成，直接开卷。",
+        "整则寓言只会生成一张封面图。",
+      ],
+      weaveLines: [
+        "城南有一座宅子，门匾上写着「应事斋」三个字……",
+        "最里头那间屋，住着一位先生。",
+        "他眼睛蒙着——看不见。两只手平搁在膝上。",
+        "真正把事办成的，从来不是他一个人。是把他围在正中的——这一整座宅子。",
+      ],
+      bound: "装订完成", ready: "你的寓言已成卷", readySub: "翻开它。",
+      openBook: "翻开此书", skipImage: "跳过图片生成", skipImageHint: "通常需要 1-3 分钟。文字准备好后即可使用。",
+      skipQueued: "文字一准备好，就会自动开卷。",
+      progressLabel: "进度",
+      theFable: "寓言", afterStory: "故事之后",
+      plate: "图", sceneWord: "故事", decodedWord: "释义",
+      ch: "卷", concept: "概念", contents: "目录", titlePage: "扉页",
+      scenesWord: "幕", decodedRow: "故事之后 — 释义",
+      begin: "开卷", textSize: "字号", prev: "上一页", next: "下一页",
+    },
+    da: {
+      shelf: "Hylde",
+      heroKicker: "Ideer på kandidatniveau, fortalt som illustrerede fabler",
+      heroPre: "Gør enhver idé", heroAccent: "fabel", heroPost: "til en",
+      heroSub: "Fortæl os, hvad du vil have forklaret — vi binder det til en lille illustreret bog.",
+      conceptLabel: "Hvad skal vi forklare?",
+      conceptPh: "fx Hvordan fungerer et agentisk AI-system egentlig under motorhjelmen?",
+      settingLabel: "Miljø",
+      weave: "Væv fablen",
+      demoNote: "Denne demo åbner én fabel om agentisk arkitektur.",
+      onShelf: "På hylden", open: "Åbn",
+      tags: ["Agentisk AI", "Arkitektur", "LLM-systemer"],
+      stages: [
+        { label:"Læser din idé", note:"Lytter efter konceptets form under ordene." },
+        { label:"Væver fablen", note:"Gør idéen til figurer, en verden og en vending." },
+        { label:"Forbereder læseren", note:"Historien sættes først, før omslaget ankommer." },
+        { label:"Maler omslaget", note:"Ét billede til hele fablen, tusj der blomstrer frem." },
+        { label:"Binder bogen", note:"Sætter typen og skærer kanterne." },
+      ],
+      loadingLines: [
+        "Først skrives fablen. Derefter males omslaget.",
+        "Historien kan læses, før billedet er færdigt.",
+        "Omslaget tager længere tid, fordi det genereres som en fuld illustration.",
+        "Hvis teksten er klar, kan du springe billedgenerering over og begynde at læse.",
+        "Der laves ét omslag til hele fablen.",
+      ],
+      weaveLines: [
+        "I den sydlige del af byen stod et hus. Over porten stod tre ord...",
+        "I det inderste rum sad en mester — den klogeste under himlen.",
+        "Hans øjne var bundet. Hans hænder kunne ikke løfte en pensel.",
+        "Det, der virkelig fik sagen gjort, var aldrig ham alene — det var hele huset omkring ham.",
+      ],
+      bound: "Bogen er bundet", ready: "Din fabel er klar", readySub: "Vend siden.",
+      openBook: "Åbn bogen", skipImage: "Spring billedgenerering over", skipImageHint: "Tager normalt 1-3 minutter. Tilgængelig når historieteksten er klar.",
+      skipQueued: "Åbner så snart historieteksten er klar.",
+      progressLabel: "Fremdrift",
+      theFable: "Fablen", afterStory: "Efter historien",
+      plate: "Billede", sceneWord: "Scene", decodedWord: "Fortolket",
+      ch: "kap", concept: "Koncept", contents: "Indhold", titlePage: "Titelblad",
+      scenesWord: "scener", decodedRow: "Efter historien — fortolket",
+      begin: "Begynd at læse", textSize: "Tekststørrelse", prev: "Forrige", next: "Næste",
+    },
+    fr: {
+      shelf: "Étagère",
+      heroKicker: "Des idées de niveau master, racontées comme des fables illustrées",
+      heroPre: "Transformez n'importe quelle idée", heroAccent: "fable", heroPost: "en une",
+      heroSub: "Dites-nous ce que vous voulez comprendre — nous le relions dans un petit livre illustré.",
+      conceptLabel: "Que faut-il expliquer ?",
+      conceptPh: "ex. Comment fonctionne vraiment un système d'IA agentique sous le capot ?",
+      settingLabel: "Cadre",
+      weave: "Tisser la fable",
+      demoNote: "Cette démo ouvre une fable sur l'architecture agentique.",
+      onShelf: "Sur l'étagère", open: "Ouvrir",
+      tags: ["IA agentique", "Architecture", "Systèmes LLM"],
+      stages: [
+        { label:"Lecture de votre idée", note:"Écoute de la forme du concept sous les mots." },
+        { label:"Tissage de la fable", note:"Transformation de l'idée en personnages, en monde et en retournement." },
+        { label:"Préparation de la lecture", note:"Le texte est mis en place avant l'arrivée de la couverture." },
+        { label:"Peinture de la couverture", note:"Une image pour toute la fable, l'encre prend forme." },
+        { label:"Reliure du livre", note:"Composition du texte et finition des bords." },
+      ],
+      loadingLines: [
+        "La fable est écrite d'abord. La couverture est peinte ensuite.",
+        "L'histoire peut être lue avant que l'image soit terminée.",
+        "La couverture prend plus longtemps parce qu'elle est générée comme une illustration complète.",
+        "Si le texte est prêt, vous pouvez ignorer la génération d'image et commencer à lire.",
+        "Une seule couverture est créée pour toute la fable.",
+      ],
+      weaveLines: [
+        "Au sud de la ville se dressait une maison. Au-dessus de sa porte, trois mots...",
+        "Dans la pièce la plus profonde siégeait un maître — le plus sage sous le ciel.",
+        "Ses yeux étaient bandés. Ses mains ne pouvaient lever un pinceau.",
+        "Celui qui réglait vraiment l'affaire n'était jamais lui seul — c'était toute la maison.",
+      ],
+      bound: "Le livre est relié", ready: "Votre fable est prête", readySub: "Tournez la page.",
+      openBook: "Ouvrir le livre", skipImage: "Ignorer la génération d'image", skipImageHint: "Prend généralement 1 à 3 minutes. Disponible dès que le texte est prêt.",
+      skipQueued: "Ouverture dès que le texte de l'histoire est prêt.",
+      progressLabel: "Progression",
+      theFable: "La fable", afterStory: "Après l'histoire",
+      plate: "Image", sceneWord: "Scène", decodedWord: "Interprétée",
+      ch: "ch", concept: "Concept", contents: "Sommaire", titlePage: "Page de titre",
+      scenesWord: "scènes", decodedRow: "Après l'histoire — interprétée",
+      begin: "Commencer la lecture", textSize: "Taille du texte", prev: "Préc.", next: "Suiv.",
+    },
+  };
+
+  function chaptersFor(lang){
+    return chapters.map(c => lang === "zh"
+      ? { main: `《${c.zh}》`, sub: c.en, idea: c.ideaZh }
+      : lang === "da"
+        ? { main: c.da, sub: c.en, idea: c.ideaDa }
+        : lang === "fr"
+          ? { main: c.fr, sub: c.en, idea: c.ideaFr }
+        : { main: c.en, sub: `《${c.zh}》`, idea: c.ideaEn });
+  }
+
+  window.FABLE = {
+    renderMarkdown, buildPages, book, visuals, chapters, settings, ui, meta,
+    promptBase, prompts, promptFor,
+    metaFor: (l) => meta[["zh", "da", "fr"].includes(l) ? l : "en"],
+    chaptersFor,
+  };
+})();
+
+</script>
+  <script src="live-fable.js?v=20260612-poll-retry"></script>
+  <script type="text/babel">
+/* FABLE — shared components, icons, helpers (exported to window) */
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ---------------- icons (1.5px stroke, currentColor) ---------------- */
+function Icon({ name, size = 18, style }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", style };
+  const paths = {
+    moon: <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
+    sun: <g><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></g>,
+    left: <path d="M15 5l-7 7 7 7" />,
+    right: <path d="M9 5l7 7-7 7" />,
+    book: <g><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21Z" /><path d="M4 5.5V21" /></g>,
+    contents: <g><path d="M8 6h12M8 12h12M8 18h12" /><circle cx="4" cy="6" r="0.6" fill="currentColor"/><circle cx="4" cy="12" r="0.6" fill="currentColor"/><circle cx="4" cy="18" r="0.6" fill="currentColor"/></g>,
+    feather: <g><path d="M20.2 3.8c-3 .3-9.5 1.8-12.7 8.2C5.9 15 5 19 5 19l9-9" /><path d="M5 19c1.2-1.2 3-2 5-2M16 8l-3 3" /></g>,
+    copy: <g><rect x="9" y="9" width="11" height="11" rx="1.5" /><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15" /></g>,
+    check: <path d="M5 12.5l4.5 4.5L19 7" />,
+    x: <path d="M6 6l12 12M18 6L6 18" />,
+    settings: <g><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2.2" /><circle cx="8" cy="17" r="2.2" /></g>,
+    shelf: <g><rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="16" rx="1" /><path d="M17.5 5.2l3 .8-3.5 14-3-.8z" /></g>,
+    spark: <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6Z" />,
+    moon2: <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
+    arrowR: <path d="M5 12h14M13 6l6 6-6 6" />,
+  };
+  return <svg {...p} aria-hidden="true">{paths[name] || null}</svg>;
+}
+
+function MoonGateMark({ size = 28, animated = true }) {
+  const uid = useRef("mg-" + Math.random().toString(36).slice(2)).current;
+  const [replay, setReplay] = useState(0);
+  const sweep = useRef(null);
+  useEffect(() => {
+    if (!animated || !sweep.current) return;
+    const id = requestAnimationFrame(() => {
+      try { sweep.current.beginElement(); } catch (e) {}
+    });
+    return () => cancelAnimationFrame(id);
+  }, [animated, replay]);
+
+  return (
+    <svg key={replay} className={"mg-mark" + (animated ? " is-animated" : "")}
+      viewBox="0 0 120 120" width={size} height={size} aria-hidden="true"
+      onMouseEnter={() => animated && setReplay((n) => n + 1)}>
+      <defs>
+        <radialGradient id={uid + "-moon"} cx="38%" cy="32%" r="80%">
+          <stop offset="0" stopColor="var(--gold-soft)" />
+          <stop offset="52%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="color-mix(in srgb, var(--accent) 52%, #000)" />
+        </radialGradient>
+        <radialGradient id={uid + "-glow"} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="var(--gold-soft)" stopOpacity="0.75" />
+          <stop offset="58%" stopColor="var(--accent)" stopOpacity="0.14" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={uid + "-dot"} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#fff6e2" />
+          <stop offset="42%" stopColor="var(--gold-soft)" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={uid + "-tail"} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="var(--gold-soft)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--gold-soft)" stopOpacity="0.7" />
+        </linearGradient>
+        <clipPath id={uid + "-clip"}>
+          <circle cx="60" cy="60" r="41.2" />
+        </clipPath>
+      </defs>
+      <circle className="mg-glow" cx="60" cy="60" r="50" fill={`url(#${uid}-glow)`} />
+      <circle className="mg-disc" cx="60" cy="60" r="41.2" fill={`url(#${uid}-moon)`} />
+      <circle cx="62.3" cy="57.7" r="41.2" fill="var(--bg)" clipPath={`url(#${uid}-clip)`}>
+        {animated && <animate ref={sweep} attributeName="cx" begin="indefinite"
+          from="150" to="62.3" dur="1.35s" fill="freeze" restart="always"
+          calcMode="spline" keyTimes="0;1" keySplines="0.22 1 0.36 1" />}
+      </circle>
+      <g transform="rotate(-90 60 60)">
+        <circle className="mg-ring" cx="60" cy="60" r="44" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+      </g>
+      <g className="mg-orbit">
+        <path className="mg-tail" d="M60 16 A44 44 0 0 0 32 26" fill="none" stroke={`url(#${uid}-tail)`} strokeWidth="2.2" strokeLinecap="round" />
+        <circle className="mg-dot" cx="60" cy="16" r="3.3" fill={`url(#${uid}-dot)`} />
+      </g>
+    </svg>
+  );
+}
+
+/* ---------------- brand wordmark ---------------- */
+function Logo({ size = 22, onClick, lang = "en" }) {
+  const zh = lang === "zh";
+  const mark = zh ? "寓言" : "Fable";
+  return (
+    <button onClick={onClick} className="logo" style={{
+      display: "flex", alignItems: "center", gap: 11, background: "none", border: 0, padding: 0, cursor: onClick ? "pointer" : "default" }}>
+      <MoonGateMark size={size + 8} />
+      <span style={{ fontFamily: zh ? "var(--font-cjk)" : "var(--font-display)", fontWeight: 600, fontSize: size, letterSpacing: zh ? "0.14em" : "0.02em", color: "var(--ink)", lineHeight: 1 }}>{mark}</span>
+    </button>
+  );
+}
+
+/* ---------------- segmented control ---------------- */
+function Seg({ options, value, onChange, name }) {
+  return (
+    <div className="seg" role="group" aria-label={name}>
+      {options.map((o) => (
+        <button key={o} type="button" aria-pressed={value === o} onClick={() => onChange(o)}>{o}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- theme toggle ---------------- */
+function ThemeToggle({ theme, setTheme }) {
+  const dark = theme === "dark";
+  return (
+    <button className="iconbtn" onClick={() => setTheme(dark ? "light" : "dark")}
+      aria-label={dark ? "Switch to light" : "Switch to dark"} title={dark ? "Light · 日间" : "Dark · 夜间"}>
+      <Icon name={dark ? "sun" : "moon"} />
+    </button>
+  );
+}
+
+/* ---------------- language dropdown ---------------- */
+function LangToggle({ lang, setLang }) {
+  return (
+    <div className="langtoggle">
+      <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Language">
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+        <option value="da">DK</option>
+        <option value="zh">中文</option>
+      </select>
+    </div>
+  );
+}
+
+/* ---------------- markdown view ---------------- */
+function Markdown({ raw, className }) {
+  const html = window.FABLE.renderMarkdown(raw || "");
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+/* ---------------- toast hook ---------------- */
+function useToast() {
+  const [msg, setMsg] = useState("");
+  const t = useRef();
+  const show = useCallback((m) => {
+    setMsg(m); clearTimeout(t.current);
+    t.current = setTimeout(() => setMsg(""), 1500);
+  }, []);
+  const node = (
+    <div style={{
+      position: "fixed", left: "50%", bottom: 26, transform: `translateX(-50%) translateY(${msg ? 0 : 12}px)`,
+      opacity: msg ? 1 : 0, pointerEvents: "none", transition: "all .22s var(--ease)", zIndex: 90,
+      background: "var(--bg-3)", color: "var(--ink)", border: "1px solid var(--line-2)",
+      borderRadius: 2, padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.06em",
+      boxShadow: "var(--shadow-soft)" }}>{msg}</div>
+  );
+  return [show, node];
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const a = document.createElement("textarea"); a.value = text; a.style.position = "fixed"; a.style.opacity = "0";
+    document.body.appendChild(a); a.select(); document.execCommand("copy"); document.body.removeChild(a);
+  }
+}
+
+/* roman numerals for folios */
+function roman(n) {
+  const map = [["X",10],["IX",9],["V",5],["IV",4],["I",1]];
+  let s = "", v = n;
+  for (const [r, k] of map) while (v >= k) { s += r; v -= k; }
+  return s || "·";
+}
+
+Object.assign(window, { Icon, MoonGateMark, Logo, Seg, ThemeToggle, LangToggle, Markdown, useToast, copyText, roman });
+
+</script>
+  <script type="text/babel">
+/* FABLE · CINEMA — the cinematic on-ramp (entry landing + composer) */
+const { useState: useStateCC, useEffect: useEffectCC } = React;
+
+function htmlLang(lang) {
+  if (lang === "zh") return "zh-CN";
+  if (lang === "da") return "da";
+  if (lang === "fr") return "fr";
+  return "en";
+}
+
+function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }) {
+  const FB = window.FABLE;
+  const meta = FB.metaFor(lang);
+  const cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
+  const [concept, setConcept] = useStateCC("");
+  const [setting, setSetting] = useStateCC(FB.settings[lang][0]);
+  const [inView, setInView] = useStateCC(false);
+  useEffectCC(() => {setSetting(FB.settings[lang][0]);}, [lang]);
+  useEffectCC(() => {setInView(true);}, []);
+  const canWeave = false;
+  const previewNote = {
+    en: "New stories are coming soon. Explore the sample book below.",
+    zh: "新故事即将开放。请先阅读下方的示例故事。",
+    da: "Nye historier kommer snart. Udforsk eksempelbogen nedenfor.",
+    fr: "De nouvelles histoires arrivent bientôt. Découvrez le livre d’exemple ci-dessous."
+  }[lang];
+
+  return (
+    <div className="cine-create grain" lang={htmlLang(lang)} {...inView ? { "data-in": "" } : {}}>
+      {/* fixed cinematic backdrop */}
+      <div className="cine-bg" aria-hidden="true">
+        <div className="cine-bg-layer" style={{ opacity: 1 }}>
+          <img src={FB.book.cover} alt="" style={{ objectPosition: "62% 28%" }} />
+        </div>
+        <div className="cine-scrim" data-mode="chapter" />
+        <div className="cine-bars" />
+      </div>
+
+      {/* top bar */}
+      <header className="cine-bar">
+        <Logo lang={lang} />
+        <div className="cine-bar-right">
+          <LangToggle lang={lang} setLang={setLang} />
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+        </div>
+      </header>
+
+      <main className="cine-create-main">
+        <div className="cine-create-inner">
+          <p className="kicker reveal-on" style={{ color: "rgba(246,237,219,.7)" }}>{T.heroKicker}</p>
+          <h1 className="cine-create-title reveal-on"
+          style={{ fontFamily: lang === "zh" ? "var(--font-cjk)" : "var(--font-display)", letterSpacing: lang === "zh" ? "0.02em" : undefined }}>
+            {T.heroPre}<br />{T.heroPost}{lang === "zh" ? "" : " "}
+            <span className="serif-italic" style={{ color: "var(--accent)" }}>{T.heroAccent}</span>{lang === "zh" ? "。" : "."}
+          </h1>
+          <p className="cine-create-sub reveal-on">{T.heroSub}</p>
+
+          <div className="cine-compose reveal-on" data-comment-anchor="36586ca834-div-45-11">
+            <span className="kicker">{T.conceptLabel}</span>
+            <textarea className="cine-ta" value={concept} spellCheck={false} data-ob="concept"
+            onChange={(e) => setConcept(e.target.value)} placeholder={T.conceptPh} />
+            <div style={{ display: "grid", gap: 9 }} data-ob="setting">
+              <span className="kicker" style={{ color: "rgba(246,237,219,.55)" }}>{T.settingLabel}</span>
+              <div className="cine-settings">
+                {FB.settings[lang].map((o) =>
+                <button key={o} type="button" className={"cine-chip" + (o === setting ? " is-on" : "")}
+                onClick={() => setSetting(o)} aria-pressed={o === setting}
+                style={{ fontFamily: cjk(o) ? "var(--font-cjk)" : undefined }}>{o}</button>
+                )}
+              </div>
+            </div>
+
+            <p role="status" style={{ color: "var(--ink-2)", margin: 0 }}>{previewNote}</p>
+            <div className="cine-compose-foot">
+              <button className="cine-nowshowing" onClick={onOpenBook}>
+                <Icon name="right" size={14} /> {T.open} · {meta.title}
+              </button>
+              <button className="btn btn--primary" data-ob="weave" disabled={!canWeave} onClick={() => onWeave({ concept, setting })}>
+                <Icon name="feather" size={16} /> {T.weave}
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>);
+
+}
+
+window.CinemaCreate = CinemaCreate;
+</script>
+  <script type="text/babel">
+/* FABLE — Generation "magic moment": staged, atmospheric, ink blooming */
+const { useState: useStateG, useEffect: useEffectG, useRef: useRefG } = React;
+
+function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) {
+  const FB = window.FABLE;
+  const stages = T.stages;
+  const liveMode = window.FABLE_LIVE && window.FABLE_LIVE.isLive();
+  const [stageIdx, setStageIdx] = useStateG(0);
+  const [typed, setTyped] = useStateG("");
+  const [plateCount, setPlateCount] = useStateG(0);
+  const [progressPct, setProgressPct] = useStateG(2);
+  const [coverIn, setCoverIn] = useStateG(false);
+  const [ready, setReady] = useStateG(false);
+  const [liveResult, setLiveResult] = useStateG(null);
+  const [partialResult, setPartialResult] = useStateG(null);
+  const [skipQueued, setSkipQueued] = useStateG(false);
+  const [runInfo, setRunInfo] = useStateG(null);
+  const [error, setError] = useStateG("");
+  const timers = useRefG([]);
+  const liveDrift = useRefG(null);
+  const skipRequested = useRefG(false);
+  const fallbackCover = (FB.visuals && FB.visuals[0]) || { image: FB.book.cover, prompt: "" };
+  const plates = liveMode && runInfo ? runInfo.images.map((img) => ({ image: img.src, prompt: img.prompt })) : [fallbackCover];
+
+  useEffectG(() => {
+    const stopDrift = () => {
+      if (liveDrift.current) clearInterval(liveDrift.current);
+      liveDrift.current = null;
+    };
+    const driftTo = (floor, ceiling) => {
+      stopDrift();
+      setProgressPct((p) => Math.max(p, floor));
+      const id = setInterval(() => {
+        setProgressPct((p) => {
+          if (p >= ceiling) return p;
+          return Math.min(ceiling, p + Math.max(0.35, (ceiling - p) * 0.045));
+        });
+      }, 850);
+      liveDrift.current = id;
+      timers.current.push(id);
+    };
+
+    if (liveMode) {
+      let cancelled = false;
+      const run = async () => {
+        try {
+          setProgressPct(6);
+          setStageIdx(1);
+          driftTo(8, 28);
+          const result = await window.FABLE_LIVE.generate({
+            request,
+            lang,
+            onStage: (idx) => {
+              if (cancelled) return;
+              setStageIdx(idx);
+              if (idx === 1) driftTo(8, 28);
+              if (idx === 2) driftTo(34, 58);
+              if (idx === 3) driftTo(62, 92);
+              if (idx === 4) driftTo(94, 98);
+            },
+            onPartial: (partial) => {
+              if (cancelled) return;
+              if (skipRequested.current) {
+                cancelled = true;
+                stopDrift();
+                onDone(partial);
+                return;
+              }
+              setPartialResult(partial);
+              setStageIdx((idx) => Math.max(idx, 2));
+              driftTo(34, 58);
+            },
+          });
+          if (cancelled) return;
+          if (skipRequested.current) {
+            onDone(result);
+            return;
+          }
+          stopDrift();
+          setLiveResult(result);
+          setRunInfo(result.run);
+          setCoverIn(true);
+          setPlateCount(1);
+          setProgressPct(100);
+          setStageIdx(4);
+          setReady(true);
+        } catch (err) {
+          if (cancelled) return;
+          stopDrift();
+          setError(err.message || String(err));
+          setProgressPct((p) => Math.min(88, Math.max(12, p)));
+          setReady(false);
+        }
+      };
+      run();
+      return () => { cancelled = true; stopDrift(); timers.current.forEach(clearTimeout); };
+    }
+
+    const T = (fn, ms) => {const id = setTimeout(fn, ms);timers.current.push(id);};
+    // stage progression
+    setProgressPct(2);
+    T(() => { setStageIdx(1); setProgressPct(24); }, 1100); // weave
+    T(() => { setStageIdx(2); setProgressPct(50); }, 4200); // reader
+    T(() => { setStageIdx(3); setProgressPct(66); }, 5200); // cover
+    T(() => {setCoverIn(true); setProgressPct(76);}, 5600);
+    // fill plates
+    for (let i = 1; i <= plates.length; i++) T(() => { setPlateCount(i); setProgressPct(84); }, 6200 + i * 360);
+    T(() => { setStageIdx(4); setProgressPct(94); }, 6200 + plates.length * 360 + 500); // bind
+    T(() => { setReady(true); setProgressPct(100); }, 6200 + plates.length * 360 + 1500);
+    return () => timers.current.forEach(clearTimeout);
+  }, [liveMode, request, lang]);
+
+  // Keep the loading copy moving until the book is ready.
+  useEffectG(() => {
+    if (stageIdx < 1 || ready) return;
+    const lines = (T.loadingLines && T.loadingLines.length ? T.loadingLines : T.weaveLines);
+    let li = 0, ci = 0;
+    let id;
+    const tick = () => {
+      const line = lines[li];
+      if (ci <= line.length) {
+        setTyped(line.slice(0, ci));
+        ci++;
+        id = setTimeout(tick, 44);
+      } else {
+        id = setTimeout(() => {
+          li = (li + 1) % lines.length;
+          ci = 1;
+          setTyped(lines[li].slice(0, ci));
+          id = setTimeout(tick, 80);
+        }, 1300);
+      }
+    };
+    tick();
+    return () => clearTimeout(id);
+  }, [stageIdx >= 1, ready, lang]);
+
+  const progress = Math.min(1, Math.max(0.02, progressPct / 100));
+  const progressPercent = Math.min(100, Math.max(1, Math.round(progress * 100)));
+  const canSkipImage = !ready && !error;
+  const skipImageGeneration = () => {
+    skipRequested.current = true;
+    if (liveMode && partialResult) {
+      onDone(partialResult);
+      return;
+    }
+    if (!liveMode) {
+      onDone(null);
+      return;
+    }
+    setSkipQueued(true);
+  };
+
+  return (
+    <div className="grain" style={{ minHeight: "100vh", background: "var(--bg)", display: "grid", gridTemplateRows: "auto 1fr auto", position: "relative", overflow: "hidden" }}>
+      {/* candle glow */}
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(60% 50% at 50% 38%, var(--glow), transparent 70%)", opacity: coverIn ? 0.9 : 0.4, transition: "opacity 1.2s var(--ease)", pointerEvents: "none" }} />
+
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(18px,3vw,40px)", position: "relative", zIndex: 2 }}>
+        <Logo lang={lang} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <LangToggle lang={lang} setLang={setLang} />
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+        </div>
+      </header>
+
+      <main style={{ display: "grid", placeItems: "center", padding: "20px", position: "relative", zIndex: 1 }}>
+        <div style={{ width: "min(720px, 92vw)", textAlign: "center" }}>
+          {/* cover reveal */}
+          <div style={{ position: "relative", width: "min(420px, 78vw)", margin: "0 auto", aspectRatio: "16/10",
+            border: "1px solid var(--line-2)", borderRadius: 3, overflow: "hidden", background: "var(--bg-3)",
+            boxShadow: coverIn ? "var(--shadow)" : "none", transition: "box-shadow 1s var(--ease)" }}>
+            {coverIn ?
+            <img src={(liveResult && liveResult.pages && liveResult.pages[0].image) || FB.book.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", animation: "inkBloom 1.6s var(--ease) both" }} /> :
+
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+                <InkSwirl />
+              </div>
+            }
+            <span style={{ position: "absolute", inset: 0, background: "var(--vignette)", opacity: coverIn ? 0.5 : 0, transition: "opacity 1s" }} />
+          </div>
+
+          {/* typed fable fragment — capped to two lines, one line at a time */}
+          <div style={{ height: 60, marginTop: 22, display: "grid", placeItems: "center", overflow: "hidden" }}>
+            <p style={{ margin: 0, fontFamily: lang === "zh" ? "var(--font-cjk)" : "var(--font-body)", fontSize: 16.5, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 540, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", opacity: stageIdx >= 1 && !ready ? 1 : 0.0, transition: "opacity .6s" }} data-comment-anchor="7b0caacaf8-p-82-13">
+              {typed}<span className="caret" style={{ opacity: ready ? 0 : 1 }}>｜</span>
+            </p>
+          </div>
+
+          {/* stage label */}
+          <div style={{ marginTop: 10 }}>
+            <p className="kicker" style={{ color: "var(--accent)", marginBottom: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 14 }}>
+              <span>{ready ? T.bound : `${roman(stageIdx + 1)} / ${roman(stages.length)}`}</span>
+            </p>
+            <h2 className="display" style={{ fontSize: "clamp(26px,4vw,38px)" }}>
+              {ready ? T.ready : stages[stageIdx].label}
+            </h2>
+            <p style={{ color: "var(--ink-3)", fontSize: 15, fontStyle: "italic", marginTop: 8, minHeight: 22 }}>
+              {ready ? T.readySub : stages[stageIdx].note}
+            </p>
+          </div>
+
+          {/* plate thumbnails filling in */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 26, flexWrap: "wrap" }}>
+            {plates.map((pl, i) =>
+            <span key={i} style={{
+              width: 46, height: 29, borderRadius: 2, overflow: "hidden", border: "1px solid var(--line)",
+              background: "var(--bg-3)", position: "relative" }}>
+                {i < plateCount && <img src={pl.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", animation: "inkBloom .8s var(--ease) both" }} />}
+              </span>
+            )}
+          </div>
+
+          {/* progress rule */}
+          <div style={{ width: "min(420px, 78vw)", margin: "30px auto 0", height: 1, background: "var(--line)", position: "relative" }}>
+            <span style={{ position: "absolute", left: 0, top: -1, height: 3, width: `${Math.min(100, progress * 100)}%`, background: "var(--accent)", transition: "width .5s var(--ease)", boxShadow: "0 0 10px var(--glow)" }} />
+          </div>
+          <p className="kicker" aria-live="polite" style={{ margin: "12px 0 0", color: "var(--accent)", display: "inline-flex", alignItems: "baseline", gap: 8 }}>
+            <span>{T.progressLabel}</span>
+            <strong style={{ fontFamily: "var(--font-mono)", fontSize: 18, letterSpacing: 0 }}>{progressPercent}%</strong>
+          </p>
+
+          <div style={{ marginTop: 30, height: 48 }}>
+            {ready && !error &&
+            <button className="btn btn--primary fade-up" data-ob="open" onClick={() => onDone(liveMode ? liveResult : null)}>
+                <Icon name="book" size={16} /> {T.openBook}
+              </button>
+            }
+            {error &&
+            <button className="btn btn--quiet fade-up" onClick={() => window.location.reload()}>
+                {lang === "zh" ? "返回重试" : "Try again"}
+              </button>
+            }
+          </div>
+          {error && <p style={{ color: "var(--bordeaux)", fontSize: 13, marginTop: 14 }}>{error}</p>}
+        </div>
+      </main>
+
+      <footer style={{ padding: "16px", textAlign: "center", position: "relative", zIndex: 2 }}>
+        {!ready && !error &&
+          <div style={{ display: "grid", placeItems: "center", gap: 7 }}>
+            <button className="btn btn--ghost" onClick={skipImageGeneration} disabled={!canSkipImage} style={{ fontSize: 11 }}>
+              {T.skipImage}
+            </button>
+            <span style={{ color: "var(--ink-3)", fontSize: 12 }}>{skipQueued ? T.skipQueued : T.skipImageHint}</span>
+          </div>
+        }
+      </footer>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes caretBlink { 50% { opacity: 0; } }
+        .caret { animation: caretBlink 1s steps(1) infinite; color: var(--accent); }
+      `}</style>
+    </div>);
+
+}
+
+function InkSwirl() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" style={{ animation: "spin 3.2s linear infinite", opacity: 0.7 }}>
+      <circle cx="60" cy="60" r="42" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="6 14" opacity="0.7" />
+      <circle cx="60" cy="60" r="30" fill="none" stroke="var(--ink-3)" strokeWidth="1" strokeDasharray="2 10" />
+      <circle cx="60" cy="18" r="3" fill="var(--accent)" />
+    </svg>);
+
+}
+
+window.GenerateScreen = GenerateScreen;
+</script>
+  <script type="text/babel">
+/* FABLE · CINEMA — "The Reel"
+   A scrollytelling reader. No book, no pages, no spreads. A fixed cinematic
+   backdrop swaps per chapter while prose rises over a filmic scrim; the
+   "what it really means" decode becomes a flat field-notes interlude. */
+const { useState: useStateCR, useEffect: useEffectCR, useRef: useRefCR, useMemo: useMemoCR } = React;
+
+const _cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
+
+function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = {} }) {
+  const FB = window.FABLE;
+  const meta = (pages[0] && pages[0].meta) || FB.metaFor(lang);
+  const scroller = useRefCR(null);
+  const nodeRefs = useRefCR([]);
+  const [active, setActive] = useStateCR(0);
+  const [toc, setToc] = useStateCR(false);
+
+  // flatten pages → cinematic sections (cover · chapter card · scenes · decode · end)
+  const sections = useMemoCR(() => {
+    const out = [];
+    pages.forEach((p) => {
+      if (p.kind === "Cover") out.push({ type: "cover", page: p, image: p.image });
+      else if (p.kind === "Story") {
+        if (p.sceneIndex === 0) out.push({ type: "chapter", page: p, image: p.image });
+        out.push({ type: "scene", page: p, image: p.image });
+      } else out.push({ type: "decode", page: p, image: p.image });
+    });
+    const lastImg = out.length ? out[out.length - 1].image : (pages[0] && pages[0].image);
+    out.push({ type: "end", page: { image: lastImg }, image: lastImg });
+    return out;
+  }, [pages]);
+
+  const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image))], [sections]);
+  const stops = useMemoCR(
+    () => sections.map((s, i) => ({ i, s })).filter((x) => x.s.type === "cover" || x.s.type === "chapter"),
+    [sections]
+  );
+
+  // active section = the one whose body holds the viewport "read line"
+  useEffectCR(() => {
+    const el = scroller.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const line = el.scrollTop + el.clientHeight * 0.42;
+        let best = 0, bestD = Infinity;
+        nodeRefs.current.forEach((n, i) => {
+          if (!n) return;
+          const top = n.offsetTop, bot = top + n.offsetHeight, mid = (top + bot) / 2;
+          if (line >= top && line < bot) { best = i; bestD = -1; }
+          else if (bestD !== -1) { const d = Math.abs(mid - line); if (d < bestD) { bestD = d; best = i; } }
+        });
+        setActive((a) => (a === best ? a : best));
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => { el.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, [sections]);
+
+  const scrollToIndex = (i) => {
+    const n = nodeRefs.current[i], el = scroller.current;
+    if (!n || !el) return;
+    el.scrollTo({ top: n.offsetTop, behavior: "smooth" });
+  };
+
+  useEffectCR(() => {
+    const h = (e) => {
+      if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); scrollToIndex(Math.min(active + 1, sections.length - 1)); }
+      else if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); scrollToIndex(Math.max(active - 1, 0)); }
+      else if (e.key === "Escape") setToc(false);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [active, sections]);
+
+  const cur = sections[active] || sections[0];
+  const activeImage = cur.image;
+  const mode = cur.type;
+  const pan = (cur.page && cur.page.pan != null) ? cur.page.pan : 50;
+  const progress = sections.length > 1 ? active / (sections.length - 1) : 0;
+  const activeStop = stops.reduce((acc, x) => (x.i <= active ? x.i : acc), 0);
+
+  return (
+    <div className="cine grain" ref={scroller} lang={htmlLang(lang)}>
+      {/* fixed cinematic backdrop */}
+      <div className="cine-bg">
+        {uniqueImages.map((src) => (
+          <div key={src} className="cine-bg-layer" style={{ opacity: src === activeImage ? 1 : 0 }}>
+            <img src={src} alt="" style={{ objectPosition: `${pan}% 50%` }} />
+          </div>
+        ))}
+        <div className="cine-scrim" data-mode={mode} />
+        <div className="cine-bars" />
+      </div>
+
+      {/* top bar */}
+      <header className="cine-bar">
+        <button className="btn btn--quiet" data-ob="shelf" onClick={onExit} style={{ flex: "0 0 auto" }}>
+          <Icon name="left" size={16} /><span style={{ marginLeft: 4 }}>{T.shelf}</span>
+        </button>
+        <div className="cine-bar-mid">
+          <p className="kicker" style={{ fontSize: 10 }}>{meta.trilogy}</p>
+          <p className="cine-bar-title" style={{ fontFamily: _cjk(meta.title) ? "var(--font-cjk)" : "var(--font-display)" }}>
+            {barLabel(cur, T, meta)}
+          </p>
+        </div>
+        <div className="cine-bar-right">
+          <button className="iconbtn" data-ob="contents" onClick={() => setToc((t) => !t)} aria-label="Contents" title={T.contents}><Icon name="contents" /></button>
+          <LangToggle lang={lang} setLang={setLang} />
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+        </div>
+      </header>
+
+      {/* progress rail */}
+      <div className="cine-rail" aria-hidden="true">
+        <div className="cine-rail-track"><span className="cine-rail-fill" style={{ height: `${progress * 100}%` }} /></div>
+        {stops.map(({ i }) => (
+          <button key={i}
+            className={"cine-rail-dot" + (active >= i ? " is-done" : "") + (activeStop === i ? " is-active" : "")}
+            style={{ top: `${(i / (sections.length - 1)) * 100}%` }}
+            onClick={() => scrollToIndex(i)} />
+        ))}
+      </div>
+
+      {/* the flow */}
+      <div className="cine-flow">
+        {sections.map((s, i) => (
+          <section key={i} ref={(n) => (nodeRefs.current[i] = n)}
+            className={`cine-sec cine-${s.type}`}
+            data-screen-label={s.type === "scene" ? `${s.page.nav}` : s.type}
+            {...(active === i ? { "data-active": "" } : {})}>
+            <Section s={s} T={T} meta={meta} lang={lang} onBegin={() => scrollToIndex(1)} onExit={onExit} />
+          </section>
+        ))}
+      </div>
+
+      {toc && <CineContents sections={sections} active={active} T={T} onPick={(i) => { scrollToIndex(i); setToc(false); }} onClose={() => setToc(false)} />}
+    </div>
+  );
+}
+
+function barLabel(cur, T, meta) {
+  if (cur.type === "cover") return meta.title;
+  if (cur.type === "end") return meta.title;
+  if (cur.type === "decode") return `${cur.page.title} · ${T.decodedWord}`;
+  const p = cur.page;
+  return `${p.title} · ${p.sceneIndex + 1}/${p.sceneCount}`;
+}
+
+function Section({ s, T, meta, lang, onBegin, onExit }) {
+  const p = s.page;
+  const dispFont = (t) => (_cjk(t) ? "var(--font-cjk)" : "var(--font-display)");
+
+  if (s.type === "cover") {
+    return (
+      <div className="inner">
+        <p className="kicker reveal" style={{ color: "rgba(246,237,219,.7)" }}>{meta.trilogy}</p>
+        <h1 className="reveal" style={{ fontFamily: dispFont(meta.title), letterSpacing: _cjk(meta.title) ? "0.03em" : undefined }}>{meta.title}</h1>
+        <p className="sub reveal">{meta.subtitle}.</p>
+        <button className="cine-cue reveal" onClick={onBegin} style={{ background: "none", border: 0, cursor: "pointer" }}>
+          {T.begin} <Icon name="right" size={16} style={{ transform: "rotate(90deg)" }} />
+        </button>
+      </div>
+    );
+  }
+
+  if (s.type === "chapter") {
+    return (
+      <div className="inner">
+        <p className="num reveal">{T.ch} {roman(p.chapterIndex + 1)}</p>
+        <h2 className="reveal" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h2>
+        <p className="deck reveal">{p.deck}</p>
+      </div>
+    );
+  }
+
+  if (s.type === "scene") {
+    return (
+      <div className="cine-panel reveal">
+        <div className="cine-scene-meta">
+          <span className="kicker" style={{ color: "var(--accent)" }}>{T.theFable}</span>
+          <span className="kicker" style={{ textTransform: "none" }}>{T.ch} {roman(p.chapterIndex + 1)} · {p.sceneIndex + 1}/{p.sceneCount}</span>
+        </div>
+        <Prose raw={p.raw} drop={p.sceneIndex === 0} />
+      </div>
+    );
+  }
+
+  if (s.type === "decode") {
+    return (
+      <div className="cine-decode-card reveal">
+        <div className="cine-decode-head">
+          <span className="tag">{T.afterStory}</span>
+          <span className="ln" />
+        </div>
+        <h3 className="dt" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h3>
+        <div style={{ height: 18 }} />
+        <Prose raw={p.raw} drop={false} />
+      </div>
+    );
+  }
+
+  // end
+  const endTitle = lang === "zh" ? "寓言完" : (lang === "da" ? "Fablen er slut" : (lang === "fr" ? "Fin de la fable" : "End of the fable"));
+  return (
+    <div className="cine-end inner">
+      <p className="kicker reveal" style={{ color: "rgba(246,237,219,.7)", marginBottom: 18 }}>{meta.trilogy}</p>
+      <h2 className="reveal">{endTitle}</h2>
+      <p className="reveal">{meta.subtitle}.</p>
+      <button className="btn btn--ghost reveal" data-ob="shelf" onClick={onExit} style={{ borderColor: "rgba(246,237,219,.4)", color: "#f6eddb" }}>
+        <Icon name="left" size={15} /> {T.shelf}
+      </button>
+    </div>
+  );
+}
+
+/* prose with an optional drop-initial, rendered from the shared markdown engine */
+function Prose({ raw, drop }) {
+  const ref = useRefCR(null);
+  useEffectCR(() => {
+    if (!drop || !ref.current) return;
+    const p = [...ref.current.children].find((e) => e.tagName === "P");
+    if (!p || p.querySelector(".dropcap")) return;
+    const txt = p.firstChild;
+    if (txt && txt.nodeType === 3 && txt.textContent.length) {
+      const span = document.createElement("span");
+      span.className = "dropcap" + (_cjk(txt.textContent[0]) ? " cjk" : "");
+      span.textContent = txt.textContent[0];
+      txt.textContent = txt.textContent.slice(1);
+      p.insertBefore(span, txt);
+    }
+  }, [raw, drop]);
+  const html = window.FABLE.renderMarkdown(raw || "");
+  return <div className="cine-prose" ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function CineContents({ sections, active, T, onPick, onClose }) {
+  const rows = sections
+    .map((s, i) => ({ s, i }))
+    .filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type));
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="overlay-card grain fade-up" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+          <h3 className="display" style={{ fontSize: 26 }}>{T.contents}</h3>
+          <button className="iconbtn" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          {rows.map(({ s, i }) => {
+            const p = s.page;
+            const isChap = s.type === "chapter";
+            const isDecode = s.type === "decode";
+            const label = s.type === "cover" ? T.titlePage
+              : s.type === "end" ? (T.contents && "—")
+              : isDecode ? `${T.ch} ${roman(p.chapterIndex + 1)} · ${T.decodedWord}`
+              : `${T.ch} ${roman(p.chapterIndex + 1)} · ${p.sceneCount} ${T.scenesWord}`;
+            const title = s.type === "cover" ? sections[0].page.title
+              : s.type === "end" ? (T.contents ? "Fin" : "Fin")
+              : p.title;
+            return (
+              <button key={i}
+                className={(isDecode ? "toc-sub" : "toc-row") + (active === i ? " is-active" : "")}
+                style={isDecode ? {} : { gridTemplateColumns: "64px 1fr auto" }}
+                onClick={() => onPick(i)}>
+                {!isDecode && <img src={s.image} alt="" />}
+                <span style={{ display: "grid", gap: 2, minWidth: 0, textAlign: "left" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.13em", textTransform: "uppercase", color: isDecode ? "var(--bordeaux)" : "var(--ink-3)" }}>{label}</span>
+                  {!isDecode && <span style={{ fontFamily: _cjk(title) ? "var(--font-cjk)" : "var(--font-display)", fontSize: 16, color: "var(--ink)", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>}
+                </span>
+                {isDecode ? <Icon name="arrowR" size={14} /> : <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)" }}>{roman(i)}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.CinemaReader = CinemaReader;
+
+</script>
+  <script type="text/babel">
+// @ds-adherence-ignore -- omelette starter scaffold (raw elements/hex/px by design)
+
+/* BEGIN USAGE */
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+// Exports (to window): useTweaks, TweaksPanel, TweakSection, TweakRow, TweakSlider,
+//   TweakToggle, TweakRadio, TweakSelect, TweakText, TweakNumber, TweakColor, TweakButton.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// TweakRadio is the segmented control for 2–3 short options (auto-falls-back to
+// TweakSelect past ~16/~10 chars per label); reach for TweakSelect directly when
+// options are many or long. For color tweaks always curate 3-4 options rather than
+// a free picker; an option can also be a whole 2–5 color palette (the stored value
+// is the array). The Tweak* controls are a floor, not a ceiling — build custom
+// controls inside the panel if a tweak calls for UI they don't cover.
+/* END USAGE */
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+
+</script>
+  <script type="text/babel">
+/* FABLE · CINEMA — app state machine + mount (reader → CinemaReader) */
+const { useState: useStateA, useEffect: useEffectA } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "dark",
+  "accent": "#cf9f4c",
+  "grain": 0.3,
+  "heroArt": "bold",
+  "settingChips": "illustrated",
+  "shelf": "library",
+  "dividers": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const FB = window.FABLE;
+  const md = document.getElementById("source-md").textContent.trim();
+
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [lang, setLangState] = useStateA("en");
+  const [screen, setScreen] = useStateA("create"); // create | generate | reader
+  const [request, setRequest] = useStateA(null);
+  const [generated, setGenerated] = useStateA(null);
+
+  const pages = React.useMemo(() => (
+    generated && generated.lang === lang ? generated.pages : FB.buildPages(md, lang)
+  ), [generated, lang]);
+  const T = FB.ui[lang];
+
+  useEffectA(() => { document.documentElement.setAttribute("data-theme", t.theme); }, [t.theme]);
+  useEffectA(() => {
+    document.documentElement.style.setProperty("--accent", t.accent);
+    document.documentElement.style.setProperty("--grain", String(t.grain));
+  }, [t.accent, t.grain]);
+  useEffectA(() => {
+    localStorage.setItem("fable-lang", lang);
+    document.documentElement.setAttribute("lang", htmlLang(lang));
+  }, [lang]);
+  useEffectA(() => {
+    window.__fableScreen = screen;
+    window.dispatchEvent(new CustomEvent("fable:screen", { detail: screen }));
+  }, [screen]);
+
+  const setLang = (x) => setLangState(x);
+  const theme = t.theme;
+  const setTheme = (x) => setTweak("theme", x);
+  const viz = { heroArt: t.heroArt, settingChips: t.settingChips, shelf: t.shelf, dividers: t.dividers };
+  const shared = { theme, setTheme, lang, setLang, T, viz };
+
+  return (
+    <React.Fragment>
+      {screen === "create" && (
+        <CinemaCreate {...shared}
+          onWeave={(req) => { setGenerated(null); setRequest(req); setScreen("generate"); window.scrollTo(0, 0); }}
+          onOpenBook={() => { setGenerated(null); setScreen("reader"); window.scrollTo(0, 0); }} />
+      )}
+      {screen === "generate" && (
+        <GenerateScreen {...shared} request={request}
+          onDone={(result) => { if (result && result.pages) setGenerated(result); setScreen("reader"); window.scrollTo(0, 0); }} />
+      )}
+      {screen === "reader" && (
+        <CinemaReader {...shared} pages={pages}
+          onExit={() => { setScreen("create"); window.scrollTo(0, 0); }} />
+      )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Brand" />
+        <TweakColor label="Accent" value={t.accent}
+          options={["#cf9f4c", "#c66a64", "#6f9c84", "#46a5b9"]}
+          onChange={(v) => setTweak("accent", v)} />
+        <TweakRadio label="Theme" value={t.theme} options={["dark", "light"]}
+          onChange={(v) => setTweak("theme", v)} />
+        <TweakSlider label="Film grain" value={t.grain} min={0} max={1} step={0.1}
+          onChange={(v) => setTweak("grain", v)} />
+
+        <TweakSection label="Entry" />
+        <TweakSelect label="Hero backdrop" value={t.heroArt}
+          options={["off", "subtle", "bold"]}
+          onChange={(v) => setTweak("heroArt", v)} />
+        <TweakRadio label="Setting picker" value={t.settingChips}
+          options={[{ value: "text", label: "Text" }, { value: "illustrated", label: "Illustrated" }]}
+          onChange={(v) => setTweak("settingChips", v)} />
+        <TweakRadio label="Shelf" value={t.shelf}
+          options={[{ value: "single", label: "Single" }, { value: "library", label: "Library" }]}
+          onChange={(v) => setTweak("shelf", v)} />
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+  <script type="text/babel" src="onboarding.jsx"></script>
+</body>
+</html>
