@@ -15,7 +15,7 @@ try {
     assert.match(await page.locator('[role="status"]').textContent(), /coming soon/);
     await page.locator('.cine-nowshowing').click();
     await page.waitForFunction(() => window.__fableScreen === 'reader');
-    await page.waitForTimeout(700);
+    await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0), undefined, { timeout: 60000 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     const missing = await page.locator('img').evaluateAll(imgs => imgs.filter(i => !i.complete || i.naturalWidth === 0).map(i => i.src));
     assert.deepEqual(missing, []);
