@@ -1806,7 +1806,7 @@ function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }
 
             <p role="status" style={{ color: "var(--ink-2)", margin: 0 }}>{previewNote}</p>
             <div className="cine-compose-foot">
-              <button className="cine-nowshowing" onClick={onOpenBook}>
+              <button className="cine-nowshowing" data-ob="sample" onClick={onOpenBook}>
                 <Icon name="right" size={14} /> {T.open} · {meta.title}
               </button>
               <button className="btn btn--primary" data-ob="weave" disabled={!canWeave} onClick={() => onWeave({ concept, setting })}>

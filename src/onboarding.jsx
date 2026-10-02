@@ -13,7 +13,7 @@
         body: ["Type the idea you want turned into a fable — a question, a system, or a concept you’re trying to understand."] },
       { key: "setting", target: "setting", title: "Choose a setting",
         body: ["Pick the world the fable is told in — classical, myth, fairy tale, or present-day. It shapes both the voice and the artwork."] },
-      { key: "weave", target: "weave", action: "New story generation is coming soon. Open the sample book to explore.", title: "New stories coming soon",
+      { key: "sample", target: "sample", finish: true, title: "Explore the sample book",
         body: ["New story and image generation are not available yet. Use the sample-book link to read the illustrated stories."] },
     ],
     generate: [
@@ -165,6 +165,18 @@
     // measure the card so a tall card can be clamped inside the viewport
     const cardRef = useRef(null);
     const [cardH, setCardH] = useState(0);
+    useEffect(() => {
+      const previous = document.activeElement;
+      cardRef.current?.focus();
+      const onKey = (event) => {
+        if (event.key === "Escape") { event.preventDefault(); onEnd(); }
+      };
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("keydown", onKey);
+        if (previous?.isConnected) previous.focus();
+      };
+    }, []);
     React.useLayoutEffect(() => {
       const h = cardRef.current ? cardRef.current.offsetHeight : 0;
       if (h && Math.abs(h - cardH) > 1) setCardH(h);
@@ -198,10 +210,10 @@
 
     return React.createElement("div", { className: "ob-veil" },
       rect ? spot : React.createElement("div", { className: "ob-dim" }),
-      React.createElement("div", { className: "ob-card", style: cardStyle, ref: cardRef },
+      React.createElement("div", { className: "ob-card", style: cardStyle, ref: cardRef, role: "dialog", "aria-labelledby": "guide-title", tabIndex: -1 },
         React.createElement("button", { className: "ob-x", "aria-label": "Close guide", onClick: onEnd },
           React.createElement(CloseIcon)),
-        React.createElement("h3", { className: "ob-title" }, step.title),
+        React.createElement("h3", { className: "ob-title", id: "guide-title" }, step.title),
         step.bullets
           ? React.createElement(React.Fragment, null,
               step.lead && React.createElement("div", { className: "ob-body" },
