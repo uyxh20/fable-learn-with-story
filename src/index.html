@@ -3086,7 +3086,7 @@ function App() {
   const setTheme = (x) => setTweak("theme", x);
   const viz = { heroArt: t.heroArt, settingChips: t.settingChips, shelf: t.shelf, dividers: t.dividers };
   const shared = { theme, setTheme, lang, setLang, T, viz };
-  const Reader = { popup: window.PopupStageReader, tunnel: window.TunnelBookReader, mechanics: window.PaperMechanicsReader }[new URLSearchParams(location.search).get("reader")] || CinemaReader;
+  const Reader = { __proto__: null, popup: window.PopupStageReader, tunnel: window.TunnelBookReader, mechanics: window.PaperMechanicsReader }[new URLSearchParams(location.search).get("reader")] || CinemaReader;
 
   return (
     <React.Fragment>

@@ -15,7 +15,7 @@
 .pb-top button { min-width:44px; min-height:44px; }
 .pb-label { flex:1; min-width:0; font-size:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .pb-top .langtoggle { flex:none; }
-.pb-workspace { position:absolute; inset:98px 52px 92px; display:grid; place-items:center; }
+.pb-workspace { position:absolute; inset:98px 52px 92px; display:flex; align-items:center; justify-content:center; }
 .pb-book { position:relative; width:min(1200px,100%); height:min(680px,100%); touch-action:pan-y; perspective:1900px; }
 .pb-spread { --open:1; width:100%; height:100%; display:grid; grid-template-columns:1fr 1fr; background:var(--bg-2); border-radius:6px 15px 15px 6px; box-shadow:0 5px 0 var(--line-2),0 9px 0 var(--bg-2),0 30px 60px #0006; border:1px solid var(--line-2); }
 .pb-text { position:relative; padding:clamp(24px,4vw,64px); overflow:auto; scrollbar-width:thin; overscroll-behavior:contain; min-height:0; border-right:1px solid var(--line-2); background:linear-gradient(90deg,transparent 95%,var(--line)); }
@@ -58,10 +58,29 @@
 .pb-dialog button { min-height:44px; text-align:left; background:transparent; border:0; color:var(--ink); padding:10px; font:17px var(--font-body); }
 .pb-dialog button[aria-current] { background:var(--line); }
 
-.pb-stage { position:absolute; inset:8% 3% 4%; transform-style:preserve-3d; transform:rotateX(-8deg); }
+.pb-stage { position:absolute; inset:8% 10% 4%; transform-style:preserve-3d; transform:rotateX(-8deg); }
 .pb-floor { position:absolute; left:0; top:90%; width:100%; height:38%; transform-origin:top; transform:rotateX(90deg); background:linear-gradient(#baa27c,#8f7959); border:1px solid #cfbc96; }
 .pb-wall { position:absolute; inset:0 0 10%; transform-origin:bottom; transform:rotateX(calc(-90deg * (1 - var(--open)))); border:8px solid #c4b18e; background:#c4b18e; box-shadow:0 8px 16px #0004; }
 .pb-wall img { width:100%; height:100%; object-fit:cover; }
+
+.pb-cut { position:absolute; bottom:10%; left:0; width:100%; height:90%; transform-origin:bottom; transform:translateZ(var(--z)) rotateX(calc(-90deg * (1 - clamp(0, calc(var(--open) * 1.2 - var(--delay)), 1)))); }
+.pb-cut img { width:100%; height:100%; object-fit:cover; clip-path:polygon(0 76%,4% 74%,8% 79%,12% 71%,16% 73%,20% 66%,24% 70%,28% 77%,32% 73%,36% 79%,40% 75%,44% 81%,48% 78%,52% 83%,56% 80%,60% 84%,64% 77%,68% 81%,72% 76%,76% 80%,80% 73%,84% 76%,88% 68%,92% 71%,96% 65%,100% 70%,100% 100%,0 100%); }
+.pb-cut svg { position:absolute; bottom:0; width:42%; height:66%; fill:#958568; stroke:#d6c59f; stroke-width:2; }
+.pb-tunnel { position:absolute; inset:0; transform-style:preserve-3d; transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)); transition:transform 180ms ease-out; }
+.pb-tunnel-plane { position:absolute; inset:0; transform:translateZ(calc(var(--depth) * var(--open))); transform-style:preserve-3d; }
+.pb-tunnel-plane svg { width:100%; height:100%; filter:drop-shadow(0 5px 6px #0005); }
+.pb-tunnel-plane img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.pb-tunnel-band { clip-path:polygon(0 78%,10% 74%,17% 79%,25% 70%,34% 75%,45% 72%,55% 80%,68% 75%,80% 80%,90% 71%,100% 75%,100% 100%,0 100%); }
+.pb-mechanism { position:absolute; inset:4% 0 8%; transform-style:preserve-3d; transform-origin:bottom; transform:rotateX(calc(-80deg * (1 - var(--open)))); border:7px solid #c8b590; box-shadow:0 12px 25px #0005; background:#cab994; }
+.pb-mechanism.pb-decode-mechanism { inset:35% 0 6%; }
+.pb-mechanism > img { width:100%; height:100%; object-fit:cover; }
+.pb-pull { position:absolute; left:calc(20% + var(--pull) * .45%); bottom:-28px; width:110px; height:44px; display:grid; place-items:center; background:#dfcc9e; color:#342b1e; border:1px solid #9a835b; border-radius:0 0 8px 8px; font:12px var(--font-mono); cursor:ew-resize; touch-action:none; user-select:none; box-shadow:0 5px 10px #0003; }
+.pb-lift { position:absolute; inset:0; transform-origin:top; transform:rotateX(calc(var(--lift,0) * 158deg)); transform-style:preserve-3d; transition:transform 650ms var(--ease); touch-action:none; cursor:pointer; }
+.pb-lift img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; backface-visibility:hidden; -webkit-backface-visibility:hidden; border:1px solid #dac49c; }
+.pb-lift-back { position:absolute; inset:0; transform:rotateY(180deg); background:#c8b793; backface-visibility:hidden; -webkit-backface-visibility:hidden; border:1px solid #a18c65; }
+.pb-peek { inset:20% 26% 18%; transform-origin:left; transform:rotateY(calc(var(--lift,0) * -145deg)); }
+.pb-peek img { object-fit:cover; object-position:75% 50%; }
+.pb-flap-control { position:absolute; bottom:-38px; left:0; width:100%; min-height:44px; padding:8px; background:#d8c299; color:#30271a; border:1px solid #a28c63; font:12px var(--font-body); touch-action:none; }
 @media(max-width:899px) {
  .pb-desk { filter:none; }
  .pb-top { height:64px; padding:8px; gap:4px; }
@@ -117,11 +136,54 @@
     </>;
   }
   function Stage({ s, T }) {
-    return <div className="pb-stage"><div className="pb-floor"/><div className="pb-wall"><img src={s.image} alt={s.type === 'decode' ? T.figureAlt : ''} style={{objectPosition:`${s.page.pan ?? 50}% 50%`}}/></div></div>;
+    const scene=s.page.sceneIndex||0, pan=s.page.pan??50;
+    return <div className="pb-stage"><div className="pb-floor"/><div className="pb-wall"><img src={s.image} alt={s.type === 'decode' ? T.figureAlt : ''} style={{objectPosition:`${pan}% 50%`}}/></div>
+      <div className="pb-cut" style={{'--z':'36px','--delay':'.12'}} aria-hidden="true"><img src={s.image} alt="" style={{objectPosition:`${pan}% 50%`}}/></div>
+      <div className="pb-cut" style={{'--z':'65px','--delay':'.2'}} aria-hidden="true"><svg style={{left:scene%2?'auto':'-2%',right:scene%2?'-2%':'auto'}} viewBox="0 0 180 240" preserveAspectRatio="none">
+        {scene%3===0 ? <path fillRule="evenodd" d="M10 240V64Q90-10 170 64V240H10Z M40 240V92Q90 12 140 92V240Z"/> : scene%3===1 ? <path d="M15 240V93H0L90 18L180 93H165V240H145V95H35V240ZM20 62L90 0L160 62Z"/> : <path d="M26 240L40 45L52 240ZM66 240L83 4L93 240ZM112 240L130 38L142 240Z M36 110Q-8 59 6 35Q51 54 36 110 M85 84Q124 35 150 44Q149 89 85 84 M126 141Q162 100 177 110Q177 145 126 141"/>}
+      </svg></div>
+    </div>;
+  }
+  function Tunnel({ s, T, reduced }) {
+    const ref = useRef(null), scene = s.page.sceneIndex || 0;
+    const colors = ['#d8c9a7','#c7b58e','#b2a17f','#978768'];
+    const shift = (scene % 3 - 1) * 22;
+    return <div className="pb-tunnel" ref={ref} onPointerMove={e => {
+      if (reduced || e.pointerType !== 'mouse' || innerWidth < 900) return;
+      const r=e.currentTarget.getBoundingClientRect();
+      ref.current.style.setProperty('--tilt-x',`${clamp((e.clientY-r.top)/r.height,0,1)*-12+6}deg`);
+      ref.current.style.setProperty('--tilt-y',`${clamp((e.clientX-r.left)/r.width,0,1)*12-6}deg`);
+    }} onPointerLeave={() => {ref.current.style.setProperty('--tilt-x','0deg');ref.current.style.setProperty('--tilt-y','0deg');}}>
+      <div className="pb-tunnel-plane" style={{'--depth':'-240px'}}><img src={s.image} alt={s.type==='decode'?T.figureAlt:''} style={{objectPosition:`${s.page.pan??50}% 50%`}}/></div>
+      {[3,2,1,0].map(i => <div className="pb-tunnel-plane" key={i} style={{'--depth':`${-60*i}px`}}>
+        {i>0 && <img className="pb-tunnel-band" src={s.image} alt="" aria-hidden="true" style={{objectPosition:`${clamp((s.page.pan||0)+i*12,0,100)}% 50%`, clipPath:`polygon(0 ${86-i*5}%, 12% ${80-i*4}%, 26% ${84-i*5}%, 40% ${72-i*3}%, 58% ${86-i*4}%, 70% ${76-i*4}%, 85% ${83-i*3}%, 100% ${75-i*3}%,100% 100%,0 100%)`}}/>}
+        <svg viewBox="0 0 500 400" preserveAspectRatio="none" aria-hidden="true"><path fill={colors[i]} fillRule="evenodd" stroke="#e8d9b6" strokeWidth="2" d={`M0 0H500V400H0Z M${48+i*10+shift} ${50+i*6} Q250 ${18+i*10} ${452-i*10+shift} ${50+i*6} L${443-i*8+shift} ${340-i*5} Q250 ${372-i*6} ${58+i*8+shift} ${340-i*5} Z`}/></svg>
+      </div>)}
+    </div>;
+  }
+  function Mechanics({ s, T, pages }) {
+    const [pull,setPull]=useState(0), [lift,setLift]=useState(false);
+    const drag=useRef(null), moved=useRef(false);
+    const decode=s.type==='decode', tab=s.type!=='decode' && (s.page.sceneIndex||0)%2===0;
+    const story=pages.find(p=>p.kind==='Story' && p.chapterIndex===s.page.chapterIndex)?.image || s.image;
+    const words={en:['Pull','Lift to peek','Close flap'],fr:['Tirer','Soulever','Refermer'],da:['Træk','Løft flappen','Luk flappen'],zh:['拉动','掀开看看','合上']}[document.documentElement.lang.split('-')[0]] || ['Pull','Lift to peek','Close flap'];
+    const dragStart=e=>{e.preventDefault();e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);drag.current={x:e.clientX,y:e.clientY,value:pull};moved.current=false;};
+    const dragMove=e=>{if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;if(Math.abs(dx)+Math.abs(dy)>8)moved.current=true;if(tab)setPull(Math.round(clamp(drag.current.value+dx*.8,0,100)));else if(dy < -25)setLift(true);else if(dy>25)setLift(false);};
+    const dragEnd=()=>{drag.current=null;};
+    const toggle=()=>{if(!moved.current)setLift(v=>!v);moved.current=false;};
+    return <div className={`pb-mechanism ${decode?'pb-decode-mechanism':''}`} data-mechanism="" style={{'--pull':pull,'--lift':lift?1:0}}>
+      <img src={s.image} alt={decode?T.figureAlt:''} style={{objectPosition:`${clamp((s.page.pan??50)+pull*((s.page.pan??50)>50?-.7:.7),0,100)}% 50%`}}/>
+      {tab ? <div className="pb-pull" role="slider" tabIndex={0} aria-label={words[0]} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pull} onPointerDown={dragStart} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={dragEnd} onKeyDown={e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();setPull(n=>e.key==='Home'?0:e.key==='End'?100:clamp(n+(e.key==='ArrowRight'?10:-10),0,100));}}}>↔ {words[0]}</div> : <>
+        <div className={`pb-lift ${decode?'':'pb-peek'}`} aria-hidden="true" onPointerDown={dragStart} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={dragEnd} onClick={toggle}><div className="pb-lift-back"/><img src={decode?story:s.image} alt=""/></div>
+        <button className="pb-flap-control" aria-expanded={lift} onClick={()=>setLift(v=>!v)}>{lift?words[2]:decode?T.afterStory:words[1]} ↑</button>
+      </>}
+    </div>;
   }
   function Installation({ s, variant, pages, T, reduced }) {
     if (variant === 'popup') return <Stage s={s} T={T}/>;
-    return <img className="pb-flat" src={s.image} alt={s.type === 'decode' ? T.figureAlt : ''} style={{objectPosition:`${s.page.pan ?? 50}% 50%`}}/>;
+    if (variant === 'tunnel') return <Tunnel s={s} T={T} reduced={reduced}/>;
+    return <Mechanics s={s} T={T} pages={pages}/>;
+
   }
   function Contents({ sections, active, T, meta, onPick, onClose }) {
     const dialog = useRef(null);
@@ -206,7 +268,7 @@
     useEffect(() => {
       const key = e => {
         if (e.key === 'Escape') { setToc(false); return; }
-        if (toc || lock.current || e.defaultPrevented || e.target.closest('input, textarea, select, [contenteditable], [role="dialog"], [role="slider"]')) return;
+        if (toc || document.querySelector('.ob-card[role="dialog"]') || lock.current || e.defaultPrevented || e.target.closest('input, textarea, select, [contenteditable], [role="dialog"], [role="slider"]')) return;
         if (e.target.closest('button') && [' ','Enter'].includes(e.key)) return;
         const forward = ['ArrowRight','PageDown',' '].includes(e.key), back = ['ArrowLeft','PageUp'].includes(e.key);
         if (!forward && !back) return;
