@@ -38,7 +38,10 @@
     {
       "binding": "GENERATE",
       "name": "fable-generation",
-      "class_name": "GenerateFable"
+      "class_name": "GenerateFable",
+      "concurrency": {
+        "limit": 3
+      }
     }
   ]
 }

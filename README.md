@@ -31,7 +31,7 @@ npm run dev
 
 `npm run check` runs focused unit tests, builds the frontend and validates the Worker bundle. `node scripts/qa-creation.mjs` runs actual local Workflow, D1 and R2 bindings with stubbed OpenRouter responses, including failure retention, duplicate requests, concurrent quotas, ownership, share revocation, downloads and persistence across a runtime restart. It makes no paid provider calls.
 
-`node scripts/qa-regression.mjs` checks the homepage and sample reader without creating a story. Set `FABLE_TEST_URL` to check a deployed site. Evidence belongs under ignored `.gstack/`, never in the public asset directory.
+`node scripts/qa-regression.mjs` checks the homepage and sample reader without creating a story. `node scripts/qa-exports.mjs` checks offline downloads, PDF rendering, sample share links and production security boundaries. Set `FABLE_TEST_URL` to check a deployed site. Evidence belongs under ignored `.gstack/`, never in the public asset directory.
 
 The five original homepage mocks and three endings remain available through `npm run dev:mocks` at `http://127.0.0.1:8788/mocks/compare`. These are local English prototypes and use sample content. They build separately under ignored `.local-preview/`. See [the original design study](docs/local-design-study.md). Experimental paper readers remain confined to localhost.
 
