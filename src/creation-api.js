@@ -43,8 +43,8 @@ export async function creationResponse(request,env,json) {
     return response;
   }
   const cookie=ownerCookie(request), owner=cookie?await hash(cookie):null;
-  const shared=path.match(/^\/api\/shared\/([a-f0-9]{64})(\/image)?$/);
-  const story=path.match(/^\/api\/stories\/([a-f0-9-]+)(\/(?:image|share))?$/);
+  const shared=path.match(/^\/api\/shared\/([a-f0-9]{64})(\/image(?:\/[0-2])?)?$/);
+  const story=path.match(/^\/api\/stories\/([a-f0-9-]+)(\/(?:image(?:\/[0-2])?|share))?$/);
   const job=path.match(/^\/api\/generations\/([a-f0-9-]+)$/);
   if(shared || story || job) {
     if(request.method!=='GET' && !(story?.[2]==='/share' && ['POST','DELETE'].includes(request.method))) return json({error:'method_not_allowed'},405);
@@ -60,15 +60,18 @@ export async function creationResponse(request,env,json) {
       const saved=await env.DB.prepare('SELECT share_token FROM creations WHERE id=?').bind(row.id).first();
       return json({url:`${url.origin}/?share=${saved.share_token}#read/cover`});
     }
-    if(shared?.[2] || story?.[2]==='/image') {
-      const object=await env.STORIES.get(`creations/${row.id}/cover`);
+    if(shared?.[2] || story?.[2]?.startsWith('/image')) {
+      const index=Number((shared||story)[2].split('/')[2]||0);
+      const object=await env.STORIES.get(`creations/${row.id}/${index===0?'cover':`scene-${index}`}`);
       if(!object) return json({error:'image_not_found'},404);
       const response=new Response(object.body,{headers:{'Content-Type':object.httpMetadata.contentType,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
       return response;
     }
     const object=await env.STORIES.get(`creations/${row.id}/story.json`);
     const doc=object ? await object.json():null;
-    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,image:row.status==='completed'?{url:shared?`/api/shared/${shared[1]}/image`:`/api/stories/${row.id}/image`}:null}:null;
+    const imageBase=shared?`/api/shared/${shared[1]}/image`:`/api/stories/${row.id}/image`;
+    const images=doc?await Promise.all((doc.scenes||[{}]).map(async(_,index)=>await env.STORIES.head(`creations/${row.id}/${index===0?'cover':`scene-${index}`}`)?{url:`${imageBase}/${index}`}:null)):[];
+    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,image:images[0]||null,...(doc.scenes?{scenes:doc.scenes.map((scene,index)=>({text:scene.text,image:images[index]}))}:{})}:null;
     return json({job_id:row.id,story_id:row.id,status:row.status,stage:row.status==='illustrating'?'image_call_started':row.status==='completed'?'complete':'story_call_started',
       ...(row.error?{error:friendlyError}:{}),...(row.status==='completed'?{result}:result?{partial_result:result}:{}),share_url:!shared&&row.share_token?`${url.origin}/?share=${row.share_token}#read/cover`:null});
   }

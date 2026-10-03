@@ -110,7 +110,7 @@
     const image = opts.imageSrc || FALLBACK_IMAGE;
     const split = splitStory(opts.markdown || "", lang);
     const scenes = chunk(paragraphs(split.story), lang === "zh" ? 300 : 520);
-    const usedScenes = scenes.length ? scenes : [split.story || concept || title];
+    const usedScenes = opts.scenes?.length ? opts.scenes.flatMap(scene=>chunk(paragraphs(scene.text),lang === "zh" ? 300 : 520).map(raw=>({raw,image:scene.image?.url||image}))) : (scenes.length ? scenes : [split.story || concept || title]).map(raw=>({raw,image}));
     const chapterTitle = lang === "zh" ? "《寓言》" : (lang === "da" ? "Fablen" : (lang === "fr" ? "La fable" : "The Fable"));
     const deck = lang === "zh" ? "由你的概念临场生成。" : (lang === "da" ? "Genereret live ud fra dit koncept." : (lang === "fr" ? "Générée en direct à partir de votre concept." : "Generated live from your concept."));
     const pages = [{
@@ -138,7 +138,7 @@
         idea: deck,
       }],
     }];
-    usedScenes.forEach((raw, i) => {
+    usedScenes.forEach((scene, i) => {
       pages.push({
         kind: "Story",
         chapterIndex: 0,
@@ -147,11 +147,11 @@
         title: chapterTitle,
         titleEn: opts.setting || "",
         deck,
-        image,
+        image:scene.image,
         prompt: "",
         pan: usedScenes.length > 1 ? Math.round((i / (usedScenes.length - 1)) * 100) : 50,
         nav: `${chapterTitle} · ${i + 1}/${usedScenes.length}`,
-        raw,
+        raw:scene.raw,
       });
     });
     pages.push({
@@ -165,7 +165,7 @@
       pan: 50,
       deck: lang === "zh" ? "故事之后。" : (lang === "da" ? "Efter historien." : (lang === "fr" ? "Après l'histoire." : "After the story.")),
       raw: split.lesson,
-      image,
+      image:usedScenes[usedScenes.length-1].image,
       prompt: "",
     });
     return pages;
@@ -179,7 +179,7 @@
     const lang=result.lang || "en", src=dataUrl(result.image);
     return { lang, storyId:id, shareURL, partial, markdown:result.markdown,
       pages:buildPages({...result,imageSrc:src}),
-      run:{images:[{src,prompt:""}],total_cost_usd:0} };
+      run:{images:(result.scenes?.map(s=>s.image).filter(Boolean)||[result.image]).filter(Boolean).map(image=>({src:image.url,prompt:""})),total_cost_usd:0} };
   }
   async function pollJob(id,onStage,onPartial,active=()=>true,share="") {
     const started=Date.now(); let partialShown=false;

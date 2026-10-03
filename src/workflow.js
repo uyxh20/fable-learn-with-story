@@ -28,15 +28,24 @@ export class GenerateFable extends WorkflowEntrypoint {
         const object=await env.STORIES.get(`creations/${id}/story.json`),doc=await object.json();
         await env.DB.prepare("UPDATE creations SET title=?,status='illustrating',updated_at=? WHERE id=?").bind(doc.title,new Date().toISOString(),id).run();
       });
-      await step.do('illustrate and save image',{retries:{limit:0,delay:'1 second'},timeout:'5 minutes'},async()=>{
-        if(await env.STORIES.head(`creations/${id}/cover`)) return;
-        const reserved=await env.DB.prepare('UPDATE creations SET image_started=1 WHERE id=? AND image_started=0').bind(id).run();
-        if(!reserved.meta.changes) throw new Error('image_needs_reconciliation');
-        const object=await env.STORIES.get(`creations/${id}/story.json`),doc=await object.json();
-        const image=await generateImage(env,doc);
-        await save(()=>env.STORIES.put(`creations/${id}/cover`,image.bytes,{httpMetadata:{contentType:image.type}}));
-        await save(()=>env.STORIES.put(`creations/${id}/image-metadata.json`,JSON.stringify({model:env.IMAGE_MODEL,prompt:doc.image_prompt,usage:image.usage}),{httpMetadata:{contentType:'application/json'}}));
-      });
+      const doc=await step.do('load illustration plan',async()=>{const object=await env.STORIES.get(`creations/${id}/story.json`);return object.json();});
+      const scenes=doc.scenes||[{image_prompt:doc.image_prompt}];
+      const outcomes=await Promise.all(scenes.map(async(scene,index)=>{
+        try {
+          await step.do(index===0?'illustrate and save image':`illustrate scene ${index+1}`,{retries:{limit:0,delay:'1 second'},timeout:'5 minutes'},async()=>{
+            const key=index===0?'cover':`scene-${index}`,bit=1<<index;
+            if(await env.STORIES.head(`creations/${id}/${key}`)) return;
+            const reserved=await env.DB.prepare('UPDATE creations SET image_started=image_started|? WHERE id=? AND (image_started&?)=0').bind(bit,id,bit).run();
+            if(!reserved.meta.changes) throw new Error('image_needs_reconciliation');
+            const prompt=`${doc.visual_guide||''}\nScene ${index+1}: ${scene.image_prompt}`;
+            const image=await generateImage(env,{image_prompt:prompt});
+            await save(()=>env.STORIES.put(`creations/${id}/${key}`,image.bytes,{httpMetadata:{contentType:image.type}}));
+            await save(()=>env.STORIES.put(`creations/${id}/${key}-metadata.json`,JSON.stringify({model:env.IMAGE_MODEL,prompt,usage:image.usage}),{httpMetadata:{contentType:'application/json'}}));
+          });
+          return true;
+        } catch {return false;}
+      }));
+      if(outcomes.some(ok=>!ok)) throw new Error('illustration_incomplete');
       await step.do('complete saved book',async()=>{
         await env.DB.prepare("UPDATE creations SET status='completed',updated_at=? WHERE id=?").bind(new Date().toISOString(),id).run();
       });

@@ -75,3 +75,12 @@ test('server-backed reader retains every paragraph and restores the saved job ro
   assert.equal(result.storyId,'job');assert.equal(result.pages[0].title,'Complete book');assert.equal(result.markdown,markdown);
   assert.ok(result.pages.some(p=>p.raw?.includes('Paragraph 19')));assert.deepEqual(routes,['/?story=job#read/cover']);assert.equal(polls,1);
 });
+
+test('scene text keeps its corresponding image through reader pagination',async()=>{
+  const window={};vm.runInNewContext(await readFile(new URL('../src/live-fable.js',import.meta.url),'utf8'),{window});
+  const scenes=Array.from({length:3},(_,i)=>({text:`Scene ${i+1}. `+'A paragraph about this scene. '.repeat(30)+'\n\n'+'The same scene continues. '.repeat(30),image:{url:`/image/${i}`}}));
+  const pages=window.FABLE_LIVE.buildPages({title:'Three scenes',lang:'en',markdown:'# Three scenes\n\nStory\n\n### After the story\n\nExplanation.',scenes,imageSrc:'/image/0'});
+  const story=pages.filter(p=>p.kind==='Story');assert.equal(story.length,6);
+  story.forEach((page,i)=>assert.equal(page.image,scenes[Math.floor(i/2)].image.url));
+  assert.equal(pages.at(-1).image,'/image/2');
+});

@@ -4,14 +4,14 @@ import { generateText,generateImage } from '../src/openrouter.js';
 import { boundedJSON,validateCreation,generationEnabled } from '../src/creation-api.js';
 const env={OPENROUTER_API_KEY:'test-only',LLM_MODEL:'test/text',IMAGE_MODEL:'google/test-image'};
 const input={concept:'Compound growth',lang:'en',setting:'Chinese classical'};
-const content={title:'The orchard',story:'The gardener planted a tree. '.repeat(12),explanation:'Each seed grows from the previous harvest.',image_prompt:'A gardener in an orchard.'};
+const content={title:'The orchard',visual_guide:'The same old gardener in blue robes.',scenes:Array.from({length:3},(_,i)=>({text:`Season ${i+1}. `+'The gardener planted a tree. '.repeat(8),image_prompt:`The gardener in season ${i+1}.`})),explanation:'Each seed grows from the previous harvest.',image_prompt:'A gardener in an orchard.'};
 test('provider requests use only the server secret; complete story and usage are preserved',async()=>{
   const doc=await generateText(env,input,async(url,options)=>{
     assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');
     assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,12000);assert.deepEqual(JSON.parse(options.body).reasoning,{effort:'high',exclude:true});assert.equal(JSON.parse(options.body).response_format.json_schema.strict,true);assert.equal(JSON.parse(options.body).provider.require_parameters,true);
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}],usage:{cost:0.01}});
   });
-  assert.ok(doc.markdown.includes(content.story));assert.ok(doc.markdown.includes(content.explanation));assert.equal(doc.text_usage.cost,0.01);
+  assert.ok(content.scenes.every(scene=>doc.markdown.includes(scene.text)));assert.ok(doc.markdown.includes(content.explanation));assert.equal(doc.text_usage.cost,0.01);
   assert.equal(JSON.stringify(doc).includes('test-only'),false);
 });
 test('truncated, malformed and rejected provider results fail without leaking provider errors',async()=>{
@@ -39,4 +39,10 @@ test('Seedream uses its supported resolution parameters and persists raster outp
     return Response.json({data:[{b64_json:bytes.toString('base64'),media_type:'image/png'}]});
   });
   assert.equal(result.type,'image/png');assert.deepEqual(Buffer.from(result.bytes),bytes);
+});
+
+test('a fable must contain three complete scene and illustration pairs',async()=>{
+  for(const scenes of [content.scenes.slice(0,2),[...content.scenes,{text:'Extra scene',image_prompt:'Extra'}],content.scenes.map((s,i)=>i===1?{...s,image_prompt:''}:s)]) {
+    await assert.rejects(generateText(env,input,async()=>Response.json({choices:[{message:{content:JSON.stringify({...content,scenes})}}]})),/invalid_text_fields/);
+  }
 });

@@ -1413,15 +1413,15 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
         { label:"Reading your idea", note:"Listening for the shape of the concept beneath the words." },
         { label:"Weaving the fable", note:"Casting the idea as characters, a world, and a turn." },
         { label:"Preparing the reader", note:"The story text is set first, before the cover arrives." },
-        { label:"Painting the cover", note:"One image for the whole fable, ink blooming into form." },
+        { label:"Painting the scenes", note:"Three moments, illustrated in ink and watercolor." },
         { label:"Binding the book", note:"Setting the type, deckling the edges." },
       ],
       loadingLines: [
-        "First the fable is written. Then the cover is painted.",
+        "First the fable is written. Then its three scenes are illustrated.",
         "Your story text is saved as soon as it is written.",
-        "The cover takes longer because it is generated as a full illustration.",
+        "Each illustration follows a different moment in the story.",
         "You can leave this page; your fable will keep being created.",
-        "A single cover is being made for the whole fable.",
+        "Three pictures will change with the story as you read.",
       ],
       weaveLines: [
         "In the south of the city stood a house. Above its gate, three words…",
@@ -1456,15 +1456,15 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
         { label:"读你的念头", note:"在字句之下，听出概念真正的形状。" },
         { label:"编织寓言", note:"把概念化成人物、世界与一处转折。" },
         { label:"准备阅读", note:"文字先成篇，再等待封面落定。" },
-        { label:"绘制封面", note:"一则寓言只生成一张图，墨色晕染成形。" },
+        { label:"绘制场景", note:"三个故事场景，三幅水墨插画。" },
         { label:"装订成册", note:"排版落定，裁出毛边。" },
       ],
       loadingLines: [
-        "先写出寓言，再绘制封面。",
+        "先写出寓言，再绘制场景。",
         "故事文字一完成就会保存。",
-        "封面是一张完整插画，所以会比文字更慢。",
+        "每幅插画对应故事中的不同一幕。",
         "离开页面后，寓言仍会继续创作。",
-        "整则寓言只会生成一张封面图。",
+        "三幅插画将随着故事的推进切换。",
       ],
       weaveLines: [
         "城南有一座宅子，门匾上写着「应事斋」三个字……",
@@ -1498,15 +1498,15 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
         { label:"Læser din idé", note:"Lytter efter konceptets form under ordene." },
         { label:"Væver fablen", note:"Gør idéen til figurer, en verden og en vending." },
         { label:"Forbereder læseren", note:"Historien sættes først, før omslaget ankommer." },
-        { label:"Maler omslaget", note:"Ét billede til hele fablen, tusj der blomstrer frem." },
+        { label:"Maler scenerne", note:"Tre øjeblikke, illustreret i tusj og akvarel." },
         { label:"Binder bogen", note:"Sætter typen og skærer kanterne." },
       ],
       loadingLines: [
-        "Først skrives fablen. Derefter males omslaget.",
+        "Først skrives fablen. Derefter illustreres tre scener.",
         "Teksten gemmes, så snart den er skrevet.",
-        "Omslaget tager længere tid, fordi det genereres som en fuld illustration.",
+        "Hvert billede følger et nyt øjeblik i historien.",
         "Du kan forlade siden; din fabel bliver stadig færdig.",
-        "Der laves ét omslag til hele fablen.",
+        "Tre billeder skifter med historien, mens du læser.",
       ],
       weaveLines: [
         "I den sydlige del af byen stod et hus. Over porten stod tre ord...",
@@ -1540,15 +1540,15 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
         { label:"Lecture de votre idée", note:"Écoute de la forme du concept sous les mots." },
         { label:"Tissage de la fable", note:"Transformation de l'idée en personnages, en monde et en retournement." },
         { label:"Préparation de la lecture", note:"Le texte est mis en place avant l'arrivée de la couverture." },
-        { label:"Peinture de la couverture", note:"Une image pour toute la fable, l'encre prend forme." },
+        { label:"Illustration des scènes", note:"Trois moments illustrés à l’encre et à l’aquarelle." },
         { label:"Reliure du livre", note:"Composition du texte et finition des bords." },
       ],
       loadingLines: [
-        "La fable est écrite d'abord. La couverture est peinte ensuite.",
+        "La fable est écrite, puis ses trois scènes sont illustrées.",
         "Le texte est enregistré dès qu’il est écrit.",
-        "La couverture prend plus longtemps parce qu'elle est générée comme une illustration complète.",
+        "Chaque illustration suit un moment différent du récit.",
         "Vous pouvez quitter cette page ; votre fable continuera à se créer.",
-        "Une seule couverture est créée pour toute la fable.",
+        "Trois images accompagnent les transitions du récit.",
       ],
       weaveLines: [
         "Au sud de la ville se dressait une maison. Au-dessus de sa porte, trois mots...",
@@ -1877,7 +1877,7 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
           setLiveResult(result);
           setRunInfo(result.run);
           setCoverIn(true);
-          setPlateCount(1);
+          setPlateCount(result.run.images.length);
           setProgressPct(100);
           setStageIdx(4);
           setReady(true);

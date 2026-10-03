@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { chromium,expect } from '@playwright/test';
 const evidence='.gstack/production-2026-10-03';await mkdir(evidence,{recursive:true});
 const bundle=await build({entryPoints:['src/entry.js'],bundle:true,format:'esm',platform:'browser',external:['cloudflare:workers'],write:false});
-const png=await readFile('public/art/cover.png');let calls=[];let failImage=false;
+const pngs=await Promise.all(['cover.png','03_kongzhai_story.png','05_jigua_story.png'].map(name=>readFile(`public/art/${name}`)));let imageIndex=0,calls=[];let failImage=false;
 const persist=await mkdtemp(`${tmpdir()}/fable-qa-`);
 const options=convertV4MiniflareOptions({name:'fable-test',modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-10-03',host:'127.0.0.1',port:8789,
   d1Databases:['DB'],r2Buckets:['STORIES'],workflows:{GENERATE:{name:'fable-test-generation',className:'GenerateFable'}},
@@ -18,9 +18,9 @@ const options=convertV4MiniflareOptions({name:'fable-test',modules:true,script:b
     const url=new URL(request.url);assert.equal(url.hostname,'openrouter.ai');
     assert.equal(request.headers.get('Authorization'),'Bearer local-test-only');
     const body=await request.json();calls.push(url.pathname);
-    if(url.pathname.endsWith('/chat/completions'))return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({title:'The Patient Gardener',story:Array.from({length:12},(_,i)=>`The gardener tended tree ${i+1}. `+'Each season, the roots grew deeper and the branches gave more fruit. '.repeat(6)).join('\n\n'),explanation:'The orchard represents compound growth. Small gains accumulate on previous gains. '+ 'Saving a little each year gives the next year more to grow from. '.repeat(4),image_prompt:'An old gardener in an ink-painted orchard.'})}}],usage:{cost:0.001}});
-    assert.equal(body.n,1);if(failImage)return new Response('test failure',{status:500});
-    return Response.json({data:[{b64_json:png.toString('base64'),media_type:'image/png'}],usage:{cost:0.01}});
+    if(url.pathname.endsWith('/chat/completions'))return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({title:'The Patient Gardener',visual_guide:'An old gardener in blue robes.',scenes:Array.from({length:3},(_,scene)=>({text:Array.from({length:4},(_,i)=>`The gardener tended tree ${scene*4+i+1}. `+'Each season, the roots grew deeper and the branches gave more fruit. '.repeat(6)).join('\n\n'),image_prompt:`Orchard scene ${scene+1}.`})),explanation:'The orchard represents compound growth. Small gains accumulate on previous gains. '+ 'Saving a little each year gives the next year more to grow from. '.repeat(4),image_prompt:'An old gardener in an ink-painted orchard.'})}}],usage:{cost:0.001}});
+    assert.equal(body.n,1);const index=imageIndex++%3;if(failImage&&index===1)return new Response('test failure',{status:500});
+    return Response.json({data:[{b64_json:pngs[index].toString('base64'),media_type:'image/png'}],usage:{cost:0.01}});
   },
 });options.resourcePersistencePath=persist;
 let mf=new Miniflare(options),browser;
@@ -38,20 +38,28 @@ try{
   await page.reload();await expect(page.locator('.cine')).toBeVisible();
   const saved=await context.request.get(`http://127.0.0.1:8789/api/stories/${id}`);assert.equal(saved.status(),200);const doc=await saved.json();assert.equal(doc.status,'completed');assert.ok(doc.result.markdown.includes('tree 12'));
   assert.equal((await context.request.get(`http://127.0.0.1:8789${doc.result.image.url}`)).status(),200);
+  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+  assert.equal(doc.result.scenes.length,3);
+  const imageBodies=[];
+  for(const scene of doc.result.scenes){const image=await context.request.get(`http://127.0.0.1:8789${scene.image.url}`);assert.equal(image.status(),200);imageBodies.push((await image.body()).toString('base64'));
+    const section=page.locator('.cine-scene').filter({hasText:scene.text.slice(0,30)}).first();await section.evaluate(el=>document.querySelector('.cine').scrollTo({top:el.offsetTop,behavior:'instant'}));
+    await expect(section).toHaveAttribute('data-active','');await expect(page.locator('.cine-bg-layer').filter({has:page.locator(`img[src="${scene.image.url}"]`)})).toHaveCSS('opacity','1');
+  }
+  assert.equal(new Set(imageBodies).size,3);
   const row=await db.prepare('SELECT * FROM creations WHERE id=?').bind(id).first();
-  const retry=await context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{...JSON.parse(row.request_json),idempotency_token:row.idempotency}});assert.equal((await retry.json()).job_id,id);assert.equal(calls.length,2);
+  const retry=await context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{...JSON.parse(row.request_json),idempotency_token:row.idempotency}});assert.equal((await retry.json()).job_id,id);assert.equal(calls.length,4);
   assert.equal((await context.request.get(`http://127.0.0.1:8789/api/stories/${id}/share`)).status(),405);
   assert.equal((await context.request.post('http://127.0.0.1:8789/api/session',{headers:{Origin:'https://foreign.example'}})).status(),403);
   const conflict=await context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{...JSON.parse(row.request_json),concept:'A changed topic',idempotency_token:row.idempotency}});assert.equal(conflict.status(),409);
   await page.evaluate(()=>document.fonts.ready);await page.locator('.cine-rail button').last().click();await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label','end');await expect(page.getByRole('heading',{name:'A story to keep.'})).toBeInViewport();
   await page.screenshot({path:`${evidence}/ending.png`});
-  await page.getByRole('button',{name:'Download fable'}).click();const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:/Offline book/}).click();const download=await downloadEvent;await download.saveAs(`${evidence}/fable.html`);const html=await readFile(`${evidence}/fable.html`,'utf8');assert.ok(html.includes('tree 12'));assert.ok(html.includes('data:image/png;base64,'));
+  await page.getByRole('button',{name:'Download fable'}).click();const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:/Offline book/}).click();const download=await downloadEvent;await download.saveAs(`${evidence}/fable.html`);const html=await readFile(`${evidence}/fable.html`,'utf8');assert.ok(html.includes('tree 12'));assert.ok(html.includes('data:image/png;base64,'));for(const bytes of imageBodies)assert.ok(html.includes(bytes));
   await page.keyboard.press('Escape');await page.getByRole('button',{name:'Share fable'}).click();await page.getByRole('button',{name:'Create share link'}).click();await expect(page.locator('.fable-share-input')).toBeVisible();const link=await page.locator('.fable-share-input').inputValue();
   const stranger=await browser.newContext();assert.equal((await stranger.request.get(`http://127.0.0.1:8789/api/stories/${id}`)).status(),404);const recipient=await stranger.newPage();await recipient.goto(link);await expect(recipient.locator('.cine')).toBeVisible();
   await page.getByRole('button',{name:'Stop sharing'}).click();await expect(page.getByRole('dialog').getByRole('status')).toContainText('Sharing is off.');assert.equal((await stranger.request.get(`http://127.0.0.1:8789/api/shared/${new URL(link).searchParams.get('share')}`)).status(),404);await stranger.close();
   failImage=true;const failed=await context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{concept:'A failed image still saves the story',setting:'Chinese classical',lang:'en',idempotency_token:crypto.randomUUID()}});const failedId=(await failed.json()).job_id;
   await expect.poll(async()=>{const r=await context.request.get(`http://127.0.0.1:8789/api/stories/${failedId}`);return(await r.json()).status;},{timeout:30000}).toBe('failed');
-  const partial=await(await context.request.get(`http://127.0.0.1:8789/api/stories/${failedId}`)).json();assert.ok(partial.partial_result.markdown.includes('tree 12'));
+  const partial=await(await context.request.get(`http://127.0.0.1:8789/api/stories/${failedId}`)).json();assert.ok(partial.partial_result.markdown.includes('tree 12'));assert.equal(partial.partial_result.scenes.filter(s=>s.image).length,2);
   assert.equal((await context.request.post(`http://127.0.0.1:8789/api/stories/${failedId}/share`,{headers:{Origin:'http://127.0.0.1:8789'}})).status(),409);
   failImage=false;
   const raced=await Promise.all(Array.from({length:3},()=>context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{concept:'A bounded concurrent creation',setting:'Chinese classical',lang:'en',idempotency_token:crypto.randomUUID()}})));

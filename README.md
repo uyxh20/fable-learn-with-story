@@ -8,11 +8,11 @@ Learn an idea through an illustrated fable. Choose a story world, enter an idea,
 
 Homepage 5 pairs a chat-bubble composer with the illustrated sample. The quiet colophon offers an offline HTML book (including illustrations), a browser print view for PDF, and explicit sharing with a revocable link.
 
-Creation uses OpenRouter with `anthropic/claude-opus-4.6` at high reasoning effort for text, and `bytedance-seed/seedream-5-0-flash` for one 1K, 16:9 cover. The API key is stored only as an encrypted Cloudflare secret.
+Creation uses OpenRouter with `anthropic/claude-opus-4.6` at high reasoning effort for text, and `bytedance-seed/seedream-5-0-flash` for three 1K, 16:9 scene illustrations. The API key is stored only as an encrypted Cloudflare secret.
 
 ## Saved creations
 
-Cloudflare D1 records every accepted request before generation begins. A Cloudflare Workflow continues independently of the browser. Full story text, explanation, source idea, setting, language, model identifiers and provider usage are saved in private R2 storage; the generated cover is stored as image bytes, with its prompt and metadata separately. Text is saved before the image request, so an image failure does not discard it.
+Cloudflare D1 records every accepted request before generation begins. A Cloudflare Workflow continues independently of the browser. Full story text, explanation, source idea, setting, language, model identifiers and provider usage are saved in private R2 storage; each generated illustration is stored as image bytes, with its prompt and metadata separately. The story has three sequential scenes with matching illustration prompts and shared character descriptions. Images crossfade as their corresponding text enters the reading area. Text is saved before the three image requests; each finished image is retained even if another fails. Older one-image creations remain readable.
 
 A random HttpOnly, Secure, SameSite=Strict cookie owns the creation. “Your fables” shows the latest 30 creations for that browser, including unfinished jobs. There are no accounts or cross-device recovery: clearing the cookie loses private access, although the backend retains the creation. Download a copy or create a share link to keep access elsewhere.
 
@@ -43,7 +43,7 @@ Set the owner-selected `LLM_MODEL` and `IMAGE_MODEL` IDs in `wrangler.jsonc`, ve
 
 For local paid testing only, put the key in ignored `.dev.vars` using `.dev.vars.example`. Normal QA needs no real key. Configure an OpenRouter key credit limit as an additional budget boundary.
 
-Requests are limited to 2,000 input characters, 12,000 combined reasoning/output tokens, and one image. D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
+Requests are limited to 2,000 input characters, 12,000 combined reasoning/output tokens, and three images. D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
 
 ## Deployment
 
@@ -57,7 +57,7 @@ The configured D1 database, private R2 bucket and Workflow must exist. `dist/` i
 
 ## Privacy and security
 
-The backend sends the entered idea, language and setting to OpenRouter for story generation, then the generated illustration prompt for the cover. It retains finished content and failed-request status. It does not log API keys or provider response bodies. There is no analytics integration. UI preferences use local storage; reading position uses session storage. Google Fonts supplies typography.
+The backend sends the entered idea, language and setting to OpenRouter for story generation, then each scene’s illustration prompt. It retains finished content and failed-request status. It does not log API keys or provider response bodies. There is no analytics integration. UI preferences use local storage; reading position uses session storage. Google Fonts supplies typography.
 
 The app uses same-origin write checks, private bucket access, escaped Markdown, bounded request/output sizes, and browser security headers. Public asset builds exclude source audits, local records, secrets and logs. Private backend data is not uploaded to GitHub.
 
