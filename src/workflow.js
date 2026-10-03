@@ -15,7 +15,7 @@ export class GenerateFable extends WorkflowEntrypoint {
   async run(event,step) {
     const id=event.payload.id, env=this.env;
     try {
-      await step.do('write and save story',{retries:{limit:0,delay:'1 second'},timeout:'3 minutes'},async()=>{
+      await step.do('write and save story',{retries:{limit:0,delay:'1 second'},timeout:'5 minutes'},async()=>{
         if(await env.STORIES.head(`creations/${id}/story.json`)) return;
         const row=await env.DB.prepare('SELECT * FROM creations WHERE id=?').bind(id).first();
         if(!row) throw new Error('missing_creation');

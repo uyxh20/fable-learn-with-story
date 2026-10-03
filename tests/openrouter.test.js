@@ -8,7 +8,7 @@ const content={title:'The orchard',story:'The gardener planted a tree. '.repeat(
 test('provider requests use only the server secret; complete story and usage are preserved',async()=>{
   const doc=await generateText(env,input,async(url,options)=>{
     assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');
-    assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,4000);
+    assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,12000);assert.deepEqual(JSON.parse(options.body).reasoning,{effort:'high',exclude:true});
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}],usage:{cost:0.01}});
   });
   assert.ok(doc.markdown.includes(content.story));assert.ok(doc.markdown.includes(content.explanation));assert.equal(doc.text_usage.cost,0.01);
@@ -29,4 +29,14 @@ test('generation stays disabled until storage, workflow, key and both models exi
   assert.equal(generationEnabled({...env,GENERATION_ENABLED:'true',DB:{},STORIES:{},GENERATE:{}}),true);
   assert.throws(()=>validateCreation({...input,idempotency_token:crypto.randomUUID(),concept:'x'.repeat(2001)}),/invalid_request/);
   assert.throws(()=>validateCreation({...input,idempotency_token:crypto.randomUUID(),lang:'unknown'}),/invalid_request/);
+});
+
+test('Seedream uses its supported resolution parameters and persists raster output',async()=>{
+  const bytes=Buffer.from([137,80,78,71,13,10,26,10]);
+  const result=await generateImage({...env,IMAGE_MODEL:'bytedance-seed/seedream-5-0-flash'},content,async(url,options)=>{
+    assert.equal(url,'https://openrouter.ai/api/v1/images');const body=JSON.parse(options.body);
+    assert.equal(body.model,'bytedance-seed/seedream-5-0-flash');assert.equal(body.resolution,'1K');assert.equal(body.aspect_ratio,'16:9');assert.equal(body.n,1);assert.equal(body.quality,undefined);
+    return Response.json({data:[{b64_json:bytes.toString('base64'),media_type:'image/png'}]});
+  });
+  assert.equal(result.type,'image/png');assert.deepEqual(Buffer.from(result.bytes),bytes);
 });

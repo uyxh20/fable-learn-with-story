@@ -8,7 +8,7 @@ Learn an idea through an illustrated fable. Choose a story world, enter an idea,
 
 Homepage 5 pairs a chat-bubble composer with the illustrated sample. The quiet colophon offers an offline HTML book (including illustrations), a browser print view for PDF, and explicit sharing with a revocable link.
 
-The OpenRouter backend is implemented, but creation stays disabled until the owner configures the secret and selects both models. The sample and its downloads remain available. No provider models are selected by default.
+Creation uses OpenRouter with `anthropic/claude-opus-4.6` at high reasoning effort for text, and `bytedance-seed/seedream-5-0-flash` for one 1K, 16:9 cover. The API key is stored only as an encrypted Cloudflare secret.
 
 ## Saved creations
 
@@ -29,7 +29,7 @@ npx wrangler d1 migrations apply fable-creations --local
 npm run dev
 ```
 
-`npm run check` runs focused unit tests, builds the frontend and validates the Worker bundle. `node scripts/qa-creation.mjs` runs actual local Workflow, D1 and R2 bindings with stubbed OpenRouter responses, including failure retention, duplicate requests, concurrent quotas, ownership, share revocation, downloads and persistence across a runtime restart. It makes no paid provider calls.
+`npm run check` runs focused unit tests, builds the frontend and validates the Worker bundle. `node scripts/qa-creation.mjs` runs actual local Workflow, D1 and R2 bindings with stubbed OpenRouter responses, including failure retention, duplicate requests, concurrent quotas, ownership, share revocation, downloads and persistence across a runtime restart. It makes no paid provider calls. To run one real production creation, explicitly opt in with `FABLE_PAID_SMOKE=1 node scripts/qa-live-creation.mjs`. This uses the configured models and checks persistence, download, sharing and revocation.
 
 `node scripts/qa-regression.mjs` checks the homepage and sample reader without creating a story. `node scripts/qa-exports.mjs` checks offline downloads, PDF rendering, sample share links and production security boundaries. Set `FABLE_TEST_URL` to check a deployed site. Evidence belongs under ignored `.gstack/`, never in the public asset directory.
 
@@ -39,11 +39,11 @@ The five original homepage mocks and three endings remain available through `npm
 
 In Cloudflare, open the Worker’s Settings → Variables and Secrets and add `OPENROUTER_API_KEY` as a **Secret**. Alternatively use `npx wrangler secret put OPENROUTER_API_KEY` with an authenticated CLI. Never put a real key into Git, chat, frontend code, or plain-text variables.
 
-Set the owner-selected `LLM_MODEL` and `IMAGE_MODEL` IDs in `wrangler.jsonc`, verify each model’s capabilities, then set `GENERATION_ENABLED` to `true` and deploy. All three values and all storage/workflow bindings are required before creation is available. Text uses OpenRouter chat completions; image generation uses its dedicated images endpoint. The current image adapter supports Google image models with 1K resolution and other compatible models with medium quality; verify parameters before changing providers.
+Set the owner-selected `LLM_MODEL` and `IMAGE_MODEL` IDs in `wrangler.jsonc`, verify each model’s capabilities, then set `GENERATION_ENABLED` to `true` and deploy. All three values and all storage/workflow bindings are required before creation is available. Text uses OpenRouter chat completions; image generation uses its dedicated images endpoint. The current image adapter supports Seedream 5.0 Flash and Google image models with 1K resolution, and other compatible models with medium quality; verify parameters before changing providers.
 
 For local paid testing only, put the key in ignored `.dev.vars` using `.dev.vars.example`. Normal QA needs no real key. Configure an OpenRouter key credit limit as an additional budget boundary.
 
-Requests are limited to 2,000 input characters, 4,000 output tokens, and one image. D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
+Requests are limited to 2,000 input characters, 12,000 combined reasoning/output tokens, and one image. D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
 
 ## Deployment
 

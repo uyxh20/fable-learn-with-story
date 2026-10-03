@@ -23,7 +23,7 @@ try{
       await expect.poll(()=>page.locator('.cine').evaluate(e=>e.scrollTop)).toBeGreaterThan(before+100);
       const after=await page.locator('.cine').evaluate(e=>e.scrollTop);await page.reload();await page.evaluate(()=>document.fonts.ready);
       await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label','decode');
-      assert.ok(Math.abs(after-await page.locator('.cine').evaluate(e=>e.scrollTop))<5);
+      await expect.poll(async()=>Math.abs(after-await page.locator('.cine').evaluate(e=>e.scrollTop))).toBeLessThan(5);
       await page.getByRole('button',{name:labels.contents,exact:true}).click();const dialog=page.getByRole('dialog');
       await expect(dialog.getByRole('button',{name:labels.closeLabel,exact:true})).toBeFocused();
       await page.keyboard.press('Shift+Tab');await expect(dialog.locator('button').last()).toBeFocused();
