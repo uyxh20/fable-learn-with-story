@@ -7,6 +7,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && wrangler dev",
+    "build:mocks": "npm run build && node scripts/build-mocks.mjs",
+    "dev:mocks": "npm run build:mocks && wrangler dev --config wrangler.local.jsonc --local --ip 127.0.0.1 --port 8788 --inspector-port 9230 --persist-to .wrangler/fable-local",
     "test": "node --test",
     "check": "npm test && npm run build && wrangler deploy --dry-run",
     "deploy": "npm run check && wrangler deploy"

@@ -1,8 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "fable-learn-with-story",
-  "main": "src/worker.js",
-  "compatibility_date": "2026-10-02",
+  "main": "src/entry.js",
+  "compatibility_date": "2026-10-03",
   "workers_dev": true,
   "assets": {
     "directory": "./dist",
@@ -10,13 +10,35 @@
     "run_worker_first": true
   },
   "vars": {
-    "LLM_API_URL": "",
+    "GENERATION_ENABLED": "false",
     "LLM_MODEL": "",
-    "IMAGE_API_URL": "",
-    "IMAGE_MODEL": ""
+    "IMAGE_MODEL": "",
+    "DAILY_CREATION_LIMIT": "20"
   },
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 0.1
-  }
+    "head_sampling_rate": 0.1,
+    "redact_query_string": true
+  },
+  "r2_buckets": [
+    {
+      "binding": "STORIES",
+      "bucket_name": "fable-creations"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fable-creations",
+      "database_id": "815bd547-5a15-48b0-bb28-724f8c173faf",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "workflows": [
+    {
+      "binding": "GENERATE",
+      "name": "fable-generation",
+      "class_name": "GenerateFable"
+    }
+  ]
 }

@@ -12,17 +12,7 @@
   }
 
   function isLive() {
-    return mode() === "live";
-  }
-
-  function sessionId() {
-    const key = "fable-public-session";
-    let value = localStorage.getItem(key);
-    if (!value) {
-      value = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-      localStorage.setItem(key, value);
-    }
-    return value;
+    return true;
   }
 
   async function api(path, options) {
@@ -105,7 +95,7 @@
       }
     });
     if (cur) scenes.push(cur);
-    return scenes.slice(0, 4);
+    return scenes;
   }
 
   function dataUrl(image) {
@@ -116,7 +106,7 @@
   function buildPages(opts) {
     const lang = ["zh", "da", "fr"].includes(opts.lang) ? opts.lang : "en";
     const concept = opts.concept || "";
-    const title = titleFor(concept, lang);
+    const title = opts.title || titleFor(concept, lang);
     const image = opts.imageSrc || FALLBACK_IMAGE;
     const split = splitStory(opts.markdown || "", lang);
     const scenes = chunk(paragraphs(split.story), lang === "zh" ? 300 : 520);
@@ -185,85 +175,33 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function pollJob(jobId, onStage, onPartial) {
-    const started = Date.now();
-    let storySeen = false;
-    let transientFailures = 0;
-    while (Date.now() - started < 360000) {
-      let status;
-      try {
-        status = await api(`/api/generations/${encodeURIComponent(jobId)}`, { method: "GET" });
-        transientFailures = 0;
-      } catch (err) {
-        if ([429, 500, 502, 503, 504].includes(err.status) && transientFailures < 8) {
-          transientFailures += 1;
-          await sleep(Math.min(30000, 4000 * transientFailures));
-          continue;
-        }
-        throw err;
+  function toBook(result, id, shareURL, partial = false) {
+    const lang=result.lang || "en", src=dataUrl(result.image);
+    return { lang, storyId:id, shareURL, partial, markdown:result.markdown,
+      pages:buildPages({...result,imageSrc:src}),
+      run:{images:[{src,prompt:""}],total_cost_usd:0} };
+  }
+  async function pollJob(id,onStage,onPartial,active=()=>true,share="") {
+    const started=Date.now(); let partialShown=false;
+    while(active() && Date.now()-started<600000) {
+      const state=await api(share ? `/api/shared/${encodeURIComponent(share)}` : `/api/generations/${encodeURIComponent(id)}`);
+      if(state.status==="completed") {onStage?.(4);return toBook(state.result,state.story_id,state.share_url);}
+      if(state.status==="failed") {
+        if(state.partial_result) return toBook(state.partial_result,state.story_id,state.share_url,true);
+        throw new Error(state.error || "This fable could not be created. Please try again later.");
       }
-      if (status.partial_result) {
-        storySeen = true;
-        onPartial && onPartial(status.partial_result);
-      }
-      if (status.stage === "story_call_completed") onStage && onStage(2);
-      if (status.stage === "image_call_started") onStage && onStage(3);
-      if (status.status === "completed") {
-        onStage && onStage(4);
-        return status;
-      }
-      if (status.status === "failed" || status.status === "needs_reconciliation") {
-        throw new Error(status.error || "Generation failed.");
-      }
-      await sleep(storySeen ? 12000 : 5000);
+      if(state.partial_result) {onStage?.(3);if(!partialShown){partialShown=true;onPartial?.(toBook(state.partial_result,state.story_id,null,true));}}
+      else onStage?.(1);
+      await sleep(2500);
     }
-    throw new Error("Generation timed out.");
+    throw new Error("Your fable is still being created. You can reopen it from Your fables.");
   }
-
-  async function generate({ request, lang, onStage, onPartial }) {
-    if (!request || !request.concept) throw new Error("Missing concept.");
-    onStage && onStage(1);
-    const idempotency = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    const created = await api("/api/generations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Fable-Session": sessionId(),
-      },
-      body: JSON.stringify({
-        concept: request.concept,
-        lang,
-        setting: request.setting,
-        idempotency_token: idempotency,
-        human_proof: "browser-session",
-      }),
-    });
-    const toBook = (result) => {
-      const image = result.image || {};
-      const src = dataUrl(image);
-      const pages = buildPages({
-        markdown: result.markdown || "",
-        lang,
-        concept: request.concept,
-        setting: request.setting,
-        imageSrc: src,
-      });
-      const run = {
-        ts: new Date().toISOString(),
-        lang,
-        setting: request.setting,
-        concept: request.concept,
-        images: [{ plate: 1, register: "story/decoded", prompt: "", src }],
-        total_cost_usd: 0,
-      };
-      return { lang, pages, run, markdown: result.markdown || "", partial: !result.image };
-    };
-    const completed = await pollJob(created.job_id, onStage, (partial) => {
-      onPartial && onPartial(toBook(partial || {}));
-    });
-    const result = completed.result || {};
-    return toBook(result);
+  async function generate({request,lang,onStage,onPartial}) {
+    await api("/api/session",{method:"POST"});
+    const created=await api("/api/generations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({concept:request.concept,setting:request.setting,lang,idempotency_token:crypto.randomUUID()})});
+    history.replaceState(null,"",`/?story=${created.story_id}#read/cover`);
+    return pollJob(created.job_id,onStage,onPartial);
   }
-
-  window.FABLE_LIVE = { isLive, mode, generate, buildPages };
+  async function load(id,share,active) { return pollJob(id,null,null,active,share); }
+  window.FABLE_LIVE = { isLive, mode, generate, buildPages, load };
 })();

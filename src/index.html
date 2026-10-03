@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fable (Learn with Story)</title>
   <meta name="description" content="Learn through illustrated fables. Explore stories that make complex ideas memorable.">
+  <link rel="stylesheet" href="/assets/fable-home.css">
   <style>
 /* ============================================================
    FABLE — design system
@@ -1417,9 +1418,9 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
       ],
       loadingLines: [
         "First the fable is written. Then the cover is painted.",
-        "The story can be read before the image is finished.",
+        "Your story text is saved as soon as it is written.",
         "The cover takes longer because it is generated as a full illustration.",
-        "If the text is ready, you can skip image generation and start reading.",
+        "You can leave this page; your fable will keep being created.",
         "A single cover is being made for the whole fable.",
       ],
       weaveLines: [
@@ -1460,9 +1461,9 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
       ],
       loadingLines: [
         "先写出寓言，再绘制封面。",
-        "文字准备好后，你可以先开始阅读。",
+        "故事文字一完成就会保存。",
         "封面是一张完整插画，所以会比文字更慢。",
-        "如果文字已经好了，可以跳过图片生成，直接开卷。",
+        "离开页面后，寓言仍会继续创作。",
         "整则寓言只会生成一张封面图。",
       ],
       weaveLines: [
@@ -1502,9 +1503,9 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
       ],
       loadingLines: [
         "Først skrives fablen. Derefter males omslaget.",
-        "Historien kan læses, før billedet er færdigt.",
+        "Teksten gemmes, så snart den er skrevet.",
         "Omslaget tager længere tid, fordi det genereres som en fuld illustration.",
-        "Hvis teksten er klar, kan du springe billedgenerering over og begynde at læse.",
+        "Du kan forlade siden; din fabel bliver stadig færdig.",
         "Der laves ét omslag til hele fablen.",
       ],
       weaveLines: [
@@ -1544,9 +1545,9 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
       ],
       loadingLines: [
         "La fable est écrite d'abord. La couverture est peinte ensuite.",
-        "L'histoire peut être lue avant que l'image soit terminée.",
+        "Le texte est enregistré dès qu’il est écrit.",
         "La couverture prend plus longtemps parce qu'elle est générée comme une illustration complète.",
-        "Si le texte est prêt, vous pouvez ignorer la génération d'image et commencer à lire.",
+        "Vous pouvez quitter cette page ; votre fable continuera à se créer.",
         "Une seule couverture est créée pour toute la fable.",
       ],
       weaveLines: [
@@ -1586,6 +1587,7 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
 })();
 
 </script>
+  <script src="story-client.js"></script>
   <script src="live-fable.js?v=20260612-poll-retry"></script>
   <script src="ux-copy.js"></script>
   <script type="text/babel">
@@ -1768,6 +1770,7 @@ function roman(n) {
 Object.assign(window, { Icon, MoonGateMark, Logo, Seg, ThemeToggle, LangToggle, Markdown, useToast, copyText, roman });
 
 </script>
+  <script type="text/babel" src="homepage.jsx"></script>
   <script type="text/babel">
 /* FABLE · CINEMA — the cinematic on-ramp (entry landing + composer) */
 const { useState: useStateCC, useEffect: useEffectCC } = React;
@@ -1781,78 +1784,13 @@ function htmlLang(lang) {
 
 function readSavedPlace() {
   try {
-    const saved = JSON.parse(sessionStorage.getItem("fable-reading-place"));
+    const saved = JSON.parse(sessionStorage.getItem(`fable-reading-place:${location.search}`));
     return saved && /^#read\/(cover|end|chapter\/\d+|scene\/\d+\/\d+|explanation\/\d+)$/.test(saved.route)
       && Number.isFinite(saved.offset) && saved.offset >= 0 ? saved : null;
   } catch { return null; }
 }
 
-function CinemaCreate({ onWeave, onOpenBook, theme, setTheme, lang, setLang, T }) {
-  const FB = window.FABLE;
-  const meta = FB.metaFor(lang);
-  const cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
-  const [inView, setInView] = useStateCC(false);
-  useEffectCC(() => {setInView(true);}, []);
-  const canWeave = false;
-  const savedPlace = readSavedPlace();
-
-  return (
-    <div className="cine-create grain" lang={htmlLang(lang)} {...inView ? { "data-in": "" } : {}}>
-      {/* fixed cinematic backdrop */}
-      <div className="cine-bg" aria-hidden="true">
-        <div className="cine-bg-layer" style={{ opacity: 1 }}>
-          <img src={FB.book.cover} alt="" style={{ objectPosition: "62% 28%" }} />
-        </div>
-        <div className="cine-scrim" data-mode="chapter" />
-        <div className="cine-bars" />
-      </div>
-
-      {/* top bar */}
-      <header className="cine-bar">
-        <Logo lang={lang} />
-        <div className="cine-bar-right">
-          <LangToggle lang={lang} setLang={setLang} />
-          <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
-        </div>
-      </header>
-
-      <main className="cine-create-main">
-        <div className="cine-create-inner">
-          <p className="kicker reveal-on" style={{ color: "rgba(246,237,219,.7)" }}>{T.previewLabel}</p>
-          <h1 className="cine-create-title reveal-on"
-          style={{ fontFamily: lang === "zh" ? "var(--font-cjk)" : "var(--font-display)", letterSpacing: lang === "zh" ? "0.02em" : undefined }}>
-            {T.previewTitle}
-          </h1>
-          <p className="cine-create-sub reveal-on">{T.previewSub}</p>
-
-          <div className="cine-compose reveal-on">
-            <p className="kicker">{T.sampleMeta}</p>
-            <h2 className="sample-title">{meta.title}</h2>
-            <p className="preview-note">{T.previewNote}</p>
-            <div className="cine-compose-foot">
-              <button className="btn btn--primary cine-nowshowing" data-ob="sample" onClick={() => onOpenBook(false)}>
-                <Icon name="book" /> {T.readSample}
-              </button>
-              {savedPlace && <button className="btn btn--quiet" onClick={() => onOpenBook(true)}>{T.resume}</button>}
-            </div>
-            <details className="future-compose">
-              <summary>{T.comingSoon}</summary>
-              <div className="future-fields">
-                <label className="kicker" htmlFor="fable-concept">{T.conceptLabel}</label>
-                <textarea id="fable-concept" className="cine-ta" value="" disabled placeholder={T.conceptPh} />
-                <span className="kicker">{T.settingLabel}</span>
-                <div className="cine-settings">
-                  {FB.settings[lang].map((o) => <button key={o} type="button" disabled className="cine-chip" style={{ fontFamily: cjk(o) ? "var(--font-cjk)" : undefined }}>{o}</button>)}
-                </div>
-                <button className="btn btn--quiet" disabled={!canWeave}>{T.weave}</button>
-              </div>
-            </details>
-          </div>
-        </div>
-      </main>
-    </div>);
-
-}
+function CinemaCreate(props) { return <FableHomepage {...props}/>; }
 
 window.CinemaCreate = CinemaCreate;
 </script>
@@ -2018,7 +1956,7 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(18px,3vw,40px)", position: "relative", zIndex: 2 }}>
         <Logo lang={lang} />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <LangToggle lang={lang} setLang={setLang} />
+          {setLang && <LangToggle lang={lang} setLang={setLang} />}
           <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
@@ -2086,25 +2024,14 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
               </button>
             }
             {error &&
-            <button className="btn btn--quiet fade-up" onClick={() => window.location.reload()}>
-                {lang === "zh" ? "返回重试" : "Try again"}
+            <button className="btn btn--quiet fade-up" onClick={() => { window.location.href = `/?lang=${lang}`; }}>
+                {FABLE_HOME_COPY[lang].back}
               </button>
             }
           </div>
           {error && <p style={{ color: "var(--bordeaux)", fontSize: 13, marginTop: 14 }}>{error}</p>}
         </div>
       </main>
-
-      <footer style={{ padding: "16px", textAlign: "center", position: "relative", zIndex: 2 }}>
-        {!ready && !error &&
-          <div style={{ display: "grid", placeItems: "center", gap: 7 }}>
-            <button className="btn btn--ghost" onClick={skipImageGeneration} disabled={!canSkipImage} style={{ fontSize: 11 }}>
-              {T.skipImage}
-            </button>
-            <span style={{ color: "var(--ink-3)", fontSize: 12 }}>{skipQueued ? T.skipQueued : T.skipImageHint}</span>
-          </div>
-        }
-      </footer>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -2142,7 +2069,7 @@ function sectionRoute(s) {
   return s.type === "scene" ? `#read/scene/${chapter}/${s.page.sceneIndex + 1}` : `#read/${s.type === "decode" ? "explanation" : "chapter"}/${chapter}`;
 }
 
-function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = {} }) {
+function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookInfo, viz = {} }) {
   const FB = window.FABLE;
   const meta = (pages[0] && pages[0].meta) || FB.metaFor(lang);
   const scroller = useRefCR(null);
@@ -2211,7 +2138,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
         const route = sectionRoute(sections[best]);
         const offset = Math.max(0, el.scrollTop - nodeRefs.current[best].offsetTop);
         history.replaceState(null, "", route);
-        try { sessionStorage.setItem("fable-reading-place", JSON.stringify({ route, offset })); } catch {}
+        try { sessionStorage.setItem(`fable-reading-place:${location.search}`, JSON.stringify({ route, offset })); } catch {}
       });
     };
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -2284,7 +2211,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
         </div>
         <div className="cine-bar-right">
           <button className="iconbtn" data-ob="contents" onClick={() => setToc((t) => !t)} aria-label={T.contents} title={T.contents}><Icon name="contents" /></button>
-          <LangToggle lang={lang} setLang={setLang} />
+          {setLang && <LangToggle lang={lang} setLang={setLang} />}
           <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
@@ -2309,7 +2236,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, viz = 
             className={`cine-sec cine-${s.type}`}
             data-screen-label={s.type === "scene" ? `${s.page.nav}` : s.type}
             {...(active === i ? { "data-active": "" } : {})}>
-            <Section s={s} T={T} meta={meta} lang={lang} onBegin={() => scrollToIndex(i + 1)} onExit={onExit} />
+            <Section s={s} T={T} meta={meta} lang={lang} onBegin={() => scrollToIndex(i + 1)} onExit={onExit} pages={pages} bookInfo={bookInfo} />
           </section>
         ))}
       </main>
@@ -2327,7 +2254,7 @@ function barLabel(cur, T, meta) {
   return `${p.title} · ${p.sceneIndex + 1}/${p.sceneCount}`;
 }
 
-function Section({ s, T, meta, lang, onBegin, onExit }) {
+function Section({ s, T, meta, lang, onBegin, onExit, pages, bookInfo }) {
   const p = s.page;
   const dispFont = (t) => (_cjk(t) ? "var(--font-cjk)" : "var(--font-display)");
 
@@ -2381,18 +2308,7 @@ function Section({ s, T, meta, lang, onBegin, onExit }) {
     );
   }
 
-  // end
-  const endTitle = lang === "zh" ? "寓言完" : (lang === "da" ? "Fablen er slut" : (lang === "fr" ? "Fin de la fable" : "End of the fable"));
-  return (
-    <div className="cine-end inner">
-      <p className="kicker reveal" style={{ color: "rgba(246,237,219,.7)", marginBottom: 18 }}>{meta.trilogy}</p>
-      <h2 className="reveal">{endTitle}</h2>
-      <p className="reveal">{meta.subtitle}</p>
-      <button className="btn btn--ghost reveal" data-ob="shelf" onClick={onExit} style={{ borderColor: "rgba(246,237,219,.4)", color: "#f6eddb" }}>
-        <Icon name="left" size={15} /> {T.shelf}
-      </button>
-    </div>
-  );
+  return <FableEnding pages={pages} lang={lang} onExit={onExit} bookInfo={bookInfo}/>;
 }
 
 /* prose with an optional drop-initial, rendered from the shared markdown engine */
@@ -3020,118 +2936,7 @@ Object.assign(window, {
 
 </script>
   <script type="text/babel" src="popup-readers.jsx"></script>
-  <script type="text/babel">
-/* FABLE · CINEMA — app state machine + mount (reader → CinemaReader) */
-const { useState: useStateA, useEffect: useEffectA } = React;
-
-const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "theme": "dark",
-  "accent": "#cf9f4c",
-  "grain": 0.3,
-  "heroArt": "bold",
-  "settingChips": "illustrated",
-  "shelf": "library",
-  "dividers": true
-}/*EDITMODE-END*/;
-
-function App() {
-  const FB = window.FABLE;
-  const md = document.getElementById("source-md").textContent.trim();
-
-  const [savedTheme] = useStateA(() => {
-    try { return localStorage.getItem("fable-theme") === "light" ? "light" : "dark"; }
-    catch { return "dark"; }
-  });
-  const [t, setTweak] = useTweaks({ ...TWEAK_DEFAULTS, theme: savedTheme });
-  const [lang, setLangState] = useStateA(() => {
-    try {
-      const saved = localStorage.getItem("fable-lang");
-      return ["en", "fr", "da", "zh"].includes(saved) ? saved : "en";
-    } catch { return "en"; }
-  });
-  const [screen, setScreen] = useStateA(() => location.hash.startsWith("#read/") ? "reader" : "create"); // create | generate | reader
-  useEffectA(() => {
-    const syncRoute = () => setScreen(location.hash.startsWith("#read/") ? "reader" : "create");
-    window.addEventListener("hashchange", syncRoute);
-    return () => window.removeEventListener("hashchange", syncRoute);
-  }, []);
-  const [request, setRequest] = useStateA(null);
-  const [generated, setGenerated] = useStateA(null);
-
-  const pages = React.useMemo(() => (
-    generated && generated.lang === lang ? generated.pages : FB.buildPages(md, lang)
-  ), [generated, lang]);
-  const T = FB.ui[lang];
-
-  useEffectA(() => {
-    document.documentElement.setAttribute("data-theme", t.theme);
-    try { localStorage.setItem("fable-theme", t.theme); } catch {}
-  }, [t.theme]);
-  useEffectA(() => {
-    document.documentElement.style.setProperty("--accent", t.accent);
-    document.documentElement.style.setProperty("--grain", String(t.grain));
-  }, [t.accent, t.grain]);
-  useEffectA(() => {
-    try { localStorage.setItem("fable-lang", lang); } catch {}
-    document.documentElement.setAttribute("lang", htmlLang(lang));
-    window.dispatchEvent(new CustomEvent("fable:language", { detail: lang }));
-  }, [lang]);
-  useEffectA(() => {
-    window.__fableScreen = screen;
-    window.dispatchEvent(new CustomEvent("fable:screen", { detail: screen }));
-  }, [screen]);
-
-  const setLang = (x) => setLangState(x);
-  const theme = t.theme;
-  const setTheme = (x) => setTweak("theme", x);
-  const viz = { heroArt: t.heroArt, settingChips: t.settingChips, shelf: t.shelf, dividers: t.dividers };
-  const shared = { theme, setTheme, lang, setLang, T, viz };
-  const Reader = { __proto__: null, popup: window.PopupStageReader, tunnel: window.TunnelBookReader, mechanics: window.PaperMechanicsReader }[new URLSearchParams(location.search).get("reader")] || CinemaReader;
-
-  return (
-    <React.Fragment>
-      {screen === "create" && (
-        <CinemaCreate {...shared}
-          onWeave={(req) => { setGenerated(null); setRequest(req); setScreen("generate"); window.scrollTo(0, 0); }}
-          onOpenBook={(resume) => { setGenerated(null); if (!resume) { try { sessionStorage.removeItem("fable-reading-place"); } catch {} } location.hash = resume ? (readSavedPlace()?.route || "#read/cover") : "#read/cover"; }} />
-      )}
-      {screen === "generate" && (
-        <GenerateScreen {...shared} request={request}
-          onDone={(result) => { if (result && result.pages) setGenerated(result); setScreen("reader"); window.scrollTo(0, 0); }} />
-      )}
-      {screen === "reader" && (
-        <Reader {...shared} pages={pages}
-          onExit={() => { location.hash = ""; }} />
-      )}
-
-      <TweaksPanel title="Tweaks">
-        <TweakSection label="Brand" />
-        <TweakColor label="Accent" value={t.accent}
-          options={["#cf9f4c", "#c66a64", "#6f9c84", "#46a5b9"]}
-          onChange={(v) => setTweak("accent", v)} />
-        <TweakRadio label="Theme" value={t.theme} options={["dark", "light"]}
-          onChange={(v) => setTweak("theme", v)} />
-        <TweakSlider label="Film grain" value={t.grain} min={0} max={1} step={0.1}
-          onChange={(v) => setTweak("grain", v)} />
-
-        <TweakSection label="Entry" />
-        <TweakSelect label="Hero backdrop" value={t.heroArt}
-          options={["off", "subtle", "bold"]}
-          onChange={(v) => setTweak("heroArt", v)} />
-        <TweakRadio label="Setting picker" value={t.settingChips}
-          options={[{ value: "text", label: "Text" }, { value: "illustrated", label: "Illustrated" }]}
-          onChange={(v) => setTweak("settingChips", v)} />
-        <TweakRadio label="Shelf" value={t.shelf}
-          options={[{ value: "single", label: "Single" }, { value: "library", label: "Library" }]}
-          onChange={(v) => setTweak("shelf", v)} />
-      </TweaksPanel>
-    </React.Fragment>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-</script>
+  <script type="text/babel" src="app.jsx"></script>
   <script type="text/babel" src="onboarding.jsx"></script>
 </body>
 </html>

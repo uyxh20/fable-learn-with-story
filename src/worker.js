@@ -1,3 +1,6 @@
+import { storyResponse } from './story-store.js';
+import { creationResponse, generationEnabled } from './creation-api.js';
+
 const securityHeaders = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
   'X-Content-Type-Options': 'nosniff',
@@ -15,8 +18,13 @@ export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
     if (path === '/healthz' && ['GET', 'HEAD'].includes(request.method)) {
-      return json({ status: 'ok', generation_enabled: false });
+      return json({ status: 'ok', generation_enabled: generationEnabled(env), storage_enabled: !!(env.DB && env.STORIES) });
     }
+    if (path.startsWith('/api/') && (env.DB || path === '/api/config')) {
+      try { return await creationResponse(request, env, json); }
+      catch { return json({ error: 'service_unavailable', detail: 'Please try again shortly.' }, 503); }
+    }
+    if (path === '/api/stories' || path.startsWith('/api/stories/')) return storyResponse(request, env, json);
     // Deliberately fail closed. Supplying credentials alone must not enable billed requests.
     if (path === '/api' || path.startsWith('/api/')) {
       return json({ error: 'generation_unavailable', detail: 'New story generation is not configured yet. Please explore the sample book.' }, 503);

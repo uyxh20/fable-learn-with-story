@@ -33,7 +33,7 @@ const previewCopy = {
     "guideContentsTitle": "Find the explanation",
     "guideContentsBody": "Open Contents to jump to the story, its explanation, or the ending.",
     "guideHomeTitle": "Return home",
-    "guideHomeBody": "Home takes you back to Fable. Use Continue reading to return to your place."
+    "guideHomeBody": "Home takes you back to Fable, where you can create a story or reopen your saved fables."
   },
   "fr": {
     "shelf": "Accueil",
@@ -68,7 +68,7 @@ const previewCopy = {
     "guideContentsTitle": "Trouvez l’explication",
     "guideContentsBody": "Ouvrez le sommaire pour accéder à l’histoire, à son explication ou à la fin.",
     "guideHomeTitle": "Revenez à l’accueil",
-    "guideHomeBody": "Accueil vous ramène à Fable. Reprendre la lecture vous permet de retrouver votre position."
+    "guideHomeBody": "Accueil vous ramène à Fable pour créer ou retrouver vos histoires enregistrées."
   },
   "da": {
     "shelf": "Hjem",
@@ -103,7 +103,7 @@ const previewCopy = {
     "guideContentsTitle": "Find forklaringen",
     "guideContentsBody": "Åbn indholdsfortegnelsen for at gå til historien, forklaringen eller slutningen.",
     "guideHomeTitle": "Vend hjem",
-    "guideHomeBody": "Hjem fører dig tilbage til Fable. Vælg Læs videre for at vende tilbage til din plads."
+    "guideHomeBody": "Hjem fører dig tilbage til Fable, hvor du kan skabe eller genåbne dine gemte fabler."
   },
   "zh": {
     "shelf": "首页",
@@ -138,7 +138,7 @@ const previewCopy = {
     "guideContentsTitle": "找到释义",
     "guideContentsBody": "打开目录，可跳转到故事、释义或结尾。",
     "guideHomeTitle": "返回首页",
-    "guideHomeBody": "首页按钮带你回到寓言首页。点击继续阅读，即可回到之前的位置。"
+    "guideHomeBody": "首页按钮带你回到首页，可以创作或重新打开保存的寓言。"
   }
 };
 for (const [lang, copy] of Object.entries(previewCopy)) Object.assign(window.FABLE.ui[lang], copy);

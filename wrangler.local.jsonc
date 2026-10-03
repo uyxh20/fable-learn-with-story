@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "fable-local-design",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-02",
+  "assets": { "directory": "./.local-preview/public", "binding": "ASSETS", "run_worker_first": true },
+  "r2_buckets": [{ "binding": "STORIES", "bucket_name": "fable-stories-local", "remote": false }],
+  "vars": { "LOCAL_STORY_WRITES": "true", "LLM_API_URL": "", "LLM_MODEL": "", "IMAGE_API_URL": "", "IMAGE_MODEL": "" }
+}

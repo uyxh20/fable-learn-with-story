@@ -2,46 +2,63 @@
 
 [Open Fable](https://fable-learn-with-story.ulysse-ha-19.workers.dev)
 
-A cinematic, illustrated storybook for learning complex ideas through fables. Includes sample stories, English/Chinese/Danish/French content, light and dark themes, and a scrolling reader.
+Learn an idea through an illustrated fable. Choose a story world, enter an idea, or read the curated sample. English, French, Danish and Chinese are supported, with light and dark themes.
 
 ## Current release
 
-Cloudflare Workers hosts a sample-first Fable interface and the original artwork. The reader includes a visible explanatory illustration, localized controls and an optional guide, light and dark reading surfaces, reduced-motion support, and section links. Reading position is retained in session storage for the current browser tab; Home offers Continue reading. **New story and image generation are disabled**, both in the UI and at every API route. No AI provider requests can be made by this Worker. API URLs, API keys, and model names are intentionally empty.
+Homepage 5 pairs a chat-bubble composer with the illustrated sample. The quiet colophon offers an offline HTML book (including illustrations), a browser print view for PDF, and explicit sharing with a revocable link.
 
-This is an isolated public export of the app. The original Google Cloud backend, private project history, operational notes, account identifiers, logs, and credentials are excluded. That backend has not been ported to Workers. Adding keys alone will not enable generation: the provider integration and its public-use controls are a follow-up once the providers are selected.
+The OpenRouter backend is implemented, but creation stays disabled until the owner configures the secret and selects both models. The sample and its downloads remain available. No provider models are selected by default.
 
-## Local development
+## Saved creations
 
-Requires Node.js 22 or newer.
+Cloudflare D1 records every accepted request before generation begins. A Cloudflare Workflow continues independently of the browser. Full story text, explanation, source idea, setting, language, model identifiers and provider usage are saved in private R2 storage; the generated cover is stored as image bytes, with its prompt and metadata separately. Text is saved before the image request, so an image failure does not discard it.
+
+A random HttpOnly, Secure, SameSite=Strict cookie owns the creation. “Your fables” shows the latest 30 creations for that browser, including unfinished jobs. There are no accounts or cross-device recovery: clearing the cookie loses private access, although the backend retains the creation. Download a copy or create a share link to keep access elsewhere.
+
+Stories are private by default. Only the owner can create or revoke an unguessable share link. Anyone holding an active link can read and download the story and illustration; the original input, provider details and usage are not exposed. Revoking the link stops future access, but cannot recall downloaded copies.
+
+## Local development and checks
+
+Requires Node.js 22 or newer and Chrome for browser QA.
 
 ```sh
 npm ci
+npm run check
+npx wrangler d1 migrations apply fable-creations --local
 npm run dev
 ```
 
-Open the local URL printed by Wrangler. `npm run check` runs API tests, builds the frontend, and validates the Worker bundle. Frontend JSX is compiled during the build, and React is bundled locally; no runtime Babel or third-party script CDN is used.
+`npm run check` runs focused unit tests, builds the frontend and validates the Worker bundle. `node scripts/qa-creation.mjs` runs actual local Workflow, D1 and R2 bindings with stubbed OpenRouter responses, including failure retention, duplicate requests, concurrent quotas, ownership, share revocation, downloads and persistence across a runtime restart. It makes no paid provider calls.
 
-Run `node scripts/qa-regression.mjs` against the local server for browser regression checks (requires Chrome). Set `FABLE_TEST_URL` to run the same checks on a deployment.
+`node scripts/qa-regression.mjs` checks the homepage and sample reader without creating a story. Set `FABLE_TEST_URL` to check a deployed site. Evidence belongs under ignored `.gstack/`, never in the public asset directory.
 
-## Deploy
+The five original homepage mocks and three endings remain available through `npm run dev:mocks` at `http://127.0.0.1:8788/mocks/compare`. These are local English prototypes and use sample content. They build separately under ignored `.local-preview/`. See [the original design study](docs/local-design-study.md). Experimental paper readers remain confined to localhost.
+
+## OpenRouter setup
+
+In Cloudflare, open the Worker’s Settings → Variables and Secrets and add `OPENROUTER_API_KEY` as a **Secret**. Alternatively use `npx wrangler secret put OPENROUTER_API_KEY` with an authenticated CLI. Never put a real key into Git, chat, frontend code, or plain-text variables.
+
+Set the owner-selected `LLM_MODEL` and `IMAGE_MODEL` IDs in `wrangler.jsonc`, verify each model’s capabilities, then set `GENERATION_ENABLED` to `true` and deploy. All three values and all storage/workflow bindings are required before creation is available. Text uses OpenRouter chat completions; image generation uses its dedicated images endpoint. The current image adapter supports Google image models with 1K resolution and other compatible models with medium quality; verify parameters before changing providers.
+
+For local paid testing only, put the key in ignored `.dev.vars` using `.dev.vars.example`. Normal QA needs no real key. Configure an OpenRouter key credit limit as an additional budget boundary.
+
+Requests are limited to 2,000 input characters, 4,000 output tokens, and one image. D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
+
+## Deployment
 
 ```sh
 npx wrangler login
+npx wrangler d1 migrations apply fable-creations --remote
 npm run deploy
 ```
 
-The `dist/` directory is the only public asset directory. Cloudflare credentials stay outside this repository. Wrangler uses the authenticated account and deploys the Worker named in `wrangler.jsonc`.
-
-The optional GitHub Actions check workflow is provided at `docs/github-actions-check.yml`. To activate it, place it at `.github/workflows/check.yml` using a GitHub login with workflow permission. Automated deployments are not configured.
-
-## Later AI setup
-
-`.dev.vars.example` lists empty placeholders for `LLM_API_URL`, `LLM_API_KEY`, `LLM_MODEL`, `IMAGE_API_URL`, `IMAGE_API_KEY`, and `IMAGE_MODEL`. Copy it to ignored `.dev.vars` for local secrets when needed. Use Wrangler secrets for production API keys; never put keys in browser code, Git, or plain-text Wrangler variables.
-
-Before enabling generation, implement the selected providers on the server, input limits, bot protection, per-user/network quotas, idempotency, bounded jobs/timeouts, and provider spending caps. Keep the current fail-closed behavior until those are tested.
+The configured D1 database, private R2 bucket and Workflow must exist. `dist/` is the only public asset directory. Secrets remain in Cloudflare across deployments. The optional GitHub Actions check is in `docs/github-actions-check.yml`; automatic deployments are not configured.
 
 ## Privacy and security
 
-The preview makes no AI calls and has no analytics. UI preferences use browser local storage; reading position uses session storage. Fonts are loaded from Google Fonts. Security headers restrict scripts and connections to this site's origin. Only the app sources and curated sample illustrations are tracked; local secrets and generated build output are ignored.
+The backend sends the entered idea, language and setting to OpenRouter for story generation, then the generated illustration prompt for the cover. It retains finished content and failed-request status. It does not log API keys or provider response bodies. There is no analytics integration. UI preferences use local storage; reading position uses session storage. Google Fonts supplies typography.
 
-Public visibility does not grant an open-source license. No license has been selected for the original application or artwork. React's license notice is retained in the built bundle.
+The app uses same-origin write checks, private bucket access, escaped Markdown, bounded request/output sizes, and browser security headers. Public asset builds exclude source audits, local records, secrets and logs. Private backend data is not uploaded to GitHub.
+
+Public visibility does not grant an open-source license. No license has been selected for the original app or artwork. React’s license notice is retained in the built bundle.

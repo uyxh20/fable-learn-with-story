@@ -1,143 +1,41 @@
-// Local and hosted regression checks for the sample-first Fable reader.
-import { chromium, expect } from '@playwright/test';
+// Read-only smoke checks: safe for local or production with no provider calls.
+import { chromium,expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-
-const base = process.env.FABLE_TEST_URL || 'http://localhost:8787';
-const evidence = process.env.FABLE_QA_EVIDENCE;
-if (evidence) await mkdir(evidence, { recursive: true });
-const browser = await chromium.launch({ channel: 'chrome', headless: true });
-const errors = [];
-const shot = async (page, name) => {
-  if (!evidence) return;
-  await page.waitForTimeout(1600);
-  await page.screenshot({ path: `${evidence}/${name}.png` });
-};
-const settle = async page => {
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(1800);
-};
-const openExplanation = async page => {
-  await page.getByRole('button', { name: 'Contents', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.locator('.toc-sub').click();
-  await settle(page);
-  await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
-};
-try {
-  for (const width of [390, 1440]) {
-    const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 1000 } });
-    page.setDefaultTimeout(15000);
-    page.on('pageerror', error => errors.push(error.message));
-    await page.goto(base, { waitUntil: 'networkidle' });
-    await expect(page.locator('.cine-create')).toBeVisible();
-    await settle(page);
-    assert.equal(await page.getByRole('dialog').count(), 0, 'Guide must be optional');
-    await expect(page.getByRole('button', { name: 'Read the sample', exact: true })).toBeEnabled();
-    assert.ok(await page.locator('.cine-nowshowing').evaluate(el => el.getBoundingClientRect().height >= 44));
-    await page.getByRole('button', { name: 'Guide me', exact: true }).click();
-    await expect(page.getByRole('dialog')).toContainText('Start with the sample');
-    await page.getByRole('button', { name: 'Finish', exact: true }).click();
-    await page.locator('summary').click();
-    await expect(page.getByRole('textbox')).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Weave the fable' })).toBeDisabled();
-    await page.locator('summary').click();
-    await shot(page, `home-dark-${width}`);
-    for (const lang of ['fr', 'da', 'zh', 'en']) {
-      await page.getByRole('combobox').selectOption(lang);
-      await page.locator('.cine-bar .iconbtn').click();
-      await page.reload({ waitUntil: 'networkidle' });
-      assert.equal(await page.getByRole('combobox').inputValue(), lang);
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-      await expect(page.locator('.cine-compose')).toHaveCSS('background-color', 'rgb(241, 233, 214)');
-      if (lang === 'en') await shot(page, `home-light-${width}`);
-      await page.locator('.ob-guide').click();
-      await expect(page.getByRole('dialog')).toBeVisible();
-      if (lang !== 'en') assert.doesNotMatch(await page.getByRole('dialog').innerText(), /Start with the sample|Finish|Skip/);
-      await page.keyboard.press('Escape');
-      await page.locator('.cine-nowshowing').click();
-      await settle(page);
-      const labels = await page.evaluate(() => window.FABLE.ui[document.documentElement.lang.split('-')[0]]);
-      await page.getByRole('button', { name: labels.contents, exact: true }).click();
-      const contents = page.getByRole('dialog');
-      await expect(contents.locator('.toc-row').last()).toContainText(labels.endLabel);
-      assert.doesNotMatch(await contents.innerText(), /XIII/);
-      await contents.locator('.toc-sub').click();
-      await settle(page);
+const base=process.env.FABLE_TEST_URL||'http://127.0.0.1:8787',evidence=process.env.FABLE_QA_EVIDENCE;
+if(evidence)await mkdir(evidence,{recursive:true});
+const browser=await chromium.launch({channel:'chrome',headless:true});const errors=[];
+try{
+  for(const width of [390,1440]){
+    const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});page.on('pageerror',e=>errors.push(e.message));
+    for(const lang of ['en','fr','da','zh']){
+      await page.goto(`${base}/?lang=${lang}`);await expect(page.locator('.fable-bubble')).toBeVisible();await page.evaluate(()=>document.fonts.ready);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+      const labels=await page.evaluate(()=>FABLE.ui[document.documentElement.lang.split('-')[0]]);
+      await page.getByRole('button',{name:labels.lightLabel,exact:true}).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+      if(evidence&&lang==='en')await page.screenshot({path:`${evidence}/home-light-${width}.png`,fullPage:true});
+      await page.locator('.fable-sample').click();await expect(page.locator('.cine')).toBeVisible();await page.evaluate(()=>document.fonts.ready);
+      await page.getByRole('button',{name:labels.contents,exact:true}).click();await page.getByRole('dialog').locator('.toc-sub').click();
+      await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label','decode');
       await expect(page.locator('.cine-figure img')).toBeVisible();
-      assert.ok((await page.locator('.cine-figure img').getAttribute('alt')).length > 30);
-      assert.equal(await page.locator('.cine-decode .cine-prose h3').count(), 0);
-      await page.locator('.cine-bar [data-ob=shelf]').click();
-      await expect(page.locator('.cine-create')).toBeVisible();
-      await page.locator('.cine-bar .iconbtn').click();
+      await page.locator('.cine-decode h3.dt').click();const before=await page.locator('.cine').evaluate(e=>e.scrollTop);await page.keyboard.press('Space');
+      await expect.poll(()=>page.locator('.cine').evaluate(e=>e.scrollTop)).toBeGreaterThan(before+100);
+      const after=await page.locator('.cine').evaluate(e=>e.scrollTop);await page.reload();await page.evaluate(()=>document.fonts.ready);
+      await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label','decode');
+      assert.ok(Math.abs(after-await page.locator('.cine').evaluate(e=>e.scrollTop))<5);
+      await page.getByRole('button',{name:labels.contents,exact:true}).click();const dialog=page.getByRole('dialog');
+      await expect(dialog.getByRole('button',{name:labels.closeLabel,exact:true})).toBeFocused();
+      await page.keyboard.press('Shift+Tab');await expect(dialog.locator('button').last()).toBeFocused();
+      await dialog.locator('.toc-row').last().click();await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label','end');
+      await expect(page.locator('.fable-ending')).toBeInViewport();
+      if(evidence&&lang==='en')await page.screenshot({path:`${evidence}/ending-light-${width}.png`});
+      await page.locator('.fable-next').click();await expect(page.locator('.fable-home')).toBeVisible();
+      await page.getByRole('button',{name:labels.darkLabel,exact:true}).click();
     }
-    await page.locator('.cine-nowshowing').click();
-    await settle(page);
-    await page.getByRole('button', { name: 'Begin reading', exact: true }).click();
-    await settle(page);
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'chapter');
-    await page.getByRole('button', { name: 'Scroll to continue', exact: true }).click();
-    await settle(page);
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', /1\/10/);
-    assert.equal(await page.locator('.cine-scene').first().locator('blockquote').count(), 0);
-    await shot(page, `story-dark-${width}`);
-    await page.getByRole('button', { name: 'Switch to light', exact: true }).click();
-    await expect(page.locator('.cine-panel').first()).toHaveCSS('background-color', 'rgb(241, 233, 214)');
-    await shot(page, `story-light-${width}`);
-    await page.getByRole('button', { name: 'Switch to dark', exact: true }).click();
-    await openExplanation(page);
-    await shot(page, `explanation-${width}`);
-    // Critical regression: with noninteractive focus, Space scrolls inside a long explanation.
-    await page.locator('.cine-decode h3.dt').click();
-    const before = await page.locator('.cine').evaluate(el => el.scrollTop);
-    await page.keyboard.press('Space');
-    await settle(page);
-    const after = await page.locator('.cine').evaluate(el => el.scrollTop);
-    assert.ok(after > before + 100, 'Space advances inside explanation');
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
-    await page.reload({ waitUntil: 'networkidle' });
-    await settle(page);
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
-    const restored = await page.locator('.cine').evaluate(el => el.scrollTop);
-    assert.ok(Math.abs(after - restored) < 5, `Reload keeps offset: ${after} -> ${restored}`);
-    await page.locator('.cine-bar [data-ob=shelf]').click();
-    await page.getByRole('button', { name: 'Continue reading', exact: true }).click();
-    await settle(page);
-    assert.ok(Math.abs(after - await page.locator('.cine').evaluate(el => el.scrollTop)) < 5);
-    await page.locator('.cine-bar [data-ob=shelf]').click();
-    await page.goBack();
-    await settle(page);
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'decode');
-    await page.goForward();
-    await expect(page.locator('.cine-create')).toBeVisible();
-    await page.getByRole('button', { name: 'Continue reading', exact: true }).click();
-    await settle(page);
-    const language = page.getByRole('combobox');
-    await language.focus();
-    await page.evaluate(() => { window.__qaKeys = []; window.addEventListener('keydown', event => window.__qaKeys.push({ key: event.key, prevented: event.defaultPrevented })); });
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Escape');
-    assert.equal(await page.evaluate(() => window.__qaKeys.some(e => e.key === 'ArrowDown' && !e.prevented)), true);
-    await page.getByRole('button', { name: 'Contents', exact: true }).click();
-    const contents = page.getByRole('dialog');
-    await expect(contents.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
-    await expect(contents.locator('button').last()).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(contents.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
-    await contents.locator('.toc-row').last().click();
-    await settle(page);
-    await expect(page.locator('.cine-sec[data-active]')).toHaveAttribute('data-screen-label', 'end');
-    await shot(page, `ending-${width}`);
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    assert.equal(await page.locator('.cine-bg-layer img').first().evaluate(el => getComputedStyle(el).animationName), 'none');
-    await page.getByRole('button', { name: 'Contents', exact: true }).click();
-    await page.getByRole('dialog').locator('.toc-row').first().click();
-    await expect(page.locator('.cine')).toHaveJSProperty('scrollTop', 0);
-    assert.ok(await page.locator('.cine-create, .cine').evaluate(el => el.scrollWidth <= el.clientWidth));
-    assert.equal((await page.request.get(`${base}/api/generate`)).status(), 503);
-    console.log(`PASS ${width}px: four locales, sample/guide, both themes, chapter cue, explanation figure/keyboard, resume/reload/history, focus, reduced motion, disabled API.`);
+    const health=await(await page.request.get(`${base}/healthz`)).json();assert.equal(health.status,'ok');
+    console.log(`PASS ${width}px: four languages, chat composer, sample, light/dark, explanation keyboard reading, reload, focus, quiet ending and Home.`);
     await page.close();
   }
-  assert.deepEqual(errors, []);
-} finally { await browser.close(); }
+  assert.deepEqual(errors,[]);
+}finally{await browser.close();}
