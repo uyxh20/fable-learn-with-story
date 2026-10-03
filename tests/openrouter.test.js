@@ -8,7 +8,7 @@ const content={title:'The orchard',story:'The gardener planted a tree. '.repeat(
 test('provider requests use only the server secret; complete story and usage are preserved',async()=>{
   const doc=await generateText(env,input,async(url,options)=>{
     assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');
-    assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,12000);assert.deepEqual(JSON.parse(options.body).reasoning,{effort:'high',exclude:true});
+    assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,12000);assert.deepEqual(JSON.parse(options.body).reasoning,{effort:'high',exclude:true});assert.equal(JSON.parse(options.body).response_format.json_schema.strict,true);assert.equal(JSON.parse(options.body).provider.require_parameters,true);
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}],usage:{cost:0.01}});
   });
   assert.ok(doc.markdown.includes(content.story));assert.ok(doc.markdown.includes(content.explanation));assert.equal(doc.text_usage.cost,0.01);
