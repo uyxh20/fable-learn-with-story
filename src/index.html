@@ -3019,6 +3019,7 @@ Object.assign(window, {
 });
 
 </script>
+  <script type="text/babel" src="popup-readers.jsx"></script>
   <script type="text/babel">
 /* FABLE · CINEMA — app state machine + mount (reader → CinemaReader) */
 const { useState: useStateA, useEffect: useEffectA } = React;
@@ -3085,6 +3086,7 @@ function App() {
   const setTheme = (x) => setTweak("theme", x);
   const viz = { heroArt: t.heroArt, settingChips: t.settingChips, shelf: t.shelf, dividers: t.dividers };
   const shared = { theme, setTheme, lang, setLang, T, viz };
+  const Reader = { popup: window.PopupStageReader, tunnel: window.TunnelBookReader, mechanics: window.PaperMechanicsReader }[new URLSearchParams(location.search).get("reader")] || CinemaReader;
 
   return (
     <React.Fragment>
@@ -3098,7 +3100,7 @@ function App() {
           onDone={(result) => { if (result && result.pages) setGenerated(result); setScreen("reader"); window.scrollTo(0, 0); }} />
       )}
       {screen === "reader" && (
-        <CinemaReader {...shared} pages={pages}
+        <Reader {...shared} pages={pages}
           onExit={() => { location.hash = ""; }} />
       )}
 
