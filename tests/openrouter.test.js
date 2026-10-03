@@ -16,7 +16,7 @@ function stream(parts,{finish='stop',done=true,error=false}={}) {
 test('compact storyboard uses medium effort and three fixed scene/image pairs',async()=>{
   const doc=await generatePlan(env,input,async(url,options)=>{
     assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');assert.equal(options.headers.Authorization,'Bearer test-only');
-    const body=JSON.parse(options.body);assert.equal(body.max_tokens,4000);assert.deepEqual(body.reasoning,{effort:'medium',exclude:true});assert.equal(body.response_format.json_schema.strict,true);assert.deepEqual(body.provider,{require_parameters:true});
+    const body=JSON.parse(options.body);assert.equal(body.max_tokens,2000);assert.deepEqual(body.reasoning,{effort:'medium',exclude:true});assert.equal(body.response_format.json_schema.strict,true);assert.deepEqual(body.provider,{require_parameters:true});
     return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(plan)}}],usage:{cost:0.001}});
   });
   assert.equal(doc.plan_usage.cost,0.001);assert.equal(doc.scenes.length,3);assert.equal(JSON.stringify(doc).includes('test-only'),false);

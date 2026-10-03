@@ -43,7 +43,7 @@ Set the owner-selected `LLM_MODEL` and `IMAGE_MODEL` IDs in `wrangler.jsonc`, ve
 
 For local paid testing only, put the key in ignored `.dev.vars` using `.dev.vars.example`. Normal QA needs no real key. Configure an OpenRouter key credit limit as an additional budget boundary.
 
-Requests are limited to 2,000 input characters, 4,000 combined reasoning/output tokens for the storyboard, 12,000 for prose, and three images (two text requests and three image requests per creation). D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
+Requests are limited to 2,000 input characters, 2,000 combined reasoning/output tokens for the storyboard, 12,000 for prose, and three images (two text requests and three image requests per creation). D1 atomically enforces one active creation per browser, three creations per browser/day, five per IP/day and 20 globally/day (UTC). Failed attempts count toward limits. Provider requests have timeouts and are not automatically retried; storage writes can retry without making another paid request. These are bounded public-preview limits, not user authentication or comprehensive bot protection.
 
 ## Deployment
 
