@@ -57,6 +57,11 @@
 .pb-dialog { width:min(480px,100%); max-height:80vh; overflow:auto; background:var(--bg-2); border:1px solid var(--line-2); padding:24px; display:grid; gap:6px; }
 .pb-dialog button { min-height:44px; text-align:left; background:transparent; border:0; color:var(--ink); padding:10px; font:17px var(--font-body); }
 .pb-dialog button[aria-current] { background:var(--line); }
+
+.pb-stage { position:absolute; inset:8% 3% 4%; transform-style:preserve-3d; transform:rotateX(-8deg); }
+.pb-floor { position:absolute; left:0; top:90%; width:100%; height:38%; transform-origin:top; transform:rotateX(90deg); background:linear-gradient(#baa27c,#8f7959); border:1px solid #cfbc96; }
+.pb-wall { position:absolute; inset:0 0 10%; transform-origin:bottom; transform:rotateX(calc(-90deg * (1 - var(--open)))); border:8px solid #c4b18e; background:#c4b18e; box-shadow:0 8px 16px #0004; }
+.pb-wall img { width:100%; height:100%; object-fit:cover; }
 @media(max-width:899px) {
  .pb-desk { filter:none; }
  .pb-top { height:64px; padding:8px; gap:4px; }
@@ -111,7 +116,11 @@
       </>}
     </>;
   }
+  function Stage({ s, T }) {
+    return <div className="pb-stage"><div className="pb-floor"/><div className="pb-wall"><img src={s.image} alt={s.type === 'decode' ? T.figureAlt : ''} style={{objectPosition:`${s.page.pan ?? 50}% 50%`}}/></div></div>;
+  }
   function Installation({ s, variant, pages, T, reduced }) {
+    if (variant === 'popup') return <Stage s={s} T={T}/>;
     return <img className="pb-flat" src={s.image} alt={s.type === 'decode' ? T.figureAlt : ''} style={{objectPosition:`${s.page.pan ?? 50}% 50%`}}/>;
   }
   function Contents({ sections, active, T, meta, onPick, onClose }) {
