@@ -13,8 +13,9 @@
     React.useEffect(()=>{document.documentElement.lang=htmlLang(lang);try{localStorage.setItem('fable-lang',lang);}catch{}window.dispatchEvent(new CustomEvent('fable:language',{detail:lang}));},[lang]);
     React.useEffect(()=>{window.__fableScreen=screen;window.dispatchEvent(new CustomEvent('fable:screen',{detail:screen}));},[screen]);
     React.useEffect(()=>{const sync=()=>{const q=query();setLoadKey(`${q.get('story')||''}:${q.get('share')||''}`);if(!q.has('story')&&!q.has('share')){setGenerated(null);setScreen(location.hash.startsWith('#read/')?'reader':'create');}};addEventListener('popstate',sync);addEventListener('hashchange',sync);return()=>{removeEventListener('popstate',sync);removeEventListener('hashchange',sync);};},[]);
-    React.useEffect(()=>{const [id,share]=loadKey.split(':');if(!id&&!share)return;let active=true;setScreen('loading');setError('');
-      FABLE_LIVE.load(id,share,()=>active).then(book=>{if(!active)return;setGenerated(book);setLang(book.lang);setScreen('reader');}).catch(e=>{if(active)setError(e.message);});
+    React.useEffect(()=>{const [id,share]=loadKey.split(':');if(!id&&!share)return;let active=true;if(generated?.storyId!==id)setScreen('loading');setError('');
+      const show=book=>{if(!active||!book)return;setGenerated(book);setLang(book.lang);setScreen('reader');};
+      FABLE_LIVE.load(id,share,()=>active,show).then(show).catch(e=>{if(active){setError(e.message);setGenerated(book=>book?{...book,generating:false,partial:true}:book);}});
       return()=>{active=false;};},[loadKey]);
     const home=()=>{history.pushState(null,'',`/?lang=${lang}`);setGenerated(null);setLoadKey(':');setError('');setScreen('create');};
     const openSaved=id=>{location.href=`/?story=${encodeURIComponent(id)}#read/cover`;};
@@ -24,8 +25,9 @@
     const local=['localhost','127.0.0.1'].includes(location.hostname);
     const Reader=local?({popup:window.PopupStageReader,tunnel:window.TunnelBookReader,mechanics:window.PaperMechanicsReader}[query().get('reader')]||CinemaReader):CinemaReader;
     return <>{screen==='create'&&<FableHomepage {...shared} onOpenBook={sample} onOpenSaved={openSaved} onWeave={req=>{setRequest(req);setScreen('generate');}}/>}
-      {screen==='generate'&&<GenerateScreen {...shared} setLang={undefined} request={request} onDone={result=>openSaved(result.storyId)}/>}
+      {screen==='generate'&&<GenerateScreen {...shared} setLang={undefined} request={request} onDone={result=>{setGenerated(result);setLang(result.lang);setScreen('reader');setLoadKey(`${result.storyId}:`);}}/>}
       {screen==='loading'&&<main className="fable-loading"><h1>{C.loading}</h1><p role={error?'alert':'status'}>{error||C.working}</p><button className="btn" onClick={home}>{C.back}</button></main>}
+      {screen==='reader'&&error&&<p className="fable-reader-notice" role="alert">{error}</p>}
       {screen==='reader'&&<Reader {...shared} pages={pages} bookInfo={generated} onExit={home}/>}</>;
   }
   ReactDOM.createRoot(document.getElementById('root')).render(<App/>);

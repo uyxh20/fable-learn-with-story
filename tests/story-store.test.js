@@ -84,3 +84,16 @@ test('scene text keeps its corresponding image through reader pagination',async(
   story.forEach((page,i)=>assert.equal(page.image,scenes[Math.floor(i/2)].image.url));
   assert.equal(pages.at(-1).image,'/image/2');
 });
+
+
+test('reader receives every saved scene/image update and withholds the explanation until ready',async()=>{
+  const window={},updates=[];let polls=0;
+  const scene={text:'The first complete scene. '+ 'A tree grows. '.repeat(50)};
+  const states=[{status:'writing',partial_result:{scenes:[scene],text_complete:false}},
+    {status:'writing',partial_result:{scenes:[{...scene,image:{url:'/image/0'}}],text_complete:false}},
+    {status:'completed',result:{scenes:[scene,scene,scene],text_complete:true}}];
+  vm.runInNewContext(await readFile(new URL('../src/live-fable.js',import.meta.url),'utf8'),{window,URLSearchParams,setTimeout(fn){fn();},async fetch(){const state=states[polls++],key=state.result?'result':'partial_result';return Response.json({...state,story_id:'job',[key]:{title:'Growing',lang:'en',markdown:'# Growing\n\nStory\n\n### After the story\n\nLesson',...state[key]}});}});
+  const final=await window.FABLE_LIVE.load('job','',()=>true,book=>updates.push(book));
+  assert.equal(updates.length,2);assert.equal(updates[0].generating,true);assert.equal(updates[0].pages.some(p=>p.kind==='Lesson'),false);
+  assert.equal(updates[1].run.images[0].src,'/image/0');assert.equal(final.generating,false);assert.equal(final.partial,false);assert.equal(final.pages.at(-1).kind,'Lesson');
+});

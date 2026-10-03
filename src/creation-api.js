@@ -26,7 +26,7 @@ export function validateCreation(data) {
     !['en','fr','da','zh'].includes(data.lang) || !['Chinese classical','Greek myth','Fairy tale','Contemporary'].includes(data.setting)) throw new Error('invalid_request');
   return {concept:data.concept.trim(),lang:data.lang,setting:data.setting};
 }
-const friendlyError = 'This fable could not be completed. Any finished text is saved. Please try a new fable later.';
+const friendlyError = 'This fable could not be completed. Finished scenes and pictures are saved. Please try a new fable later.';
 
 export async function creationResponse(request,env,json) {
   const url=new URL(request.url), path=url.pathname;
@@ -71,7 +71,7 @@ export async function creationResponse(request,env,json) {
     const doc=object ? await object.json():null;
     const imageBase=shared?`/api/shared/${shared[1]}/image`:`/api/stories/${row.id}/image`;
     const images=doc?await Promise.all((doc.scenes||[{}]).map(async(_,index)=>await env.STORIES.head(`creations/${row.id}/${index===0?'cover':`scene-${index}`}`)?{url:`${imageBase}/${index}`}:null)):[];
-    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,image:images[0]||null,...(doc.scenes?{scenes:doc.scenes.map((scene,index)=>({text:scene.text,image:images[index]}))}:{})}:null;
+    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,text_complete:doc.text_complete!==false,image:images[0]||null,...(doc.scenes?{scenes:doc.scenes.map((scene,index)=>({text:scene.text,image:images[index]}))}:{})}:null;
     return json({job_id:row.id,story_id:row.id,status:row.status,stage:row.status==='illustrating'?'image_call_started':row.status==='completed'?'complete':'story_call_started',
       ...(row.error?{error:friendlyError}:{}),...(row.status==='completed'?{result}:result?{partial_result:result}:{}),share_url:!shared&&row.share_token?`${url.origin}/?share=${row.share_token}#read/cover`:null});
   }

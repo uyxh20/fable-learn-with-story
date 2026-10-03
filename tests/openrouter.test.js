@@ -1,23 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateText,generateImage } from '../src/openrouter.js';
+import { generatePlan,generateText,generateImage } from '../src/openrouter.js';
 import { boundedJSON,validateCreation,generationEnabled } from '../src/creation-api.js';
 const env={OPENROUTER_API_KEY:'test-only',LLM_MODEL:'test/text',IMAGE_MODEL:'google/test-image'};
 const input={concept:'Compound growth',lang:'en',setting:'Chinese classical'};
 const content={title:'The orchard',visual_guide:'The same old gardener in blue robes.',scenes:Array.from({length:3},(_,i)=>({text:`Season ${i+1}. `+'The gardener planted a tree. '.repeat(8),image_prompt:`The gardener in season ${i+1}.`})),explanation:'Each seed grows from the previous harvest.',image_prompt:'A gardener in an orchard.'};
-test('provider requests use only the server secret; complete story and usage are preserved',async()=>{
-  const doc=await generateText(env,input,async(url,options)=>{
-    assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');
-    assert.equal(options.headers.Authorization,'Bearer test-only');assert.equal(JSON.parse(options.body).max_tokens,12000);assert.deepEqual(JSON.parse(options.body).reasoning,{effort:'high',exclude:true});assert.equal(JSON.parse(options.body).response_format.json_schema.strict,true);assert.equal(JSON.parse(options.body).provider.require_parameters,true);
-    return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}],usage:{cost:0.01}});
+const plan={...content,lesson:content.explanation,scenes:content.scenes.map(s=>({beat:'A seed grows into a tree.',image_prompt:s.image_prompt}))};
+const prose={scenes:content.scenes.map(s=>({text:s.text})),explanation:content.explanation};
+function stream(parts,{finish='stop',done=true,error=false}={}) {
+  const frames=[': heartbeat\r\n\r\n',...parts.map(content=>`data: ${JSON.stringify({choices:[{delta:{content}}]})}\r\n\r\n`),`data: ${JSON.stringify(error?{error:{message:'sensitive provider details'}}:{choices:[{delta:{},finish_reason:finish}],usage:{cost:0.01}})}\r\n\r\n`,...(done?['data: [DONE]\r\n\r\n']:[])];
+  // Split every UTF-8 byte and SSE boundary to exercise fragmented network reads.
+  const bytes=new TextEncoder().encode(frames.join(''));let i=0;
+  return new Response(new ReadableStream({pull(controller){if(i<bytes.length)controller.enqueue(bytes.slice(i,i+=7));else controller.close();}}),{headers:{'Content-Type':'text/event-stream'}});
+}
+test('compact storyboard uses medium effort and three fixed scene/image pairs',async()=>{
+  const doc=await generatePlan(env,input,async(url,options)=>{
+    assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');assert.equal(options.redirect,'manual');assert.equal(options.headers.Authorization,'Bearer test-only');
+    const body=JSON.parse(options.body);assert.equal(body.max_tokens,4000);assert.deepEqual(body.reasoning,{effort:'medium',exclude:true});assert.equal(body.response_format.json_schema.strict,true);assert.deepEqual(body.provider,{require_parameters:true});
+    return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(plan)}}],usage:{cost:0.001}});
   });
-  assert.ok(content.scenes.every(scene=>doc.markdown.includes(scene.text)));assert.ok(doc.markdown.includes(content.explanation));assert.equal(doc.text_usage.cost,0.01);
-  assert.equal(JSON.stringify(doc).includes('test-only'),false);
+  assert.equal(doc.plan_usage.cost,0.001);assert.equal(doc.scenes.length,3);assert.equal(JSON.stringify(doc).includes('test-only'),false);
 });
-test('truncated, malformed and rejected provider results fail without leaking provider errors',async()=>{
-  await assert.rejects(generateText(env,input,async()=>Response.json({choices:[{finish_reason:'length'}]})),/incomplete_text/);
-  await assert.rejects(generateText(env,input,async()=>Response.json({choices:[{message:{content:'not JSON'}}]})),/invalid_text/);
-  await assert.rejects(generateText(env,input,async()=>new Response('sensitive provider details',{status:401})),/^Error: provider_text_failed$/);
+test('stream publishes complete scenes before the explanation and keeps exact illustration prompts',async()=>{
+  const updates=[];const escaped={...prose,scenes:prose.scenes.map(s=>({text:s.text+' 他説："[braces {inside} strings]" \\ 🌱'}))};
+  const doc=await generateText(env,input,plan,async doc=>updates.push(doc),async(url,options)=>{
+    const body=JSON.parse(options.body);assert.equal(body.stream,true);assert.equal(body.max_tokens,12000);assert.equal(body.reasoning.effort,'medium');assert.deepEqual(body.provider,{require_parameters:true});
+    return stream(['{"scenes":[',...escaped.scenes.map((s,i)=>(i?',':'')+JSON.stringify(s)),'],"explanation":'+JSON.stringify(prose.explanation)+'}']);
+  });
+  assert.deepEqual(updates.map(d=>d.scenes.length),[1,2,3]);assert.ok(updates.every(d=>!d.text_complete&&!d.markdown.includes(prose.explanation)));
+  assert.ok(escaped.scenes.every(s=>doc.markdown.includes(s.text)));assert.equal(doc.scenes[1].image_prompt,plan.scenes[1].image_prompt);assert.equal(doc.text_complete,true);assert.equal(doc.text_usage.cost,0.01);
+});
+test('truncated and failed streams retain already-published scenes without exposing provider errors',async()=>{
+  for(const options of [{finish:'length'},{done:false},{error:true}]) {
+    const updates=[];
+    await assert.rejects(generateText(env,input,plan,d=>updates.push(d),async()=>stream(['{"scenes":['+JSON.stringify(prose.scenes[0])],options)),/incomplete_text|provider_text_failed/);
+    assert.equal(updates.length,1);assert.equal(updates[0].text_complete,false);
+  }
+  await assert.rejects(generateText(env,input,plan,null,async()=>stream(['not JSON'])),/invalid_text_json/);
+  await assert.rejects(generatePlan(env,input,async()=>new Response('sensitive provider details',{status:401})),/^Error: provider_text_failed$/);
 });
 test('image output must be bounded raster bytes, never a URL or SVG',async()=>{
   await assert.rejects(generateImage(env,content,async()=>Response.json({data:[{url:'https://example.com/image'}]})),/invalid_image/);
@@ -41,8 +61,11 @@ test('Seedream uses its supported resolution parameters and persists raster outp
   assert.equal(result.type,'image/png');assert.deepEqual(Buffer.from(result.bytes),bytes);
 });
 
-test('a fable must contain three complete scene and illustration pairs',async()=>{
-  for(const scenes of [content.scenes.slice(0,2),[...content.scenes,{text:'Extra scene',image_prompt:'Extra'}],content.scenes.map((s,i)=>i===1?{...s,image_prompt:''}:s)]) {
-    await assert.rejects(generateText(env,input,async()=>Response.json({choices:[{message:{content:JSON.stringify({...content,scenes})}}]})),/invalid_text_fields/);
+test('invalid plans and prose never become a completed fable',async()=>{
+  for(const scenes of [plan.scenes.slice(0,2),[...plan.scenes,plan.scenes[0]],plan.scenes.map((s,i)=>i===1?{...s,image_prompt:''}:s)]) {
+    await assert.rejects(generatePlan(env,input,async()=>Response.json({choices:[{message:{content:JSON.stringify({...plan,scenes})}}]})),/invalid_text_fields/);
+  }
+  for(const scenes of [prose.scenes.slice(0,2),[...prose.scenes,prose.scenes[0]],[{text:'Too short'}]]) {
+    await assert.rejects(generateText(env,input,plan,null,async()=>stream([JSON.stringify({...prose,scenes})])),/invalid_text_fields/);
   }
 });

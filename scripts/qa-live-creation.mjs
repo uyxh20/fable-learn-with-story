@@ -18,9 +18,27 @@ try{
     await context.storageState({path:`${evidence}/owner-session.json`});await chmod(`${evidence}/owner-session.json`,0o600);
     await writeFile(`${evidence}/job.json`,JSON.stringify({id,started:new Date(started).toISOString()}));
   }
-  let state,last;while(Date.now()-started<600000){const r=await context.request.get(`${base}/api/stories/${id}`);assert.equal(r.status(),200);state=await r.json();if(state.status!==last){console.log('Creation status:',state.status);last=state.status;}if(['failed','completed'].includes(state.status))break;await new Promise(r=>setTimeout(r,5000));}
+  let state,last,firstReadableSeconds=null,firstReadableScenes=null,readingPosition=null;
+  while(Date.now()-started<600000){
+    const r=await context.request.get(`${base}/api/stories/${id}`);assert.equal(r.status(),200);state=await r.json();
+    if(state.status!==last){console.log('Creation status:',state.status);last=state.status;}
+    if(state.partial_result&&!firstReadableSeconds&&!resume){
+      await expect(page.locator('.cine')).toBeVisible({timeout:10000});await page.evaluate(()=>document.fonts.ready);
+      firstReadableSeconds=Math.round((Date.now()-started)/1000);firstReadableScenes=state.partial_result.scenes.length;
+      console.log(`First readable: ${firstReadableSeconds}s (${firstReadableScenes} scene(s))`);
+      await page.locator('.cine-scene').first().evaluate(el=>document.querySelector('.cine').scrollTo({top:el.offsetTop+100,behavior:'instant'}));
+      await expect(page.locator('.cine-scene').first()).toHaveAttribute('data-active','');
+      readingPosition=await page.locator('.cine').evaluate(el=>el.scrollTop);await page.screenshot({path:`${evidence}/early-reading.png`});
+      await page.reload();await expect(page.locator('.cine')).toBeVisible();await page.evaluate(()=>document.fonts.ready);
+      await expect(page.locator('.cine-scene').first()).toHaveAttribute('data-active','');
+      assert.ok(Math.abs(await page.locator('.cine').evaluate(el=>el.scrollTop)-readingPosition)<3,'reload preserves position while generating');
+    }
+    if(['failed','completed'].includes(state.status))break;await new Promise(r=>setTimeout(r,2500));
+  }
+  const generationSeconds=Math.round((Date.now()-started)/1000);
   assert.equal(state.status,'completed',state.error||'Creation did not complete');assert.ok(state.result.markdown.length>1000);assert.ok(state.result.image.url.startsWith('/api/stories/'));
-  if(!resume){await expect(page.getByRole('button',{name:'Open the book',exact:true})).toBeVisible({timeout:10000});await page.getByRole('button',{name:'Open the book',exact:true}).click();}await expect(page.locator('.cine')).toBeVisible();await page.evaluate(()=>document.fonts.ready);
+  await expect(page.locator('.cine-end')).toHaveCount(1,{timeout:10000});await page.evaluate(()=>document.fonts.ready);
+  if(readingPosition!==null)assert.ok(Math.abs(await page.locator('.cine').evaluate(el=>el.scrollTop)-readingPosition)<3,'completion preserves position');
   const image=await context.request.get(base+state.result.image.url);assert.equal(image.status(),200);const bytes=await image.body();assert.ok(bytes.length>10000);assert.match(image.headers()['content-type'],/^image\/(png|jpeg|webp)$/);
   assert.equal(state.result.scenes.length,3);const imageBodies=[];
   for(const [i,scene] of state.result.scenes.entries()){
@@ -37,5 +55,5 @@ try{
   await page.keyboard.press('Escape');await page.getByRole('button',{name:'Share fable'}).click();if(await page.getByRole('button',{name:'Create share link'}).count())await page.getByRole('button',{name:'Create share link'}).click();await expect(page.locator('.fable-share-input')).toBeVisible();const link=await page.locator('.fable-share-input').inputValue();
   const stranger=await browser.newContext();assert.equal((await stranger.request.get(`${base}/api/stories/${id}`)).status(),404);const recipient=await stranger.newPage();await recipient.goto(link);await expect(recipient.locator('.cine')).toBeVisible();
   await page.getByRole('button',{name:'Stop sharing'}).click();await expect(page.getByRole('dialog').getByRole('status')).toContainText('Sharing is off.');assert.equal((await stranger.request.get(`${base}/api/shared/${new URL(link).searchParams.get('share')}`)).status(),404);await stranger.close();assert.deepEqual(errors,[]);
-  const report={passed:true,id,title:state.result.title,resumedExistingCreation:resume,verificationSeconds:Math.round((Date.now()-started)/1000),markdownCharacters:state.result.markdown.length,imageBytes:bytes.length,imageCount:3,checks:['real text and three distinct scene images','scene-aligned image transitions','private saved story and image after refresh','offline download','independent shared reader','revocation','no browser errors']};await writeFile(`${evidence}/result.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+  const report={passed:true,id,title:state.result.title,resumedExistingCreation:resume,firstReadableSeconds,firstReadableScenes,generationSeconds,verificationSeconds:Math.round((Date.now()-started)/1000),markdownCharacters:state.result.markdown.length,imageBytes:bytes.length,imageCount:3,checks:['progressive reading and stable position across reload/completion','real text and three distinct scene images','scene-aligned image transitions','private saved story and image after refresh','offline download','independent shared reader','revocation','no browser errors']};await writeFile(`${evidence}/result.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
 }finally{await browser.close();}

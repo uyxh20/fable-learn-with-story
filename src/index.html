@@ -1809,7 +1809,6 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
   const [coverIn, setCoverIn] = useStateG(false);
   const [ready, setReady] = useStateG(false);
   const [liveResult, setLiveResult] = useStateG(null);
-  const [partialResult, setPartialResult] = useStateG(null);
   const [skipQueued, setSkipQueued] = useStateG(false);
   const [runInfo, setRunInfo] = useStateG(null);
   const [error, setError] = useStateG("");
@@ -1855,32 +1854,16 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
               if (idx === 3) driftTo(62, 92);
               if (idx === 4) driftTo(94, 98);
             },
+            active: () => !cancelled,
             onPartial: (partial) => {
               if (cancelled) return;
-              if (skipRequested.current) {
-                cancelled = true;
-                stopDrift();
-                onDone(partial);
-                return;
-              }
-              setPartialResult(partial);
-              setStageIdx((idx) => Math.max(idx, 2));
-              driftTo(34, 58);
+              stopDrift();
+              onDone(partial);
             },
           });
           if (cancelled) return;
-          if (skipRequested.current) {
-            onDone(result);
-            return;
-          }
           stopDrift();
-          setLiveResult(result);
-          setRunInfo(result.run);
-          setCoverIn(true);
-          setPlateCount(result.run.images.length);
-          setProgressPct(100);
-          setStageIdx(4);
-          setReady(true);
+          onDone(result);
         } catch (err) {
           if (cancelled) return;
           stopDrift();
@@ -1937,10 +1920,6 @@ function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) 
   const canSkipImage = !ready && !error;
   const skipImageGeneration = () => {
     skipRequested.current = true;
-    if (liveMode && partialResult) {
-      onDone(partialResult);
-      return;
-    }
     if (!liveMode) {
       onDone(null);
       return;
@@ -2064,7 +2043,7 @@ const { useState: useStateCR, useEffect: useEffectCR, useRef: useRefCR, useMemo:
 const _cjk = (s) => /[\u4e00-\u9fff]/.test(s || "");
 
 function sectionRoute(s) {
-  if (["cover", "end"].includes(s.type)) return `#read/${s.type}`;
+  if (["cover", "end", "pending"].includes(s.type)) return `#read/${s.type}`;
   const chapter = s.page.chapterIndex + 1;
   return s.type === "scene" ? `#read/scene/${chapter}/${s.page.sceneIndex + 1}` : `#read/${s.type === "decode" ? "explanation" : "chapter"}/${chapter}`;
 }
@@ -2089,11 +2068,13 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
       } else out.push({ type: "decode", page: p, image: p.image });
     });
     const lastImg = out.length ? out[out.length - 1].image : (pages[0] && pages[0].image);
-    out.push({ type: "end", page: { image: lastImg }, image: lastImg });
+    out.push({ type: bookInfo?.generating ? "pending" : "end", page: { image: lastImg }, image: lastImg });
     return out;
-  }, [pages]);
+  }, [pages,bookInfo?.generating]);
 
-  const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image))], [sections]);
+  const sectionsRef = useRefCR(sections);
+  sectionsRef.current = sections;
+  const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image).filter(Boolean))], [sections]);
   const stops = useMemoCR(
     () => sections.map((s, i) => ({ i, s })).filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type)),
     [sections]
@@ -2102,7 +2083,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
   useEffectCR(() => {
     let cancelled = false;
     const restore = () => {
-      const i = Math.max(0, sections.findIndex((s) => sectionRoute(s) === location.hash));
+      const i = Math.max(0, sectionsRef.current.findIndex((s) => sectionRoute(s) === location.hash));
       const saved = readSavedPlace();
       const node = nodeRefs.current[i];
       if (!node || !scroller.current) return;
@@ -2115,16 +2096,14 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
     document.fonts.ready.then(() => { if (!cancelled) restore(); });
     window.addEventListener("hashchange", restore);
     return () => { cancelled = true; window.removeEventListener("hashchange", restore); };
-  }, [sections]);
+  }, []);
 
   // active section = the one whose body holds the viewport "read line"
   useEffectCR(() => {
     const el = scroller.current;
     if (!el) return;
     let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
+    const savePosition = () => {
         if (!restored.current) return;
         const line = el.scrollTop + el.clientHeight * 0.42;
         let best = 0, bestD = Infinity;
@@ -2139,11 +2118,12 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
         const offset = Math.max(0, el.scrollTop - nodeRefs.current[best].offsetTop);
         history.replaceState(null, "", route);
         try { sessionStorage.setItem(`fable-reading-place:${location.search}`, JSON.stringify({ route, offset })); } catch {}
-      });
     };
+    const onScroll = () => {cancelAnimationFrame(raf);raf=requestAnimationFrame(savePosition);};
+    window.addEventListener("pagehide",savePosition);
     el.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-    return () => { el.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+    return () => { el.removeEventListener("scroll", onScroll); window.removeEventListener("pagehide",savePosition); cancelAnimationFrame(raf); };
   }, [sections]);
 
   const scrollToIndex = (i) => {
@@ -2218,6 +2198,8 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
 
       <div className="cine-mobile-progress" role="progressbar" aria-label={T.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}><span style={{ width: `${progress * 100}%` }} /></div>
 
+      {bookInfo?.generating&&<p className="fable-reader-notice" role="status">{FABLE_HOME_COPY[lang].continuing}</p>}
+
       {/* progress rail */}
       <nav className="cine-rail" aria-label={T.contents}>
         <div className="cine-rail-track"><span className="cine-rail-fill" style={{ height: `${progress * 100}%` }} /></div>
@@ -2248,7 +2230,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
 
 function barLabel(cur, T, meta) {
   if (cur.type === "cover") return meta.title;
-  if (cur.type === "end") return meta.title;
+  if (["end","pending"].includes(cur.type)) return meta.title;
   if (cur.type === "decode") return `${cur.page.title} · ${T.decodedWord}`;
   const p = cur.page;
   return `${p.title} · ${p.sceneIndex + 1}/${p.sceneCount}`;
@@ -2302,12 +2284,13 @@ function Section({ s, T, meta, lang, onBegin, onExit, pages, bookInfo }) {
           <span className="ln" />
         </div>
         <h3 className="dt" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h3>
-        <figure className="cine-figure"><img src={p.image} width="1672" height="941" alt={T.figureAlt} /><figcaption>{T.figureCaption}</figcaption></figure>
+        {p.image&&<figure className="cine-figure"><img src={p.image} width="1672" height="941" alt={T.figureAlt} /><figcaption>{T.figureCaption}</figcaption></figure>}
         <Prose raw={p.raw} drop={false} />
       </div>
     );
   }
 
+  if (s.type === "pending") return <div className="fable-ending" role="status"><div className="fable-rule"/><p className="fable-closing">{FABLE_HOME_COPY[lang].continuing}</p><p className="fable-saved">{FABLE_HOME_COPY[lang].working}</p></div>;
   return <FableEnding pages={pages} lang={lang} onExit={onExit} bookInfo={bookInfo}/>;
 }
 

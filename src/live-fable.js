@@ -107,10 +107,10 @@
     const lang = ["zh", "da", "fr"].includes(opts.lang) ? opts.lang : "en";
     const concept = opts.concept || "";
     const title = opts.title || titleFor(concept, lang);
-    const image = opts.imageSrc || FALLBACK_IMAGE;
+    const image = opts.imageSrc ?? FALLBACK_IMAGE;
     const split = splitStory(opts.markdown || "", lang);
     const scenes = chunk(paragraphs(split.story), lang === "zh" ? 300 : 520);
-    const usedScenes = opts.scenes?.length ? opts.scenes.flatMap(scene=>chunk(paragraphs(scene.text),lang === "zh" ? 300 : 520).map(raw=>({raw,image:scene.image?.url||image}))) : (scenes.length ? scenes : [split.story || concept || title]).map(raw=>({raw,image}));
+    const usedScenes = opts.scenes?.length ? opts.scenes.flatMap(scene=>chunk(paragraphs(scene.text),lang === "zh" ? 300 : 520).map(raw=>({raw,image:scene.image?.url||(opts.text_complete!==undefined?"":image)}))) : (scenes.length ? scenes : [split.story || concept || title]).map(raw=>({raw,image}));
     const chapterTitle = lang === "zh" ? "《寓言》" : (lang === "da" ? "Fablen" : (lang === "fr" ? "La fable" : "The Fable"));
     const deck = lang === "zh" ? "由你的概念临场生成。" : (lang === "da" ? "Genereret live ud fra dit koncept." : (lang === "fr" ? "Générée en direct à partir de votre concept." : "Generated live from your concept."));
     const pages = [{
@@ -154,7 +154,7 @@
         raw:scene.raw,
       });
     });
-    pages.push({
+    if(opts.text_complete!==false) pages.push({
       kind: "Lesson",
       nav: lang === "zh" ? "寓言 - 释义" : (lang === "da" ? "Fablen - Fortolket" : (lang === "fr" ? "La fable - Interprétée" : "The Fable - Decoded")),
       chapterIndex: 0,
@@ -175,14 +175,14 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function toBook(result, id, shareURL, partial = false) {
-    const lang=result.lang || "en", src=dataUrl(result.image);
-    return { lang, storyId:id, shareURL, partial, markdown:result.markdown,
+  function toBook(result, id, shareURL, partial = false, generating = false) {
+    const lang=result.lang || "en", src=result.text_complete!==undefined?(result.image?.url||""):dataUrl(result.image);
+    return { lang, storyId:id, shareURL, partial, generating, markdown:result.markdown,
       pages:buildPages({...result,imageSrc:src}),
       run:{images:(result.scenes?.map(s=>s.image).filter(Boolean)||[result.image]).filter(Boolean).map(image=>({src:image.url,prompt:""})),total_cost_usd:0} };
   }
   async function pollJob(id,onStage,onPartial,active=()=>true,share="") {
-    const started=Date.now(); let partialShown=false;
+    const started=Date.now(); let lastPartial="";
     while(active() && Date.now()-started<600000) {
       const state=await api(share ? `/api/shared/${encodeURIComponent(share)}` : `/api/generations/${encodeURIComponent(id)}`);
       if(state.status==="completed") {onStage?.(4);return toBook(state.result,state.story_id,state.share_url);}
@@ -190,18 +190,19 @@
         if(state.partial_result) return toBook(state.partial_result,state.story_id,state.share_url,true);
         throw new Error(state.error || "This fable could not be created. Please try again later.");
       }
-      if(state.partial_result) {onStage?.(3);if(!partialShown){partialShown=true;onPartial?.(toBook(state.partial_result,state.story_id,null,true));}}
+      if(state.partial_result) {onStage?.(3);const snapshot=JSON.stringify(state.partial_result);if(snapshot!==lastPartial){lastPartial=snapshot;onPartial?.(toBook(state.partial_result,state.story_id,null,true,true));}}
       else onStage?.(1);
       await sleep(2500);
     }
+    if(!active())return null;
     throw new Error("Your fable is still being created. You can reopen it from Your fables.");
   }
-  async function generate({request,lang,onStage,onPartial}) {
+  async function generate({request,lang,onStage,onPartial,active}) {
     await api("/api/session",{method:"POST"});
     const created=await api("/api/generations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({concept:request.concept,setting:request.setting,lang,idempotency_token:crypto.randomUUID()})});
     history.replaceState(null,"",`/?story=${created.story_id}#read/cover`);
-    return pollJob(created.job_id,onStage,onPartial);
+    return pollJob(created.job_id,onStage,onPartial,active);
   }
-  async function load(id,share,active) { return pollJob(id,null,null,active,share); }
+  async function load(id,share,active,onUpdate) { return pollJob(id,null,onUpdate,active,share); }
   window.FABLE_LIVE = { isLive, mode, generate, buildPages, load };
 })();
