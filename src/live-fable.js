@@ -1,5 +1,5 @@
 (function () {
-  const FALLBACK_IMAGE = "art/cover.png";
+  const FALLBACK_IMAGE = "art/cover-1600.webp";
 
   function params() {
     return new URLSearchParams(window.location.search);

@@ -15,8 +15,8 @@ export function validateStory(data) {
     if (typeof data[key] !== 'string' || !data[key].trim() || data[key].length > max) throw new Error('invalid_story');
   }
   // Keep images self-contained or in the curated asset library; never fetch arbitrary URLs.
-  const image = data.image || '/art/cover.png';
-  if (typeof image !== 'string' || !(/^\/art\/[a-zA-Z0-9_-]+\.png$/.test(image) ||
+  const image = data.image || '/art/cover-1600.webp';
+  if (typeof image !== 'string' || !(/^\/art\/[a-zA-Z0-9_-]+\.(png|webp)$/.test(image) ||
       /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image))) throw new Error('invalid_image');
   return { id: data.id, title: data.title.trim(), concept: data.concept.trim(), setting: data.setting.trim(),
     lang: data.lang, markdown: data.markdown, image, status: data.status };

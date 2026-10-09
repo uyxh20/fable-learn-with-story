@@ -18,7 +18,7 @@ const md = text => ({ __html: window.FABLE.renderMarkdown(text) });
 
 function Sample({ onOpen }) {
   return <button className="sample" onClick={onOpen} aria-label="Read sample: The Hall of Affairs">
-    <img src="/art/cover.png" alt="Moonlit courtyard and a scholar at a desk"/>
+    <img src="/art/cover-1600.webp" alt="Moonlit courtyard and a scholar at a desk"/>
     <div className="sample-caption"><div><div className="eyebrow">Read a sample</div><h2>The Hall of Affairs</h2><div className="meta">How AI agents work · 5 min</div></div><span className="arrow" aria-hidden="true">↗</span></div>
   </button>;
 }
@@ -69,7 +69,7 @@ function App() {
       let id = fromCreate ? crypto.randomUUID() : localStorage.getItem('fable-design-sample');
       if (!id) id = crypto.randomUUID();
       const value = { id, title:'The Hall of Affairs', lang:'en', concept:fromCreate ? topic.trim() : 'How AI agents work',
-        setting:fromCreate ? world : 'Chinese classical', markdown, image:'/art/cover.png', status:'complete' };
+        setting:fromCreate ? world : 'Chinese classical', markdown, image:'/art/cover-1600.webp', status:'complete' };
       const result = await window.FABLE_STORE.save(value);
       if (!fromCreate) localStorage.setItem('fable-design-sample', id);
       setSaved({ ...value, updated_at:result.saved_at });
@@ -85,7 +85,7 @@ function App() {
   const sample = <Sample onOpen={() => openSample()}/>;
   const shareURL = `${location.origin}/mocks/?home=${route.home}&ending=${route.ending}&view=read&shared=sample`;
   async function bookHTML() {
-    const images = await Promise.all(['/art/cover.png', '/art/02_yingshizhai_explain.png'].map(async url => {
+    const images = await Promise.all(['/art/cover-1600.webp', '/art/02_yingshizhai_explain-1600.webp'].map(async url => {
       const r = await fetch(url); if (!r.ok) throw new Error('Artwork could not be loaded. Please retry.');
       const blob = await r.blob();
       return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob); });
@@ -124,7 +124,7 @@ function App() {
       <div className="study-end"><label htmlFor="ending">Ending</label><select id="ending" value={route.ending} onChange={e => navigate({ ending:Number(e.target.value), view:'end' })}>{endings.map((name,i) => <option key={name} value={i+1}>{String.fromCharCode(65+i)} · {name}</option>)}</select><button onClick={() => navigate({ view:route.view === 'end' ? 'home' : 'end' })}>{route.view === 'end' ? 'Homepage' : 'Preview end'}</button></div>
     </nav>
     <div className={`site ${route.view === 'home' ? `home-${route.home}` : ''}`} data-theme={theme}>
-      {route.view === 'home' && route.home === 2 && <img className="home-backdrop" src="/art/cover.png" alt=""/>}
+      {route.view === 'home' && route.home === 2 && <img className="home-backdrop" src="/art/cover-1600.webp" alt=""/>}
       <header className="brandbar"><button className="brand" onClick={() => navigate({ view:'home', shared:false })}>Fable</button><div className="brand-right">{route.view !== 'home' && <button className="text-button" onClick={() => navigate({ view:'home', shared:false })}>Home</button>}<button className="text-button theme" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}>◐</button></div></header>
       {route.shared && <div className="shared-note">Shared-story preview · sample content · local only</div>}
       {error && <div className="error" role="alert" style={{padding:'0 6vw'}}>{error} <button className="link" onClick={() => openSample()}>Open sample again</button></div>}
@@ -140,11 +140,11 @@ function App() {
         {route.home !== 5 && <footer className="page-foot">A story first. Understanding follows.</footer>}
       </>}
       {route.view === 'create' && <main className="compose"><div className="eyebrow">Create a fable</div><h1>Start with an idea.</h1><form onSubmit={e => { e.preventDefault(); openSample(true); }}><label className="field" htmlFor="topic">What would you like to understand?</label><input autoFocus id="topic" placeholder="e.g. How memory works" value={topic} onChange={e => setTopic(e.target.value)} required minLength={2} maxLength={2000}/><fieldset className="worlds"><legend className="field">Choose a world</legend>{['Chinese classical','Greek myth','Fairy tale','Contemporary'].map(w => <button type="button" key={w} aria-pressed={world === w} onClick={() => setWorld(w)}>{w}</button>)}</fieldset><button type="submit" className="primary" disabled={busy || topic.trim().length < 2}>{busy ? 'Saving…' : 'Create my fable'} <span aria-hidden="true">→</span></button><p className="demo-note">Local demo: opens the sample story. AI generation is not connected.</p></form></main>}
-      {route.view === 'read' && !error && <main><div className="reader-intro"><div className="eyebrow">A sample fable · How AI agents work</div><h1>The Hall of Affairs</h1><span className="meta">5 minute read</span><img src="/art/01_yingshizhai_story.png" alt="A scholar, a clerk and a steward in the Hall of Affairs"/></div><article className="prose"><div dangerouslySetInnerHTML={md(storyText)}/><h2>After the story</h2><img src="/art/02_yingshizhai_explain.png" alt="Illustrated layers of an AI agent, shown as a house"/><div dangerouslySetInnerHTML={md(lessonText)}/></article><div className="read-finish"><button className="primary" onClick={() => navigate({ view:'end' })}>Finish the fable <span aria-hidden="true">→</span></button></div></main>}
+      {route.view === 'read' && !error && <main><div className="reader-intro"><div className="eyebrow">A sample fable · How AI agents work</div><h1>The Hall of Affairs</h1><span className="meta">5 minute read</span><img src="/art/01_yingshizhai_story-1600.webp" alt="A scholar, a clerk and a steward in the Hall of Affairs"/></div><article className="prose"><div dangerouslySetInnerHTML={md(storyText)}/><h2>After the story</h2><img src="/art/02_yingshizhai_explain-1600.webp" alt="Illustrated layers of an AI agent, shown as a house"/><div dangerouslySetInnerHTML={md(lessonText)}/></article><div className="read-finish"><button className="primary" onClick={() => navigate({ view:'end' })}>Finish the fable <span aria-hidden="true">→</span></button></div></main>}
       {route.view === 'end' && <main className={`end end-${route.ending}`}>
         {route.ending === 1 && <><div className="colophon"/><div className="eyebrow">The end</div><h1>A story to keep.</h1><p className="closing">Take it with you. Pass it on.</p>{actions}<p className="saved">{saveLabel}</p><button className="link next" onClick={create}>Create another fable →</button></>}
-        {route.ending === 2 && <><div className="keepsake"><img src="/art/cover.png" alt="Cover of The Hall of Affairs"/><div className="eyebrow">Fable · Your reading collection</div><h1>The Hall<br/>of Affairs</h1><div className="meta">How AI agents work</div></div><p className="closing">Some stories are worth passing on.</p>{actions}<p className="saved">{saveLabel}</p><button className="link next" onClick={create}>Make another →</button></>}
-        {route.ending === 3 && <><img className="end-art" src="/art/01_yingshizhai_story.png" alt="The quiet courtyard"/><div><div className="eyebrow">The end</div><h1>Now you see the whole house.</h1><button className="link next" onClick={create}>What will you learn next? →</button></div><div className="end-rail"><div><strong>The Hall of Affairs</strong><p className="saved">{saveLabel}</p></div>{actions}</div></>}
+        {route.ending === 2 && <><div className="keepsake"><img src="/art/cover-1600.webp" alt="Cover of The Hall of Affairs"/><div className="eyebrow">Fable · Your reading collection</div><h1>The Hall<br/>of Affairs</h1><div className="meta">How AI agents work</div></div><p className="closing">Some stories are worth passing on.</p>{actions}<p className="saved">{saveLabel}</p><button className="link next" onClick={create}>Make another →</button></>}
+        {route.ending === 3 && <><img className="end-art" src="/art/01_yingshizhai_story-1600.webp" alt="The quiet courtyard"/><div><div className="eyebrow">The end</div><h1>Now you see the whole house.</h1><button className="link next" onClick={create}>What will you learn next? →</button></div><div className="end-rail"><div><strong>The Hall of Affairs</strong><p className="saved">{saveLabel}</p></div>{actions}</div></>}
       </main>}
       <dialog ref={dialog} onCancel={() => setModal(null)} onClose={() => setModal(null)} aria-labelledby="dialog-title">
         <div className="dialog-top"><h2 id="dialog-title">{modal === 'share' ? 'Pass the story on.' : 'Keep the fable.'}</h2><button className="close" aria-label="Close dialog" onClick={() => setModal(null)}>×</button></div>

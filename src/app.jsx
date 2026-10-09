@@ -22,8 +22,10 @@
     const sample=()=>{setGenerated(null);setLoadKey(':');try{sessionStorage.removeItem(`fable-reading-place:?lang=${lang}`);}catch{}history.pushState(null,'',`/?lang=${lang}#read/cover`);setScreen('reader');};
     const shared={theme,setTheme,lang,setLang:generated?undefined:setLang,T};
     // Keep experimental readers confined to localhost while preserving local design work.
-    const local=['localhost','127.0.0.1'].includes(location.hostname);
-    const Reader=local?({popup:window.PopupStageReader,tunnel:window.TunnelBookReader,mechanics:window.PaperMechanicsReader}[query().get('reader')]||CinemaReader):CinemaReader;
+    const local=['localhost','127.0.0.1'].includes(location.hostname)&&query().has('reader');
+    const [localReady,setLocalReady]=React.useState(false);
+    React.useEffect(()=>{if(local&&!window.PopupStageReader)import('__LOCAL_READERS__').then(()=>setLocalReady(true),()=>{});},[local]);
+    const Reader=local&&(localReady||window.PopupStageReader)?({popup:window.PopupStageReader,tunnel:window.TunnelBookReader,mechanics:window.PaperMechanicsReader}[query().get('reader')]||CinemaReader):CinemaReader;
     return <>{screen==='create'&&<FableHomepage {...shared} onOpenBook={sample} onOpenSaved={openSaved} onWeave={req=>{setRequest(req);setScreen('generate');}}/>}
       {screen==='generate'&&<GenerateScreen {...shared} setLang={undefined} request={request} onDone={result=>{setGenerated(result);setLang(result.lang);setScreen('reader');setLoadKey(`${result.storyId}:`);}}/>}
       {screen==='loading'&&<main className="fable-loading"><h1>{C.loading}</h1><p role={error?'alert':'status'}>{error||C.working}</p><button className="btn" onClick={home}>{C.back}</button></main>}

@@ -1,7 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
-const browser = await chromium.launch({channel:'chrome',headless:true});
+const browser = await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});
 const base = 'http://127.0.0.1:8788';
 const evidence = '.gstack/homepage-study-2026-10-03';
 try {

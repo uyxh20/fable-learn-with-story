@@ -3,8 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fable (Learn with Story)</title>
-  <meta name="description" content="Learn through illustrated fables. Explore stories that make complex ideas memorable.">
+  <title>Fable — learn anything through an illustrated story</title>
+  <meta name="description" content="Type an idea you want to understand. Fable turns it into a short illustrated story with a clear explanation at the end. No account needed.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#14100b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ece2cd" media="(prefers-color-scheme: light)">
+  <meta property="og:title" content="Fable — learn anything through an illustrated story">
+  <meta property="og:description" content="Type an idea you want to understand. Fable turns it into a short illustrated story with a clear explanation at the end.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fable-learn-with-story.ulysse-ha-19.workers.dev/art/cover-1600.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='41' fill='%23c89a4a'/%3E%3Ccircle cx='70' cy='52' r='41' fill='%2314100b'/%3E%3Ccircle cx='60' cy='60' r='48' fill='none' stroke='%23c89a4a' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cormorant-garamond-500-latin.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/eb-garamond-400-latin.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/ibm-plex-mono-500-latin.woff2">
+  <link rel="preload" as="image" href="/art/cover-800.webp" imagesrcset="/art/cover-800.webp 800w, /art/cover-1600.webp 1600w" imagesizes="(max-width: 700px) 100vw, 53vw">
   <link rel="stylesheet" href="/assets/fable-home.css">
   <style>
 /* ============================================================
@@ -689,7 +702,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 </style>
-  <script>document.documentElement.setAttribute('data-identity','cinema');document.documentElement.setAttribute('data-theme','dark');</script>
+  <script data-boot>(function(){var t=null;try{t=localStorage.getItem('fable-theme');}catch(e){}if(t!=='light'&&t!=='dark')t=window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var d=document.documentElement;d.setAttribute('data-identity','cinema');d.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
   <div id="root"></div>
@@ -891,30 +904,29 @@ button { font-family: inherit; cursor: pointer; }
 *三部曲完。*
   </script>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <script>
 /* FABLE — bilingual content model + markdown rendering (plain JS, runs before Babel) */
 (function () {
   const ART = "art";
+  const art = (name, width = 1600) => `${ART}/${name}-${width}.webp`;
+  const artSet = name => `${ART}/${name}-800.webp 800w, ${ART}/${name}-1600.webp 1600w`;
 
   // ---- per-page illustrations + the image prompts used to make them ----
   const visuals = [
-    { image: `${ART}/cover.png`, prompt:
+    { image: art("cover"), imageSet: artSet("cover"), prompt:
 `Cover illustration for a fable storybook about agentic AI architecture. A moonlit walled courtyard compound from a slightly elevated angle: an inner room with an old blind scholar at an empty desk, several temporary empty houses connected by a fine luminous line, clockwork wooden attendants moving through gates with ledgers and candles. Refined Chinese ink-and-watercolor with subtle cybernetic detail. Clean negative space upper-left for the title. No text.` },
-    { image: `${ART}/01_yingshizhai_story.png`, prompt:
+    { image: art("01_yingshizhai_story"), imageSet: artSet("01_yingshizhai_story"), prompt:
 `The Hall of Affairs: inside a high-walled archive courtyard, an old blind scholar sits at an empty desk; a clerk lays scrolls before him, a steward watches, runners wait at the gate, a ledger room glows behind. Refined ink-and-watercolor with fine cybernetic linework. No text.` },
-    { image: `${ART}/02_yingshizhai_explain.png`, prompt:
+    { image: art("02_yingshizhai_explain"), imageSet: artSet("02_yingshizhai_explain"), prompt:
 `Conceptual cutaway of one courtyard house as a layered agent system: center room with the blind scholar, surrounding rooms with a context table, a memory archive, tool-runners, a steward, runtime safeguards. Architectural allegory. Refined ink-and-watercolor, thin luminous circuitry. No text.` },
-    { image: `${ART}/03_kongzhai_story.png`, prompt:
+    { image: art("03_kongzhai_story"), imageSet: artSet("03_kongzhai_story"), prompt:
 `The Empty House: a protected manor in the far west sends thin luminous command lines to many temporary empty houses in the east; in one, a silent puppet-like attendant directs workers while the scholar is absent. Refined ink-and-watercolor, soft moonlight. No text.` },
-    { image: `${ART}/04_kongzhai_explain.png`, prompt:
+    { image: art("04_kongzhai_explain"), imageSet: artSet("04_kongzhai_explain"), prompt:
 `The Empty House decoded: a secure inner control manor protects a glowing brain-lantern and a ring of keys; outside, disposable sandbox houses are built, burned, and rebuilt; a fine command thread links control to them. Refined ink-and-watercolor. No text.` },
-    { image: `${ART}/05_jigua_story.png`, prompt:
+    { image: art("05_jigua_story"), imageSet: artSet("05_jigua_story"), prompt:
 `The Mechanism: inside the agentic courtyard, the steward, guards, watchman, bell, candle and runners are revealed as wooden clockwork automata; only one living scholar sits in the innermost room. Refined ink-and-watercolor, brass gears, subtle circuitry. No text.` },
-    { image: `${ART}/06_jigua_explain.png`, prompt:
+    { image: art("06_jigua_explain"), imageSet: artSet("06_jigua_explain"), prompt:
 `The Mechanism decoded: an allegorical cutaway of an agent system as deterministic machinery — brass-and-wood clockwork operating triggers, sandbox walls, runtime candles, ledgers, orchestration paths around one small living mind. Refined ink-and-watercolor. No text.` },
   ];
 
@@ -1277,7 +1289,7 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
       pages.push({
         kind:"Story", chapterIndex:i, sceneIndex:k, sceneCount:m,
         title: mainTitle, titleEn: subTitle, deck: idea,
-        image: story.image, prompt: story.prompt,
+        image: story.image, imageSet: story.imageSet, prompt: story.prompt,
         pan: m>1 ? Math.round((k/(m-1))*100) : 50,
         nav:`${mainTitle} · ${k+1}/${m}`,
         raw: sc,
@@ -1324,7 +1336,7 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
   const book = {
     id: "agentic-architecture",
     tags: ["Agentic AI", "Architecture", "LLM systems"],
-    cover: `${ART}/cover.png`,
+    cover: art("cover"), coverSet: artSet("cover"),
   };
 
   const settings = {
@@ -1579,7 +1591,7 @@ Cette fable décrit l'architecture en couches d'un système d'IA agentique. Ce q
   }
 
   window.FABLE = {
-    renderMarkdown, buildPages, book, visuals, chapters, settings, ui, meta,
+    renderMarkdown, buildPages, book, visuals, chapters, settings, ui, meta, art, artSet,
     promptBase, prompts, promptFor,
     metaFor: (l) => meta[["zh", "da", "fr"].includes(l) ? l : "en"],
     chaptersFor,
@@ -2075,6 +2087,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
   const sectionsRef = useRefCR(sections);
   sectionsRef.current = sections;
   const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image).filter(Boolean))], [sections]);
+  const imageSets = useMemoCR(() => Object.fromEntries(sections.filter((s) => s.image && s.page.imageSet).map((s) => [s.image, s.page.imageSet])), [sections]);
   const stops = useMemoCR(
     () => sections.map((s, i) => ({ i, s })).filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type)),
     [sections]
@@ -2171,7 +2184,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
       <div className="cine-bg" aria-hidden="true">
         {uniqueImages.map((src) => (
           <div key={src} className="cine-bg-layer" style={{ opacity: src === activeImage ? 1 : 0 }}>
-            <img src={src} alt="" style={{ objectPosition: `${pan}% 50%` }} />
+            <img src={src} srcSet={imageSets[src]} sizes="100vw" alt="" decoding="async" style={{ objectPosition: `${pan}% 50%` }} />
           </div>
         ))}
         <div className="cine-scrim" data-mode={mode} />
@@ -2355,7 +2368,7 @@ function CineContents({ sections, active, T, onPick, onClose }) {
                 className={(isDecode ? "toc-sub" : "toc-row") + (active === i ? " is-active" : "")}
                 style={isDecode ? {} : { gridTemplateColumns: "64px 1fr" }}
                 onClick={() => onPick(i)}>
-                {!isDecode && <img src={s.image} alt="" />}
+                {!isDecode && <img src={s.page.imageSet ? s.image.replace('-1600.webp', '-800.webp') : s.image} alt="" loading="lazy" />}
                 <span style={{ display: "grid", gap: 2, minWidth: 0, textAlign: "left" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.13em", textTransform: "uppercase", color: isDecode ? "var(--bordeaux)" : "var(--ink-3)" }}>{label}</span>
                   {!isDecode && <span style={{ fontFamily: _cjk(title) ? "var(--font-cjk)" : "var(--font-display)", fontSize: 16, color: "var(--ink)", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>}

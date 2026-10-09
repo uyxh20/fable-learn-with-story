@@ -29,6 +29,8 @@ export default {
     if (path === '/api' || path.startsWith('/api/')) {
       return json({ error: 'generation_unavailable', detail: 'New story generation is not configured yet. Please explore the sample book.' }, 503);
     }
+    // Static assets are normally served ahead of this Worker (run_worker_first lists only the API);
+    // this path remains for local configurations that still route everything here.
     if (!['GET', 'HEAD'].includes(request.method)) return json({ error: 'method_not_allowed' }, 405);
     const upstream = await env.ASSETS.fetch(request);
     const response = new Response(upstream.body, upstream);

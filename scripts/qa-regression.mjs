@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 const base=process.env.FABLE_TEST_URL||'http://127.0.0.1:8787',evidence=process.env.FABLE_QA_EVIDENCE;
 if(evidence)await mkdir(evidence,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true});const errors=[];
+const browser=await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});const errors=[];
 try{
   for(const width of [390,1440]){
     const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});page.on('pageerror',e=>errors.push(e.message));

@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { chromium,expect } from '@playwright/test';
 const evidence=process.env.FABLE_QA_EVIDENCE||'.gstack/latency-2026-10-04/local';await mkdir(evidence,{recursive:true});
 const bundle=await build({entryPoints:['src/entry.js'],bundle:true,format:'esm',platform:'browser',external:['cloudflare:workers'],write:false});
-const pngs=await Promise.all(['cover.png','03_kongzhai_story.png','05_jigua_story.png'].map(name=>readFile(`public/art/${name}`)));let imageIndex=0,calls=[];let failImage=false,failProse=false,progressive=true;
+const pngs=await Promise.all(['cover.png','03_kongzhai_story.png','05_jigua_story.png'].map(name=>readFile(`art-src/${name}`)));let imageIndex=0,calls=[];let failImage=false,failProse=false,progressive=true;
 let releaseImages,releaseSecond,releaseFinish;
 const imagesGate=new Promise(r=>releaseImages=r),secondGate=new Promise(r=>releaseSecond=r),finishGate=new Promise(r=>releaseFinish=r);
 const scenes=Array.from({length:3},(_,scene)=>({text:Array.from({length:4},(_,i)=>`The gardener tended tree ${scene*4+i+1}. `+'Each season, the roots grew deeper and the branches gave more fruit. '.repeat(6)).join('\n\n')}));
@@ -42,7 +42,7 @@ const options=convertV4MiniflareOptions({name:'fable-test',modules:true,script:b
 let mf=new Miniflare(options),browser;
 try{
   await mf.ready;const db=await mf.getD1Database('DB');await db.exec((await readFile('migrations/0001_creations.sql','utf8')).replace(/\n/g,' '));
-  browser=await chromium.launch({channel:'chrome',headless:true});const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
+  browser=await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8789/');await expect(page.locator('.fable-bubble')).toBeVisible();
   await page.locator('#fable-idea').fill('How does compound growth work?');await expect(page.locator('.fable-send')).toBeEnabled();

@@ -7,11 +7,12 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": true
+    "run_worker_first": ["/api/*", "/healthz"]
   },
   "vars": {
     "GENERATION_ENABLED": "true",
-    "LLM_MODEL": "anthropic/claude-opus-4.6",
+    "PLAN_MODEL": "anthropic/claude-sonnet-5.5",
+    "LLM_MODEL": "anthropic/claude-opus-5.5",
     "IMAGE_MODEL": "bytedance-seed/seedream-5-0-flash",
     "DAILY_CREATION_LIMIT": "20"
   },

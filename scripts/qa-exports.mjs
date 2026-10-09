@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 const base=process.env.FABLE_TEST_URL||'http://127.0.0.1:8787';
 const evidence=process.env.FABLE_QA_EVIDENCE||'.gstack/exports';await mkdir(evidence,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});
 try{
   const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
   await context.addInitScript(()=>{window.print=()=>{window.__printRequested=true;};});

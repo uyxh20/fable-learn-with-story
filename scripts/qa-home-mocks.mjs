@@ -6,7 +6,7 @@ const base = process.env.FABLE_TEST_URL || 'http://127.0.0.1:8788';
 assert.ok(['localhost','127.0.0.1'].includes(new URL(base).hostname), 'Local mocks only');
 const evidence = '.gstack/homepage-study-2026-10-03';
 await mkdir(evidence, {recursive:true});
-const browser = await chromium.launch({channel:'chrome',headless:true});
+const browser = await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});
 const errors = []; const results = [];
 async function settle(page) {
   await page.evaluate(async () => { await document.fonts.ready; await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); });

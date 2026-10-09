@@ -6,7 +6,7 @@ const resume=process.env.FABLE_SMOKE_RESUME==='1';
 if(!resume&&process.env.FABLE_PAID_SMOKE!=='1')throw new Error('Set FABLE_PAID_SMOKE=1 to authorize one paid creation.');
 const base=process.env.FABLE_TEST_URL||'https://fable-learn-with-story.ulysse-ha-19.workers.dev';
 const evidence=process.env.FABLE_QA_EVIDENCE||'.gstack/production-2026-10-03/live-generation';await mkdir(evidence,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true});const started=Date.now();
+const browser=await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});const started=Date.now();
 try{
   const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write'],...(resume?{storageState:`${evidence}/owner-session.json`}:{})});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));

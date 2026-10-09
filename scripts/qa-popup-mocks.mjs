@@ -6,7 +6,7 @@ const base = process.env.FABLE_TEST_URL || 'http://localhost:8787';
 assert.ok(['localhost','127.0.0.1'].includes(new URL(base).hostname), 'Mocks are local only');
 const evidence = process.env.FABLE_QA_EVIDENCE || '/private/tmp/fable-popup-mocks';
 await mkdir(evidence, { recursive:true });
-const browser = await chromium.launch({channel:'chrome',headless:true});
+const browser = await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});
 const errors=[], results=[];
 const settle = async page => {
   await expect(page.locator('.pb-spread')).toHaveAttribute('data-turning','false');
