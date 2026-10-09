@@ -18,13 +18,13 @@ const persist=await mkdtemp(`${tmpdir()}/fable-qa-`);
 const options=convertV4MiniflareOptions({name:'fable-test',modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-10-03',host:'127.0.0.1',port:8789,
   d1Databases:['DB'],r2Buckets:['STORIES'],workflows:{GENERATE:{name:'fable-test-generation',className:'GenerateFable'}},
   assets:{directory:'dist',binding:'ASSETS',run_worker_first:true,routerConfig:{has_user_worker:true}},
-  bindings:{OPENROUTER_API_KEY:'local-test-only',LLM_MODEL:'test/text',IMAGE_MODEL:'google/test-image',GENERATION_ENABLED:'true',DAILY_CREATION_LIMIT:'20'},
+  bindings:{OPENROUTER_API_KEY:'local-test-only',LLM_MODEL:'test/text',PLAN_MODEL:'test/plan',IMAGE_MODEL:'google/test-image',GENERATION_ENABLED:'true',DAILY_CREATION_LIMIT:'20'},
   outboundService:async request=>{
     const url=new URL(request.url);assert.equal(url.hostname,'openrouter.ai');
     assert.equal(request.headers.get('Authorization'),'Bearer local-test-only');
     const body=await request.json();calls.push(url.pathname);
     if(url.pathname.endsWith('/chat/completions')) {
-      assert.equal(body.reasoning.effort,'medium');
+      assert.equal(body.reasoning.effort,body.stream?'low':'medium');assert.equal(body.model,body.stream?'test/text':'test/plan');
       if(!body.stream)return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(plan)}}],usage:{cost:0.001}});
       let part=0;const encoder=new TextEncoder();
       return new Response(new ReadableStream({async pull(controller){
@@ -97,7 +97,7 @@ try{
   assert.equal((await context.request.post(`http://127.0.0.1:8789/api/stories/${failedId}/share`,{headers:{Origin:'http://127.0.0.1:8789'}})).status(),409);
   failImage=false;
   const raced=await Promise.all(Array.from({length:3},()=>context.request.post('http://127.0.0.1:8789/api/generations',{headers:{Origin:'http://127.0.0.1:8789'},data:{concept:'A bounded concurrent creation',setting:'Chinese classical',lang:'en',idempotency_token:crypto.randomUUID()}})));
-  assert.deepEqual(raced.map(r=>r.status()).sort(),[202,429,429]);
+  assert.deepEqual(raced.map(r=>r.status()).sort(),[202,409,409]);
   const finalId=(await raced.find(r=>r.status()===202).json()).job_id;
   await expect.poll(async()=>{const r=await context.request.get(`http://127.0.0.1:8789/api/stories/${finalId}`);return(await r.json()).status;},{timeout:20000}).toBe('completed');
   failProse=true;const interrupted=await browser.newContext();await interrupted.request.post('http://127.0.0.1:8789/api/session',{headers:{Origin:'http://127.0.0.1:8789'}});

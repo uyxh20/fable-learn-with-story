@@ -7,7 +7,7 @@ if(evidence)await mkdir(evidence,{recursive:true});
 const browser=await chromium.launch({...(process.env.FABLE_CHROME?{executablePath:process.env.FABLE_CHROME}:{channel:'chrome'}),headless:true});const errors=[];
 try{
   for(const width of [390,1440]){
-    const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});page.on('pageerror',e=>errors.push(e.message));
+    const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce',colorScheme:'dark'});page.on('pageerror',e=>errors.push(e.message));
     for(const lang of ['en','fr','da','zh']){
       await page.goto(`${base}/?lang=${lang}`);await expect(page.locator('.fable-bubble')).toBeVisible();await page.evaluate(()=>document.fonts.ready);
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);

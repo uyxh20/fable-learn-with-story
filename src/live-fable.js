@@ -21,6 +21,8 @@
     if (!res.ok) {
       const err = new Error(data.detail || data.error || `${path} failed with ${res.status}`);
       err.status = res.status;
+      err.code = data.error || (res.status >= 500 ? "service_unavailable" : "request_failed");
+      err.storyId = data.story_id || null;
       throw err;
     }
     return data;
@@ -103,16 +105,26 @@
     return image.url || FALLBACK_IMAGE;
   }
 
+  const copyFor = (lang) => (window.FABLE_HOME_COPY && window.FABLE_HOME_COPY[lang]) || {};
+
   function buildPages(opts) {
     const lang = ["zh", "da", "fr"].includes(opts.lang) ? opts.lang : "en";
     const concept = opts.concept || "";
     const title = opts.title || titleFor(concept, lang);
     const image = opts.imageSrc ?? FALLBACK_IMAGE;
     const split = splitStory(opts.markdown || "", lang);
-    const scenes = chunk(paragraphs(split.story), lang === "zh" ? 300 : 520);
-    const usedScenes = opts.scenes?.length ? opts.scenes.flatMap(scene=>chunk(paragraphs(scene.text),lang === "zh" ? 300 : 520).map(raw=>({raw,image:scene.image?.url||(opts.text_complete!==undefined?"":image)}))) : (scenes.length ? scenes : [split.story || concept || title]).map(raw=>({raw,image}));
-    const chapterTitle = lang === "zh" ? "《寓言》" : (lang === "da" ? "Fablen" : (lang === "fr" ? "La fable" : "The Fable"));
-    const deck = lang === "zh" ? "由你的概念临场生成。" : (lang === "da" ? "Genereret live ud fra dit koncept." : (lang === "fr" ? "Générée en direct à partir de votre concept." : "Generated live from your concept."));
+    const budget = lang === "zh" ? 300 : 520;
+    const legacyScenes = chunk(paragraphs(split.story), budget);
+    const usedScenes = opts.scenes?.length
+      ? opts.scenes.flatMap((scene, sceneIndex) => {
+        const parts = chunk(paragraphs(scene.text), budget);
+        if (!parts.length && scene.partial) parts.push("");
+        return parts.map((raw, i) => ({ raw, image: scene.image?.url || (opts.text_complete !== undefined ? "" : image), writing: !!scene.partial && i === parts.length - 1, sceneNumber: sceneIndex + 1 }));
+      })
+      : (legacyScenes.length ? legacyScenes : [split.story || concept || title]).map((raw) => ({ raw, image }));
+    const C = copyFor(lang);
+    const chapterTitle = C.theFable || (lang === "zh" ? "寓言" : (lang === "da" ? "Fablen" : (lang === "fr" ? "La fable" : "The fable")));
+    const deck = concept ? "" : (C.sharedDeck || "");
     const pages = [{
       kind: "Cover",
       nav: "Cover",
@@ -121,21 +133,22 @@
       sceneCount: 1,
       title,
       titleEn: "Live fable",
-      subtitle: lang === "zh" ? "临场生成的插画寓言" : (lang === "da" ? "En live-genereret illustreret fabel" : (lang === "fr" ? "Une fable illustrée générée en direct" : "A live illustrated fable")),
+      subtitle: C.coverSub || "An illustrated fable",
       concept,
       image,
       prompt: "",
+      live: true,
       meta: {
         title,
-        alt: lang === "zh" ? "Live fable" : (lang === "da" ? "Live fabel" : (lang === "fr" ? "Fable en direct" : "临场寓言")),
-        subtitle: lang === "zh" ? "临场生成的插画寓言" : (lang === "da" ? "En live-genereret illustreret fabel" : (lang === "fr" ? "Une fable illustrée générée en direct" : "A live illustrated fable")),
-        trilogy: lang === "zh" ? "临场寓言" : (lang === "da" ? "Live fabel" : (lang === "fr" ? "Fable en direct" : "Live fable")),
+        alt: C.coverAlt || "Fable",
+        subtitle: C.coverSub || "An illustrated fable",
+        trilogy: C.coverKicker || "A fable",
         concept,
       },
       chapters: [{
         main: chapterTitle,
         sub: opts.setting || "",
-        idea: deck,
+        idea: concept,
       }],
     }];
     usedScenes.forEach((scene, i) => {
@@ -147,14 +160,19 @@
         title: chapterTitle,
         titleEn: opts.setting || "",
         deck,
-        image:scene.image,
+        concept,
+        setting: opts.setting || "",
+        live: true,
+        image: scene.image,
         prompt: "",
         pan: usedScenes.length > 1 ? Math.round((i / (usedScenes.length - 1)) * 100) : 50,
         nav: `${chapterTitle} · ${i + 1}/${usedScenes.length}`,
-        raw:scene.raw,
+        raw: scene.raw,
+        writing: scene.writing,
+        sceneNumber: scene.sceneNumber,
       });
     });
-    if(opts.text_complete!==false) pages.push({
+    if (opts.text_complete !== false) pages.push({
       kind: "Lesson",
       nav: lang === "zh" ? "寓言 - 释义" : (lang === "da" ? "Fablen - Fortolket" : (lang === "fr" ? "La fable - Interprétée" : "The Fable - Decoded")),
       chapterIndex: 0,
@@ -165,8 +183,9 @@
       pan: 50,
       deck: lang === "zh" ? "故事之后。" : (lang === "da" ? "Efter historien." : (lang === "fr" ? "Après l'histoire." : "After the story.")),
       raw: split.lesson,
-      image:usedScenes[usedScenes.length-1].image,
+      image: usedScenes[usedScenes.length - 1].image,
       prompt: "",
+      live: true,
     });
     return pages;
   }
@@ -175,34 +194,42 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function toBook(result, id, shareURL, partial = false, generating = false) {
-    const lang=result.lang || "en", src=result.text_complete!==undefined?(result.image?.url||""):dataUrl(result.image);
-    return { lang, storyId:id, shareURL, partial, generating, markdown:result.markdown,
-      pages:buildPages({...result,imageSrc:src}),
-      run:{images:(result.scenes?.map(s=>s.image).filter(Boolean)||[result.image]).filter(Boolean).map(image=>({src:image.url,prompt:""})),total_cost_usd:0} };
+  function toBook(result, id, shareURL, partial = false, generating = false, state = null) {
+    const lang = result.lang || "en", src = result.text_complete !== undefined ? (result.image?.url || "") : dataUrl(result.image);
+    return { lang, storyId: id, shareURL, partial, generating, markdown: result.markdown, title: result.title,
+      progress: state?.progress || null, stage: state?.stage || null,
+      pages: buildPages({ ...result, imageSrc: src }),
+      run: { images: (result.scenes?.map((s) => s.image).filter(Boolean) || [result.image]).filter(Boolean).map((image) => ({ src: image.url, prompt: "" })), total_cost_usd: 0 } };
   }
-  async function pollJob(id,onStage,onPartial,active=()=>true,share="") {
-    const started=Date.now(); let lastPartial="";
-    while(active() && Date.now()-started<600000) {
-      const state=await api(share ? `/api/shared/${encodeURIComponent(share)}` : `/api/generations/${encodeURIComponent(id)}`);
-      if(state.status==="completed") {onStage?.(4);return toBook(state.result,state.story_id,state.share_url);}
-      if(state.status==="failed") {
-        if(state.partial_result) return toBook(state.partial_result,state.story_id,state.share_url,true);
-        throw new Error(state.error || "This fable could not be created. Please try again later.");
+  async function pollJob(id, onStatus, onPartial, active = () => true, share = "") {
+    const started = Date.now(); let lastPartial = "";
+    while (active() && Date.now() - started < 600000) {
+      const state = await api(share ? `/api/shared/${encodeURIComponent(share)}` : `/api/generations/${encodeURIComponent(id)}`);
+      onStatus?.(state);
+      if (state.status === "completed") return toBook(state.result, state.story_id, state.share_url, false, false, state);
+      if (state.status === "failed") {
+        if (state.partial_result) return toBook(state.partial_result, state.story_id, state.share_url, true, false, state);
+        const err = new Error(state.error || "This fable could not be created. Please try again later.");
+        err.code = state.error_code || "generation_failed";
+        throw err;
       }
-      if(state.partial_result) {onStage?.(3);const snapshot=JSON.stringify(state.partial_result);if(snapshot!==lastPartial){lastPartial=snapshot;onPartial?.(toBook(state.partial_result,state.story_id,null,true,true));}}
-      else onStage?.(1);
-      await sleep(2500);
+      if (state.partial_result) {
+        const snapshot = JSON.stringify(state.partial_result);
+        if (snapshot !== lastPartial) { lastPartial = snapshot; onPartial?.(toBook(state.partial_result, state.story_id, null, true, true, state)); }
+      }
+      await sleep(state.progress?.text_complete ? 2000 : 1200);
     }
-    if(!active())return null;
-    throw new Error("Your fable is still being created. You can reopen it from Your fables.");
+    if (!active()) return null;
+    const err = new Error("Your fable is still being created. You can reopen it from Your fables.");
+    err.code = "still_working";
+    throw err;
   }
-  async function generate({request,lang,onStage,onPartial,active}) {
-    await api("/api/session",{method:"POST"});
-    const created=await api("/api/generations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({concept:request.concept,setting:request.setting,lang,idempotency_token:crypto.randomUUID()})});
-    history.replaceState(null,"",`/?story=${created.story_id}#read/cover`);
-    return pollJob(created.job_id,onStage,onPartial,active);
+  async function generate({ request, lang, onStatus, onPartial, active }) {
+    await api("/api/session", { method: "POST" });
+    const created = await api("/api/generations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ concept: request.concept, setting: request.setting, lang, idempotency_token: crypto.randomUUID() }) });
+    history.replaceState(null, "", `/?story=${created.story_id}#read/cover`);
+    return pollJob(created.job_id, onStatus, onPartial, active);
   }
-  async function load(id,share,active,onUpdate) { return pollJob(id,null,onUpdate,active,share); }
+  async function load(id, share, active, onUpdate, onStatus) { return pollJob(id, onStatus, onUpdate, active, share); }
   window.FABLE_LIVE = { isLive, mode, generate, buildPages, load };
 })();

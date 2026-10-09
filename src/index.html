@@ -454,7 +454,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .cine-scrim { position: absolute; inset: 0; transition: background .9s var(--ease); }
 .cine-scrim[data-mode="cover"]   { background: linear-gradient(180deg, rgba(7,5,3,.55) 0%, rgba(7,5,3,.30) 38%, rgba(7,5,3,.80) 100%); }
-.cine-scrim[data-mode="chapter"] { background: linear-gradient(180deg, rgba(7,5,3,.42) 0%, rgba(7,5,3,.55) 55%, rgba(7,5,3,.85) 100%); }
+.cine-scrim[data-mode="chapter"], .cine-scrim[data-mode="idea"] { background: linear-gradient(180deg, rgba(7,5,3,.42) 0%, rgba(7,5,3,.55) 55%, rgba(7,5,3,.85) 100%); }
 .cine-scrim[data-mode="scene"]   { background: linear-gradient(180deg, rgba(7,5,3,.34) 0%, rgba(7,5,3,.52) 42%, rgba(7,5,3,.88) 100%); }
 .cine-scrim[data-mode="decode"]  { background: rgba(7,5,3,.93); }
 
@@ -502,7 +502,7 @@ button { font-family: inherit; cursor: pointer; }
 .cine-sec { position: relative; min-height: 100vh; display: flex;
   padding: clamp(96px,13vh,150px) clamp(20px,6vw,90px) clamp(80px,11vh,130px);
   box-sizing: border-box; }
-.cine-cover, .cine-chapter { align-items: flex-end; }
+.cine-cover, .cine-chapter, .cine-idea { align-items: flex-end; }
 .cine-scene  { align-items: center; }
 .cine-decode { align-items: center; min-height: auto;
   padding-top: clamp(96px,14vh,170px); padding-bottom: clamp(96px,14vh,170px); }
@@ -532,13 +532,13 @@ button { font-family: inherit; cursor: pointer; }
 @keyframes cineBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
 /* ---- CHAPTER TITLE CARD ---- */
-.cine-chapter .inner { max-width: 920px; }
-.cine-chapter .num { font-family: var(--font-mono); color: var(--accent);
+.cine-chapter .inner, .cine-idea .inner { max-width: 920px; }
+.cine-chapter .num, .cine-idea .num { font-family: var(--font-mono); color: var(--accent);
   font-size: 13px; letter-spacing: .3em; text-transform: none; }
-.cine-chapter h2 { font-family: var(--font-display); font-weight: 600; margin: 16px 0 0;
+.cine-chapter h2, .cine-idea h2 { font-family: var(--font-display); font-weight: 600; margin: 16px 0 0;
   font-size: clamp(40px,7vw,104px); line-height: .98; letter-spacing: -.015em;
   color: #f6eddb; text-shadow: 0 4px 40px rgba(0,0,0,.5); }
-.cine-chapter .deck { color: rgba(246,237,219,.84); font-style: italic;
+.cine-chapter .deck, .cine-idea .deck { color: rgba(246,237,219,.84); font-style: italic;
   font-family: var(--font-body), var(--font-cjk); font-size: clamp(16px,1.9vw,21px);
   line-height: 1.55; margin: 18px 0 0; max-width: 540px; }
 
@@ -1807,240 +1807,85 @@ function CinemaCreate(props) { return <FableHomepage {...props}/>; }
 window.CinemaCreate = CinemaCreate;
 </script>
   <script type="text/babel">
-/* FABLE — Generation "magic moment": staged, atmospheric, ink blooming */
+/* FABLE — the moment between an idea and its book. Honest stages, driven by the job's real state. */
 const { useState: useStateG, useEffect: useEffectG, useRef: useRefG } = React;
 
 function GenerateScreen({ request, onDone, theme, setTheme, lang, setLang, T }) {
-  const FB = window.FABLE;
-  const stages = T.stages;
-  const liveMode = window.FABLE_LIVE && window.FABLE_LIVE.isLive();
-  const [stageIdx, setStageIdx] = useStateG(0);
-  const [typed, setTyped] = useStateG("");
-  const [plateCount, setPlateCount] = useStateG(0);
-  const [progressPct, setProgressPct] = useStateG(2);
-  const [coverIn, setCoverIn] = useStateG(false);
-  const [ready, setReady] = useStateG(false);
-  const [liveResult, setLiveResult] = useStateG(null);
-  const [skipQueued, setSkipQueued] = useStateG(false);
-  const [runInfo, setRunInfo] = useStateG(null);
-  const [error, setError] = useStateG("");
-  const timers = useRefG([]);
-  const liveDrift = useRefG(null);
-  const skipRequested = useRefG(false);
-  const fallbackCover = (FB.visuals && FB.visuals[0]) || { image: FB.book.cover, prompt: "" };
-  const plates = liveMode && runInfo ? runInfo.images.map((img) => ({ image: img.src, prompt: img.prompt })) : [fallbackCover];
+  const C = FABLE_HOME_COPY[lang];
+  const [status, setStatus] = useStateG(null);
+  const [error, setError] = useStateG(null);
+  const [elapsed, setElapsed] = useStateG(0);
+  const started = useRefG(Date.now());
 
   useEffectG(() => {
-    const stopDrift = () => {
-      if (liveDrift.current) clearInterval(liveDrift.current);
-      liveDrift.current = null;
-    };
-    const driftTo = (floor, ceiling) => {
-      stopDrift();
-      setProgressPct((p) => Math.max(p, floor));
-      const id = setInterval(() => {
-        setProgressPct((p) => {
-          if (p >= ceiling) return p;
-          return Math.min(ceiling, p + Math.max(0.35, (ceiling - p) * 0.045));
-        });
-      }, 850);
-      liveDrift.current = id;
-      timers.current.push(id);
-    };
+    let cancelled = false;
+    const tick = setInterval(() => setElapsed(Date.now() - started.current), 500);
+    window.FABLE_LIVE.generate({
+      request, lang,
+      onStatus: (state) => { if (!cancelled) setStatus(state); },
+      active: () => !cancelled,
+      onPartial: (partial) => { if (!cancelled) onDone(partial); },
+    }).then((result) => { if (!cancelled && result) onDone(result); })
+      .catch((err) => { if (!cancelled) setError(err); });
+    return () => { cancelled = true; clearInterval(tick); };
+  }, [request, lang]);
 
-    if (liveMode) {
-      let cancelled = false;
-      const run = async () => {
-        try {
-          setProgressPct(6);
-          setStageIdx(1);
-          driftTo(8, 28);
-          const result = await window.FABLE_LIVE.generate({
-            request,
-            lang,
-            onStage: (idx) => {
-              if (cancelled) return;
-              setStageIdx(idx);
-              if (idx === 1) driftTo(8, 28);
-              if (idx === 2) driftTo(34, 58);
-              if (idx === 3) driftTo(62, 92);
-              if (idx === 4) driftTo(94, 98);
-            },
-            active: () => !cancelled,
-            onPartial: (partial) => {
-              if (cancelled) return;
-              stopDrift();
-              onDone(partial);
-            },
-          });
-          if (cancelled) return;
-          stopDrift();
-          onDone(result);
-        } catch (err) {
-          if (cancelled) return;
-          stopDrift();
-          setError(err.message || String(err));
-          setProgressPct((p) => Math.min(88, Math.max(12, p)));
-          setReady(false);
-        }
-      };
-      run();
-      return () => { cancelled = true; stopDrift(); timers.current.forEach(clearTimeout); };
-    }
-
-    const T = (fn, ms) => {const id = setTimeout(fn, ms);timers.current.push(id);};
-    // stage progression
-    setProgressPct(2);
-    T(() => { setStageIdx(1); setProgressPct(24); }, 1100); // weave
-    T(() => { setStageIdx(2); setProgressPct(50); }, 4200); // reader
-    T(() => { setStageIdx(3); setProgressPct(66); }, 5200); // cover
-    T(() => {setCoverIn(true); setProgressPct(76);}, 5600);
-    // fill plates
-    for (let i = 1; i <= plates.length; i++) T(() => { setPlateCount(i); setProgressPct(84); }, 6200 + i * 360);
-    T(() => { setStageIdx(4); setProgressPct(94); }, 6200 + plates.length * 360 + 500); // bind
-    T(() => { setReady(true); setProgressPct(100); }, 6200 + plates.length * 360 + 1500);
-    return () => timers.current.forEach(clearTimeout);
-  }, [liveMode, request, lang]);
-
-  // Keep the loading copy moving until the book is ready.
-  useEffectG(() => {
-    if (stageIdx < 1 || ready) return;
-    const lines = (T.loadingLines && T.loadingLines.length ? T.loadingLines : T.weaveLines);
-    let li = 0, ci = 0;
-    let id;
-    const tick = () => {
-      const line = lines[li];
-      if (ci <= line.length) {
-        setTyped(line.slice(0, ci));
-        ci++;
-        id = setTimeout(tick, 44);
-      } else {
-        id = setTimeout(() => {
-          li = (li + 1) % lines.length;
-          ci = 1;
-          setTyped(lines[li].slice(0, ci));
-          id = setTimeout(tick, 80);
-        }, 1300);
-      }
-    };
-    tick();
-    return () => clearTimeout(id);
-  }, [stageIdx >= 1, ready, lang]);
-
-  const progress = Math.min(1, Math.max(0.02, progressPct / 100));
-  const progressPercent = Math.min(100, Math.max(1, Math.round(progress * 100)));
-  const canSkipImage = !ready && !error;
-  const skipImageGeneration = () => {
-    skipRequested.current = true;
-    if (!liveMode) {
-      onDone(null);
-      return;
-    }
-    setSkipQueued(true);
-  };
+  const stage = status?.stage || 'planning';
+  const title = status?.title || '';
+  const scenes = status?.progress?.scenes || 0;
+  // Real stage boundaries, with a slow drift inside each so the line never looks stuck.
+  const floor = stage === 'planning' ? 0.04 : stage === 'writing' ? 0.3 + scenes * 0.15 : 0.8;
+  const drift = Math.min(0.22, elapsed / 60000);
+  const progress = error ? floor : Math.min(0.96, floor + drift);
+  const label = stage === 'planning' && !title ? C.stPlanning : stage === 'illustrating' ? C.stIllustrating : C.stWriting;
+  const note = stage === 'planning' && !title ? C.stPlanningNote : C.stWritingNote;
+  const message = error ? FABLE_ERROR_COPY(error.code, C) : '';
 
   return (
-    <div className="grain" style={{ minHeight: "100vh", background: "var(--bg)", display: "grid", gridTemplateRows: "auto 1fr auto", position: "relative", overflow: "hidden" }}>
-      {/* candle glow */}
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(60% 50% at 50% 38%, var(--glow), transparent 70%)", opacity: coverIn ? 0.9 : 0.4, transition: "opacity 1.2s var(--ease)", pointerEvents: "none" }} />
-
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(18px,3vw,40px)", position: "relative", zIndex: 2 }}>
+    <div className="grain gen" lang={htmlLang(lang)}>
+      <div className="gen-glow" aria-hidden="true" />
+      <header className="gen-bar">
         <Logo lang={lang} />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {setLang && <LangToggle lang={lang} setLang={setLang} />}
           <ThemeToggle theme={theme} setTheme={setTheme} lang={lang} />
         </div>
       </header>
-
-      <main style={{ display: "grid", placeItems: "center", padding: "20px", position: "relative", zIndex: 1 }}>
-        <div style={{ width: "min(720px, 92vw)", textAlign: "center" }}>
-          {/* cover reveal */}
-          <div style={{ position: "relative", width: "min(420px, 78vw)", margin: "0 auto", aspectRatio: "16/10",
-            border: "1px solid var(--line-2)", borderRadius: 3, overflow: "hidden", background: "var(--bg-3)",
-            boxShadow: coverIn ? "var(--shadow)" : "none", transition: "box-shadow 1s var(--ease)" }}>
-            {coverIn ?
-            <img src={(liveResult && liveResult.pages && liveResult.pages[0].image) || FB.book.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", animation: "inkBloom 1.6s var(--ease) both" }} /> :
-
-            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-                <InkSwirl />
-              </div>
-            }
-            <span style={{ position: "absolute", inset: 0, background: "var(--vignette)", opacity: coverIn ? 0.5 : 0, transition: "opacity 1s" }} />
+      <main className="gen-main">
+        <div className="gen-inner">
+          <p className="kicker gen-kicker">{C.yourIdea}</p>
+          <p className="gen-idea">{request.concept}</p>
+          <div className="gen-plate" data-ready={title ? '' : undefined}>
+            {title
+              ? <h1 className="gen-title" style={{ fontFamily: /[一-鿿]/.test(title) ? "var(--font-cjk)" : "var(--font-display)" }}>{title}</h1>
+              : <InkSwirl />}
           </div>
-
-          {/* typed fable fragment — capped to two lines, one line at a time */}
-          <div style={{ height: 60, marginTop: 22, display: "grid", placeItems: "center", overflow: "hidden" }}>
-            <p style={{ margin: 0, fontFamily: lang === "zh" ? "var(--font-cjk)" : "var(--font-body)", fontSize: 16.5, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 540, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", opacity: stageIdx >= 1 && !ready ? 1 : 0.0, transition: "opacity .6s" }} data-comment-anchor="7b0caacaf8-p-82-13">
-              {typed}<span className="caret" style={{ opacity: ready ? 0 : 1 }}>｜</span>
-            </p>
+          <div className="gen-stage" aria-live="polite">
+            {!error && <><p className="kicker" style={{ color: "var(--accent)" }}>{Math.round(progress * 100)}%</p>
+              <h2 className="display gen-stage-title">{label}</h2>
+              <p className="gen-stage-note">{note}</p></>}
+            {error && <><h2 className="display gen-stage-title">{message}</h2>
+              <div className="gen-actions">
+                {error.code === 'creation_active' && error.storyId && <button className="btn btn--primary" onClick={() => { location.href = `/?story=${encodeURIComponent(error.storyId)}#read/cover`; }}>{C.errOpen} →</button>}
+                <button className="btn btn--ghost" onClick={() => { location.href = `/?lang=${lang}`; }}>{['creation_active', 'daily_limit_browser', 'daily_limit_network', 'daily_limit_global', 'creation_limit'].includes(error.code) ? C.back : C.retry}</button>
+              </div></>}
           </div>
-
-          {/* stage label */}
-          <div style={{ marginTop: 10 }}>
-            <p className="kicker" style={{ color: "var(--accent)", marginBottom: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 14 }}>
-              <span>{ready ? T.bound : `${roman(stageIdx + 1)} / ${roman(stages.length)}`}</span>
-            </p>
-            <h2 className="display" style={{ fontSize: "clamp(26px,4vw,38px)" }}>
-              {ready ? T.ready : stages[stageIdx].label}
-            </h2>
-            <p style={{ color: "var(--ink-3)", fontSize: 15, fontStyle: "italic", marginTop: 8, minHeight: 22 }}>
-              {ready ? T.readySub : stages[stageIdx].note}
-            </p>
-          </div>
-
-          {/* plate thumbnails filling in */}
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 26, flexWrap: "wrap" }}>
-            {plates.map((pl, i) =>
-            <span key={i} style={{
-              width: 46, height: 29, borderRadius: 2, overflow: "hidden", border: "1px solid var(--line)",
-              background: "var(--bg-3)", position: "relative" }}>
-                {i < plateCount && <img src={pl.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", animation: "inkBloom .8s var(--ease) both" }} />}
-              </span>
-            )}
-          </div>
-
-          {/* progress rule */}
-          <div style={{ width: "min(420px, 78vw)", margin: "30px auto 0", height: 1, background: "var(--line)", position: "relative" }}>
-            <span style={{ position: "absolute", left: 0, top: -1, height: 3, width: `${Math.min(100, progress * 100)}%`, background: "var(--accent)", transition: "width .5s var(--ease)", boxShadow: "0 0 10px var(--glow)" }} />
-          </div>
-          <p className="kicker" aria-live="polite" style={{ margin: "12px 0 0", color: "var(--accent)", display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            <span>{T.progressLabel}</span>
-            <strong style={{ fontFamily: "var(--font-mono)", fontSize: 18, letterSpacing: 0 }}>{progressPercent}%</strong>
-          </p>
-
-          <div style={{ marginTop: 30, height: 48 }}>
-            {ready && !error &&
-            <button className="btn btn--primary fade-up" data-ob="open" onClick={() => onDone(liveMode ? liveResult : null)}>
-                <Icon name="book" size={16} /> {T.openBook}
-              </button>
-            }
-            {error &&
-            <button className="btn btn--quiet fade-up" onClick={() => { window.location.href = `/?lang=${lang}`; }}>
-                {FABLE_HOME_COPY[lang].back}
-              </button>
-            }
-          </div>
-          {error && <p style={{ color: "var(--bordeaux)", fontSize: 13, marginTop: 14 }}>{error}</p>}
+          {!error && <div className="gen-rule" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={T.progressLabel}>
+            <span style={{ width: `${progress * 100}%` }} />
+          </div>}
+          {!error && <p className="gen-foot">{C.working}</p>}
         </div>
       </main>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes caretBlink { 50% { opacity: 0; } }
-        .caret { animation: caretBlink 1s steps(1) infinite; color: var(--accent); }
-      `}</style>
     </div>);
-
 }
 
 function InkSwirl() {
   return (
-    <svg width="120" height="120" viewBox="0 0 120 120" style={{ animation: "spin 3.2s linear infinite", opacity: 0.7 }}>
+    <svg width="120" height="120" viewBox="0 0 120 120" className="ink-swirl" aria-hidden="true">
       <circle cx="60" cy="60" r="42" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="6 14" opacity="0.7" />
       <circle cx="60" cy="60" r="30" fill="none" stroke="var(--ink-3)" strokeWidth="1" strokeDasharray="2 10" />
       <circle cx="60" cy="18" r="3" fill="var(--accent)" />
     </svg>);
-
 }
 
 window.GenerateScreen = GenerateScreen;
@@ -2060,6 +1905,14 @@ function sectionRoute(s) {
   return s.type === "scene" ? `#read/scene/${chapter}/${s.page.sceneIndex + 1}` : `#read/${s.type === "decode" ? "explanation" : "chapter"}/${chapter}`;
 }
 
+/* a backdrop plate that fades in once its bytes have arrived */
+function BgImage({ src, srcSet, pan }) {
+  const [loaded, setLoaded] = useStateCR(false);
+  const ref = useRefCR(null);
+  useEffectCR(() => { if (ref.current?.complete && ref.current.naturalWidth) setLoaded(true); }, [src]);
+  return <img ref={ref} src={src} srcSet={srcSet} sizes="100vw" alt="" decoding="async" className={loaded ? "is-loaded" : ""} onLoad={() => setLoaded(true)} style={{ objectPosition: `${pan}% 50%` }} />;
+}
+
 function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookInfo, viz = {} }) {
   const FB = window.FABLE;
   const meta = (pages[0] && pages[0].meta) || FB.metaFor(lang);
@@ -2075,7 +1928,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
     pages.forEach((p) => {
       if (p.kind === "Cover") out.push({ type: "cover", page: p, image: p.image });
       else if (p.kind === "Story") {
-        if (p.sceneIndex === 0) out.push({ type: "chapter", page: p, image: p.image });
+        if (p.sceneIndex === 0) { if (!p.live) out.push({ type: "chapter", page: p, image: p.image }); else if (p.concept) out.push({ type: "idea", page: p, image: p.image }); }
         out.push({ type: "scene", page: p, image: p.image });
       } else out.push({ type: "decode", page: p, image: p.image });
     });
@@ -2089,7 +1942,7 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
   const uniqueImages = useMemoCR(() => [...new Set(sections.map((s) => s.image).filter(Boolean))], [sections]);
   const imageSets = useMemoCR(() => Object.fromEntries(sections.filter((s) => s.image && s.page.imageSet).map((s) => [s.image, s.page.imageSet])), [sections]);
   const stops = useMemoCR(
-    () => sections.map((s, i) => ({ i, s })).filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type)),
+    () => sections.map((s, i) => ({ i, s })).filter((x) => ["cover", "chapter", "idea", "decode", "end"].includes(x.s.type)),
     [sections]
   );
 
@@ -2182,9 +2035,10 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
     <div className="cine grain" ref={scroller} lang={htmlLang(lang)}>
       {/* fixed cinematic backdrop */}
       <div className="cine-bg" aria-hidden="true">
+        <div className="cine-bg-pending" style={{ opacity: activeImage ? 0 : 1 }} />
         {uniqueImages.map((src) => (
           <div key={src} className="cine-bg-layer" style={{ opacity: src === activeImage ? 1 : 0 }}>
-            <img src={src} srcSet={imageSets[src]} sizes="100vw" alt="" decoding="async" style={{ objectPosition: `${pan}% 50%` }} />
+            <BgImage src={src} srcSet={imageSets[src]} pan={pan} />
           </div>
         ))}
         <div className="cine-scrim" data-mode={mode} />
@@ -2211,13 +2065,13 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
 
       <div className="cine-mobile-progress" role="progressbar" aria-label={T.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}><span style={{ width: `${progress * 100}%` }} /></div>
 
-      {bookInfo?.generating&&<p className="fable-reader-notice" role="status">{FABLE_HOME_COPY[lang].continuing}</p>}
+      {bookInfo?.generating&&<p className="fable-reader-notice" role="status"><span className="cine-pulse" aria-hidden="true"/>{!activeImage && cur.type !== "cover" ? FABLE_HOME_COPY[lang].paintingNow : FABLE_HOME_COPY[lang].continuing}</p>}
 
       {/* progress rail */}
       <nav className="cine-rail" aria-label={T.contents}>
         <div className="cine-rail-track"><span className="cine-rail-fill" style={{ height: `${progress * 100}%` }} /></div>
         {stops.map(({ i, s }) => (
-          <button key={i} aria-label={s.type === "cover" ? T.titlePage : s.type === "decode" ? T.decodedWord : s.type === "end" ? T.endLabel : s.page.title} aria-current={activeStop === i ? "step" : undefined}
+          <button key={i} aria-label={s.type === "cover" ? T.titlePage : s.type === "decode" ? T.decodedWord : s.type === "end" ? T.endLabel : s.type === "idea" ? FABLE_HOME_COPY[lang].yourIdea : s.page.title} aria-current={activeStop === i ? "step" : undefined}
             className={"cine-rail-dot" + (active >= i ? " is-done" : "") + (activeStop === i ? " is-active" : "")}
             style={{ top: `${(i / (sections.length - 1)) * 100}%` }}
             onClick={() => scrollToIndex(i)} />
@@ -2236,13 +2090,13 @@ function CinemaReader({ pages, onExit, theme, setTheme, lang, setLang, T, bookIn
         ))}
       </main>
 
-      {toc && <CineContents sections={sections} active={active} T={T} onPick={(i) => { scrollToIndex(i); setToc(false); }} onClose={() => setToc(false)} />}
+      {toc && <CineContents sections={sections} active={active} T={T} lang={lang} onPick={(i) => { scrollToIndex(i); setToc(false); }} onClose={() => setToc(false)} />}
     </div>
   );
 }
 
 function barLabel(cur, T, meta) {
-  if (cur.type === "cover") return meta.title;
+  if (cur.type === "cover" || cur.type === "idea") return meta.title;
   if (["end","pending"].includes(cur.type)) return meta.title;
   if (cur.type === "decode") return `${cur.page.title} · ${T.decodedWord}`;
   const p = cur.page;
@@ -2277,14 +2131,28 @@ function Section({ s, T, meta, lang, onBegin, onExit, pages, bookInfo }) {
     );
   }
 
+  if (s.type === "idea") {
+    const C = FABLE_HOME_COPY[lang];
+    return (
+      <div className="inner cine-idea">
+        <p className="num reveal">{C.yourIdea}</p>
+        <h2 className="reveal" style={{ fontFamily: _cjk(p.concept) ? "var(--font-cjk)" : "var(--font-display)" }}>“{p.concept}”</h2>
+        {p.setting && <p className="deck reveal">{FABLE.settings[lang][FABLE.settings.en.indexOf(p.setting)] || p.setting}</p>}
+        <button className="cine-cue reveal" onClick={onBegin} style={{ background: "none", border: 0, cursor: "pointer" }}>{T.scrollCue} <span className="cue-down"><Icon name="right" /></span></button>
+      </div>
+    );
+  }
+
   if (s.type === "scene") {
+    const C = FABLE_HOME_COPY[lang];
     return (
       <div className="cine-panel reveal">
         <div className="cine-scene-meta">
-          <span className="kicker" style={{ color: "var(--ink-2)" }}>{T.theFable}</span>
-          <span className="kicker" style={{ textTransform: "none" }}>{T.ch} {roman(p.chapterIndex + 1)} · {p.sceneIndex + 1}/{p.sceneCount}</span>
+          <span className="kicker" style={{ color: "var(--ink-2)" }}>{p.live ? C.theFable : T.theFable}</span>
+          <span className="kicker" style={{ textTransform: "none" }}>{p.live ? `${p.sceneIndex + 1}/${p.sceneCount}` : `${T.ch} ${roman(p.chapterIndex + 1)} · ${p.sceneIndex + 1}/${p.sceneCount}`}</span>
         </div>
-        <Prose raw={p.raw} drop={p.sceneIndex === 0} />
+        <Prose raw={p.raw} drop={p.sceneIndex === 0} writing={p.writing} />
+        {p.writing && <p className="cine-writing kicker" role="status"><span className="cine-pulse" aria-hidden="true"/>{C.writingNow}</p>}
       </div>
     );
   }
@@ -2297,18 +2165,18 @@ function Section({ s, T, meta, lang, onBegin, onExit, pages, bookInfo }) {
           <span className="ln" />
         </div>
         <h3 className="dt" style={{ fontFamily: dispFont(p.title), letterSpacing: _cjk(p.title) ? "0.04em" : undefined }}>{p.title}</h3>
-        {p.image&&<figure className="cine-figure"><img src={p.image} width="1672" height="941" alt={T.figureAlt} /><figcaption>{T.figureCaption}</figcaption></figure>}
+        {p.image&&!p.live&&<figure className="cine-figure"><img src={p.image} srcSet={p.imageSet} sizes="(max-width: 840px) 100vw, 780px" width="1672" height="941" alt={T.figureAlt} loading="lazy" /><figcaption>{T.figureCaption}</figcaption></figure>}
         <Prose raw={p.raw} drop={false} />
       </div>
     );
   }
 
-  if (s.type === "pending") return <div className="fable-ending" role="status"><div className="fable-rule"/><p className="fable-closing">{FABLE_HOME_COPY[lang].continuing}</p><p className="fable-saved">{FABLE_HOME_COPY[lang].working}</p></div>;
+  if (s.type === "pending") return <div className="fable-ending cine-pending" role="status"><InkSwirl /><p className="fable-closing">{FABLE_HOME_COPY[lang].continuing}</p><p className="fable-saved">{FABLE_HOME_COPY[lang].working}</p></div>;
   return <FableEnding pages={pages} lang={lang} onExit={onExit} bookInfo={bookInfo}/>;
 }
 
 /* prose with an optional drop-initial, rendered from the shared markdown engine */
-function Prose({ raw, drop }) {
+function Prose({ raw, drop, writing }) {
   const ref = useRefCR(null);
   useEffectCR(() => {
     if (!drop || !ref.current) return;
@@ -2323,11 +2191,12 @@ function Prose({ raw, drop }) {
       p.insertBefore(span, txt);
     }
   }, [raw, drop]);
-  const html = window.FABLE.renderMarkdown(raw || "");
+  const html = window.FABLE.renderMarkdown(raw || "") + (writing ? '<span class="cine-caret" aria-hidden="true"></span>' : "");
   return <div className="cine-prose" ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function CineContents({ sections, active, T, onPick, onClose }) {
+function CineContents({ sections, active, T, lang, onPick, onClose }) {
+  const C = FABLE_HOME_COPY[lang] || FABLE_HOME_COPY.en;
   const dialogRef = React.useRef(null);
   React.useEffect(() => {
     const previous = document.activeElement;
@@ -2343,7 +2212,7 @@ function CineContents({ sections, active, T, onPick, onClose }) {
   };
   const rows = sections
     .map((s, i) => ({ s, i }))
-    .filter((x) => ["cover", "chapter", "decode", "end"].includes(x.s.type));
+    .filter((x) => ["cover", "chapter", "idea", "decode", "end"].includes(x.s.type));
   return (
     <div className="overlay" onClick={onClose}>
       <div className="overlay-card grain fade-up" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contents-title" onKeyDown={trapFocus} onClick={(e) => e.stopPropagation()}>
@@ -2356,19 +2225,22 @@ function CineContents({ sections, active, T, onPick, onClose }) {
             const p = s.page;
             const isChap = s.type === "chapter";
             const isDecode = s.type === "decode";
+            const live = !!p.live;
             const label = s.type === "cover" ? T.titlePage
               : s.type === "end" ? T.endLabel
-              : isDecode ? `${T.ch} ${roman(p.chapterIndex + 1)} · ${T.decodedWord}`
+              : s.type === "idea" ? C.yourIdea
+              : isDecode ? (live ? T.decodedWord : `${T.ch} ${roman(p.chapterIndex + 1)} · ${T.decodedWord}`)
               : `${T.ch} ${roman(p.chapterIndex + 1)} · ${p.sceneCount} ${T.scenesWord}`;
             const title = s.type === "cover" ? sections[0].page.title
               : s.type === "end" ? T.endLabel
+              : s.type === "idea" ? p.concept
               : p.title;
             return (
               <button key={i}
                 className={(isDecode ? "toc-sub" : "toc-row") + (active === i ? " is-active" : "")}
                 style={isDecode ? {} : { gridTemplateColumns: "64px 1fr" }}
                 onClick={() => onPick(i)}>
-                {!isDecode && <img src={s.page.imageSet ? s.image.replace('-1600.webp', '-800.webp') : s.image} alt="" loading="lazy" />}
+                {!isDecode && (s.image ? <img src={s.page.imageSet ? s.image.replace('-1600.webp', '-800.webp') : s.image} alt="" loading="lazy" /> : <span className="toc-thumb-empty" aria-hidden="true" />)}
                 <span style={{ display: "grid", gap: 2, minWidth: 0, textAlign: "left" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.13em", textTransform: "uppercase", color: isDecode ? "var(--bordeaux)" : "var(--ink-3)" }}>{label}</span>
                   {!isDecode && <span style={{ fontFamily: _cjk(title) ? "var(--font-cjk)" : "var(--font-display)", fontSize: 16, color: "var(--ink)", letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>}

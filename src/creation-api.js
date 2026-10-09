@@ -30,7 +30,7 @@ const friendlyError = 'This fable could not be completed. Finished scenes and pi
 
 export async function creationResponse(request,env,json) {
   const url=new URL(request.url), path=url.pathname;
-  if(path==='/api/config') return json({generation_enabled:generationEnabled(env),storage_enabled:!!(env.DB&&env.STORIES)});
+  if(path==='/api/config') return json({generation_enabled:generationEnabled(env),storage_enabled:!!(env.DB&&env.STORIES),daily_per_browser:3});
   if(!env.DB||!env.STORIES) return json({error:'generation_unavailable',detail:'Creation is not connected yet. Please enjoy the sample.'},503);
   const mutation=!['GET','HEAD'].includes(request.method);
   if(mutation && request.headers.get('Origin')!==url.origin) return json({error:'origin_not_allowed'},403);
@@ -71,9 +71,11 @@ export async function creationResponse(request,env,json) {
     const doc=object ? await object.json():null;
     const imageBase=shared?`/api/shared/${shared[1]}/image`:`/api/stories/${row.id}/image`;
     const images=doc?await Promise.all((doc.scenes||[{}]).map(async(_,index)=>await env.STORIES.head(`creations/${row.id}/${index===0?'cover':`scene-${index}`}`)?{url:`${imageBase}/${index}`}:null)):[];
-    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,text_complete:doc.text_complete!==false,image:images[0]||null,...(doc.scenes?{scenes:doc.scenes.map((scene,index)=>({text:scene.text,image:images[index]}))}:{})}:null;
-    return json({job_id:row.id,story_id:row.id,status:row.status,stage:row.status==='illustrating'?'image_call_started':row.status==='completed'?'complete':'story_call_started',
-      ...(row.error?{error:friendlyError}:{}),...(row.status==='completed'?{result}:result?{partial_result:result}:{}),share_url:!shared&&row.share_token?`${url.origin}/?share=${row.share_token}#read/cover`:null});
+    const result=doc?{title:doc.title,markdown:doc.markdown,lang:doc.lang,setting:doc.setting,concept:shared?'':doc.concept,text_complete:doc.text_complete!==false,image:images[0]||null,...(doc.scenes?{scenes:doc.scenes.map((scene,index)=>({text:scene.text,image:images[index],...(scene.partial?{partial:true}:{})}))}:{})}:null;
+    const stage=row.status==='completed'?'complete':row.status==='failed'?'failed':row.status==='illustrating'?'illustrating':row.title?'writing':'planning';
+    const progress={scenes:doc?.scenes?.filter(scene=>!scene.partial).length||0,images:images.filter(Boolean).length,text_complete:!!doc?.text_complete};
+    return json({job_id:row.id,story_id:row.id,status:row.status,stage,title:row.title||doc?.title||null,progress,
+      ...(row.error?{error:friendlyError,error_code:row.error}:{}),...(row.status==='completed'?{result}:result?{partial_result:result}:{}),share_url:!shared&&row.share_token?`${url.origin}/?share=${row.share_token}#read/cover`:null});
   }
   if(path==='/api/stories' && request.method==='GET') {
     if(!owner) return json({stories:[]});
@@ -101,7 +103,15 @@ export async function creationResponse(request,env,json) {
       AND NOT EXISTS (SELECT 1 FROM creations WHERE owner=? AND status IN ('queued','writing','illustrating'))`)
       .bind(id,owner,ip,data.idempotency_token,requestJSON,now,now,day,globalLimit,owner,day,ip,day,owner).run();
     row=await env.DB.prepare('SELECT * FROM creations WHERE owner=? AND idempotency=?').bind(owner,data.idempotency_token).first();
-    if(!row) return json({error:'creation_limit',detail:'A fable is already being created, or today’s creation limit has been reached. Please try later.'},429);
+    if(!row) {
+      // Explain which boundary was hit so the reader can act on it (reopen, wait, or come back tomorrow).
+      const why=await env.DB.prepare(`SELECT (SELECT id FROM creations WHERE owner=? AND status IN ('queued','writing','illustrating') ORDER BY created_at DESC LIMIT 1) active,
+        (SELECT COUNT(*) FROM creations WHERE owner=? AND created_at>=?) mine,(SELECT COUNT(*) FROM creations WHERE ip_hash=? AND created_at>=?) network,(SELECT COUNT(*) FROM creations WHERE created_at>=?) total`)
+        .bind(owner,owner,day,ip,day,day).first();
+      if(why?.active) return json({error:'creation_active',story_id:why.active,detail:'A fable of yours is still being written. Open it, or wait for it to finish.'},409);
+      const error=why?.mine>=3?'daily_limit_browser':why?.network>=5?'daily_limit_network':'daily_limit_global';
+      return json({error,detail:'Today’s fable limit has been reached. Please come back tomorrow.'},429);
+    }
   }
   if(row.status==='queued') {
     try {await env.GENERATE.create({id:row.id,params:{id:row.id}});}

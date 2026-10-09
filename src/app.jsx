@@ -1,7 +1,7 @@
 (function () {
   function App() {
     const query=()=>new URLSearchParams(location.search);
-    const [theme,setTheme]=React.useState(()=>{try{return localStorage.getItem('fable-theme')==='light'?'light':'dark';}catch{return 'dark';}});
+    const [theme,setTheme]=React.useState(()=>document.documentElement.dataset.theme==='light'?'light':'dark');
     const [lang,setLang]=React.useState(()=>{let l=query().get('lang');try{l=l||localStorage.getItem('fable-lang');}catch{}return ['en','fr','da','zh'].includes(l)?l:'en';});
     const [screen,setScreen]=React.useState(()=>query().has('story')||query().has('share')?'loading':location.hash.startsWith('#read/')?'reader':'create');
     const [generated,setGenerated]=React.useState(null),[request,setRequest]=React.useState(null),[error,setError]=React.useState('');
@@ -10,7 +10,9 @@
     const source=document.getElementById('source-md').textContent.trim();
     const pages=React.useMemo(()=>generated?.pages||FABLE.buildPages(source,lang),[generated,lang]);
     React.useEffect(()=>{document.documentElement.dataset.theme=theme;try{localStorage.setItem('fable-theme',theme);}catch{}},[theme]);
-    React.useEffect(()=>{document.documentElement.lang=htmlLang(lang);try{localStorage.setItem('fable-lang',lang);}catch{}window.dispatchEvent(new CustomEvent('fable:language',{detail:lang}));},[lang]);
+    React.useEffect(()=>{document.documentElement.lang=htmlLang(lang);try{localStorage.setItem('fable-lang',lang);}catch{}window.dispatchEvent(new CustomEvent('fable:language',{detail:lang}));
+      // The Chinese serif is large, so it loads only once Chinese is on screen.
+      if(lang==='zh'&&!document.getElementById('fable-cjk-font')){const link=document.createElement('link');link.id='fable-cjk-font';link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap';document.head.appendChild(link);}},[lang]);
     React.useEffect(()=>{window.__fableScreen=screen;window.dispatchEvent(new CustomEvent('fable:screen',{detail:screen}));},[screen]);
     React.useEffect(()=>{const sync=()=>{const q=query();setLoadKey(`${q.get('story')||''}:${q.get('share')||''}`);if(!q.has('story')&&!q.has('share')){setGenerated(null);setScreen(location.hash.startsWith('#read/')?'reader':'create');}};addEventListener('popstate',sync);addEventListener('hashchange',sync);return()=>{removeEventListener('popstate',sync);removeEventListener('hashchange',sync);};},[]);
     React.useEffect(()=>{const [id,share]=loadKey.split(':');if(!id&&!share)return;let active=true;if(generated?.storyId!==id)setScreen('loading');setError('');
@@ -27,8 +29,8 @@
     React.useEffect(()=>{if(local&&!window.PopupStageReader)import('__LOCAL_READERS__').then(()=>setLocalReady(true),()=>{});},[local]);
     const Reader=local&&(localReady||window.PopupStageReader)?({popup:window.PopupStageReader,tunnel:window.TunnelBookReader,mechanics:window.PaperMechanicsReader}[query().get('reader')]||CinemaReader):CinemaReader;
     return <>{screen==='create'&&<FableHomepage {...shared} onOpenBook={sample} onOpenSaved={openSaved} onWeave={req=>{setRequest(req);setScreen('generate');}}/>}
-      {screen==='generate'&&<GenerateScreen {...shared} setLang={undefined} request={request} onDone={result=>{setGenerated(result);setLang(result.lang);setScreen('reader');setLoadKey(`${result.storyId}:`);}}/>}
-      {screen==='loading'&&<main className="fable-loading"><h1>{C.loading}</h1><p role={error?'alert':'status'}>{error||C.working}</p><button className="btn" onClick={home}>{C.back}</button></main>}
+      {screen==='generate'&&<GenerateScreen {...shared} setLang={undefined} request={request} onDone={result=>{FABLE_DRAFT.write(null);setGenerated(result);setLang(result.lang);setScreen('reader');setLoadKey(`${result.storyId}:`);}}/>}
+      {screen==='loading'&&<main className="fable-loading grain"><div className="fable-loading-mark"><MoonGateMark size={54}/></div><h1>{C.loading}</h1><p role={error?'alert':'status'}>{error||C.working}</p>{error&&<button className="btn btn--ghost" onClick={home}>{C.back}</button>}</main>}
       {screen==='reader'&&error&&<p className="fable-reader-notice" role="alert">{error}</p>}
       {screen==='reader'&&<Reader {...shared} pages={pages} bookInfo={generated} onExit={home}/>}</>;
   }
