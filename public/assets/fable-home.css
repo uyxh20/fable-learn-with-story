@@ -4,12 +4,12 @@
 .fable-home-bar{height:88px;padding:0 6vw;display:flex;align-items:center;justify-content:space-between;gap:16px}.fable-home-tools{display:flex;align-items:center;gap:16px}
 .fable-home-main{display:grid;grid-template-columns:47% 53%;min-height:calc(100dvh - 88px)}
 .fable-question{display:flex;flex-direction:column;justify-content:center;padding:40px 5vw 70px 8vw}.fable-question .kicker{color:var(--accent)}
-.fable-question h1{font:500 clamp(49px,4.8vw,76px)/1.03 var(--font-display),var(--font-cjk);letter-spacing:-.035em;margin:25px 0 0}.fable-question h1 em{color:var(--accent);font-weight:400}
+.fable-question h1{font:500 clamp(49px,4.8vw,76px)/1.03 var(--font-display),var(--font-cjk);letter-spacing:-.035em;margin:25px 0 0}
 .fable-sub{font:21px/1.5 var(--font-body),var(--font-cjk);color:var(--ink-2);margin:30px 0 32px}
 .fable-bubble{background:var(--bg-2);border:1px solid var(--line-2);border-radius:26px 26px 8px 26px;padding:20px 20px 15px;box-shadow:0 8px 32px #0001}.fable-bubble:focus-within{border-color:var(--accent)}
 .fable-bubble textarea{display:block;width:100%;min-height:96px;border:0;outline:none;background:transparent;color:var(--ink);font:21px/1.5 var(--font-body),var(--font-cjk);resize:vertical;max-height:240px}.fable-bubble textarea::placeholder{color:var(--ink-2);opacity:.9}
 .fable-bubble-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.fable-bubble-foot select{max-width:46%;background:transparent;color:var(--ink-2);border:0;padding:10px 0;font:11px var(--font-mono);min-height:44px}.fable-bubble-foot option{background:var(--bg-2);color:var(--ink)}
-.fable-send{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 17px;background:var(--accent);color:#140f08;border:0;border-radius:20px 20px 5px 20px;min-height:46px;font:12px var(--font-mono)}.fable-send:disabled{opacity:.5;cursor:not-allowed}
+.fable-send{margin-left:auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 17px;background:var(--accent);color:#140f08;border:0;border-radius:20px 20px 5px 20px;min-height:46px;font:12px var(--font-mono)}.fable-send:disabled{opacity:.5;cursor:not-allowed}
 .fable-availability{color:var(--ink-2);font:12px/1.5 var(--font-body),var(--font-cjk);margin:15px 4px 0}
 .fable-sample{position:relative;margin:0 28px 28px 0;min-height:570px;border:0;padding:0;display:flex;align-items:flex-end;text-align:left;background:#0c0905;color:#f1e8d6;overflow:hidden}.fable-sample>img{position:absolute;inset:0;height:100%;width:100%;object-fit:cover;object-position:70%}.fable-sample::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#0c0a07 0%,transparent 72%)}.fable-sample-caption{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:36px;width:100%}.fable-sample-caption .kicker{color:#d4bd94}.fable-sample-caption h2{font:500 34px/1.1 var(--font-display),var(--font-cjk);margin:10px 0}.fable-sample-caption p:last-child{font:11px var(--font-mono);color:#d4bd94}.fable-sample-caption>span{display:grid;place-items:center;flex-shrink:0;width:46px;height:46px;border:1px solid #c0a276;border-radius:50%;font-size:24px}
 .cine-sec.cine-end{background:var(--bg);color:var(--ink)}.fable-ending{text-align:center;max-width:760px;width:100%;padding:70px 24px;margin:auto}.fable-rule{width:55px;height:1px;background:var(--accent);margin:0 auto 27px}.fable-ending .kicker{color:var(--accent)}.fable-ending h2{color:var(--ink);font:500 clamp(44px,6vw,76px)/1.05 var(--font-display),var(--font-cjk);margin:20px 0}.fable-closing{color:var(--ink-2);font-size:23px;margin:0 0 35px}.fable-end-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}.fable-next{border:0;border-bottom:1px solid var(--line-2);background:transparent;color:var(--ink);margin-top:38px;padding:12px 0;min-height:44px;font:13px var(--font-mono)}.fable-saved{color:var(--ink-2);font:12px/1.6 var(--font-body),var(--font-cjk);margin:20px 0 0}
@@ -24,20 +24,18 @@
 /* ---- composer controls, examples and trust line ---- */
 .fable-bubble textarea{min-height:64px;overflow:hidden}
 .fable-bubble-foot{flex-wrap:wrap;gap:10px 12px;margin-top:10px}
-.fable-worlds{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:6px;margin-top:12px}
-.fable-world{font:500 13.5px/1.15 var(--font-body),var(--font-cjk);color:var(--ink-2);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 8px;min-height:38px;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease);text-align:center;text-wrap:balance}
+.fable-worlds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:12px}
+.fable-world{font:500 13.5px/1.15 var(--font-body),var(--font-cjk);color:var(--ink-2);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 8px;height:40px;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fable-world:hover{color:var(--ink);border-color:var(--line-2)}
 .fable-world.is-on{color:var(--ink);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .fable-send{margin-left:auto;transition:filter .2s var(--ease),box-shadow .25s var(--ease),transform .2s var(--ease)}
 .fable-send:not(:disabled):hover{filter:brightness(1.07);box-shadow:0 8px 28px -10px var(--glow)}
 .fable-send:not(:disabled):active{transform:translateY(1px)}
-.fable-hint{color:var(--ink-3);font:13.5px/1.45 var(--font-body),var(--font-cjk);margin:0;flex:1 1 180px;min-width:0}
 .fable-bubble .fable-availability{margin:0;flex:1 1 180px}
-.fable-examples{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:22px 0 0}
-.fable-examples>.kicker{margin-right:4px;color:var(--ink-3)}
-.fable-example{font:15px/1.3 var(--font-body),var(--font-cjk);color:var(--ink-2);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:38px;text-align:left;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+.fable-examples{display:flex;flex-direction:column;gap:8px;margin:26px 0 0}
+.fable-examples>.kicker{margin:0 0 4px 2px;color:var(--ink-3)}
+.fable-example{font:15px/1.3 var(--font-body),var(--font-cjk);color:var(--ink-2);background:transparent;border:1px solid var(--line);border-radius:999px;padding:0 18px;height:44px;width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
 .fable-example:hover{color:var(--ink);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.fable-trust{color:var(--ink-3);font:11px/1.6 var(--font-mono);letter-spacing:.08em;margin:34px 6px 0}
 .fable-home-tools>.btn svg{margin-right:4px}
 button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .fable-bubble textarea:focus-visible{outline:none}
@@ -94,4 +92,4 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .cine-pending{min-height:50vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .toc-thumb-empty{display:block;width:64px;height:40px;border-radius:2px;border:1px solid var(--line);background:var(--bg-3)}
 .cine-idea h2{font-style:italic;font-weight:500;font-size:clamp(30px,4.6vw,64px);line-height:1.12}
-@media(max-width:700px){.fable-example{font-size:14px;padding:7px 12px}.fable-trust{margin-top:26px}.gen-plate{margin-top:26px}.fable-library-thumb{flex-basis:60px;width:60px;height:38px}}
+@media(max-width:700px){.fable-worlds{grid-template-columns:repeat(2,minmax(0,1fr))}.fable-example{font-size:14px;padding:0 14px}.gen-plate{margin-top:26px}.fable-library-thumb{flex-basis:60px;width:60px;height:38px}}
